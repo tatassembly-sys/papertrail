@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env*
+!.env.example
+*.tsbuildinfo
+*.zip
+paper-trail.zip
+atlas-test.js
+.DS_Store
+*.log

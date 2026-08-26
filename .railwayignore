@@ -1,0 +1,19 @@
+# Keep Railway deploys lean — exclude local/dev artifacts
+node_modules
+.next
+.git
+*.zip
+paper-trail.zip
+tsconfig.tsbuildinfo
+mnt
+codex
+.DS_Store
+*.log
+.env
+.env.local
+.env*.local
+HANDOVER.md
+PHASE_COMPLETION.md
+PRODUCTION_HEALTH.md
+CHANGELOG.md
+tree.txt

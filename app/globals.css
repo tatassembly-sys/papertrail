@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Theme tokens (WCAG-minded pairs) ───────────────────────────────────── */
+:root {
+  color-scheme: light;
+  /* RGB channels so Tailwind opacity modifiers work */
+  --paper: 238 240 242; /* #EEF0F2 page bg */
+  --surface: 255 255 255; /* #FFFFFF cards / inputs */
+  --ink: 22 33 61; /* #16213D primary text */
+  --ink-soft: 61 74 92; /* #3D4A5C secondary text */
+  --rule: 199 204 209; /* #C7CCD1 borders */
+  --redpen: 198 61 47; /* #C63D2F accent */
+  --redpen-soft: 243 226 223; /* #F3E2DF accent wash */
+  --stamp: 91 107 115; /* #5B6B73 meta labels */
+  --success: 22 101 52; /* green-800-ish on light */
+  --danger: 185 28 28; /* red-700 */
+  --focus-ring: 198 61 47;
+}
+
+html.dark {
+  color-scheme: dark;
+  --paper: 15 20 25; /* #0F1419 page bg */
+  --surface: 28 35 44; /* #1C232C elevated surfaces */
+  --ink: 238 240 242; /* #EEF0F2 primary text */
+  --ink-soft: 197 204 212; /* #C5CCD4 secondary */
+  --rule: 58 69 80; /* #3A4550 borders */
+  --redpen: 232 120 108; /* lighter red for dark bg contrast */
+  --redpen-soft: 61 36 32; /* deep red wash */
+  --stamp: 154 167 176; /* #9AA7B0 meta */
+  --success: 134 239 172; /* green-300 */
+  --danger: 252 165 165; /* red-300 */
+  --focus-ring: 232 120 108;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+body {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgb(var(--ink));
+  background-color: rgb(var(--paper));
+}
+
+/* Shared form control look */
+@layer components {
+  .pt-input {
+    @apply min-h-11 w-full rounded-sm border border-rule bg-surface px-3 py-2.5 text-base text-ink placeholder:text-stamp focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/20;
+  }
+
+  .pt-btn {
+    @apply inline-flex min-h-11 items-center justify-center rounded-sm bg-ink px-4 py-2.5 text-sm font-medium text-paper transition hover:opacity-90 disabled:opacity-50;
+  }
+
+  .pt-btn-ghost {
+    @apply inline-flex min-h-11 items-center justify-center rounded-sm border border-rule bg-surface px-4 py-2.5 text-sm font-medium text-ink transition hover:border-ink disabled:opacity-50;
+  }
+
+  .pt-card {
+    @apply rounded-sm border border-rule bg-surface text-ink;
+  }
+
+  .pt-alert-error {
+    @apply text-sm text-danger;
+  }
+
+  .pt-alert-success {
+    @apply text-sm text-success;
+  }
+}
+
+/* Focus visibility */
+:focus-visible {
+  outline: 2px solid rgb(var(--focus-ring));
+  outline-offset: 2px;
+}
+
+/* Search highlights */
+mark {
+  background-color: rgb(var(--redpen-soft));
+  color: rgb(var(--ink));
+  border-radius: 2px;
+  padding: 0 0.15em;
+}
+
+/* Select / option readability in dark mode (native controls) */
+select,
+option {
+  color: rgb(var(--ink));
+  background-color: rgb(var(--surface));
+}
+
+/* Date / datetime inputs inherit color-scheme from html */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  color-scheme: inherit;
+}
+
+/* Browser autofill can force white backgrounds — keep them themed */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: rgb(var(--ink));
+  -webkit-box-shadow: 0 0 0 1000px rgb(var(--surface)) inset;
+  transition: background-color 99999s ease-in-out 0s;
+  caret-color: rgb(var(--ink));
+}
+
+/* Scrollbars (Chromium) */
+* {
+  scrollbar-color: rgb(var(--rule)) transparent;
+}
+
+/* ─── Red pen signature mark ─────────────────────────────────────────────── */
+.redpen-mark {
+  position: relative;
+  white-space: nowrap;
+}
+
+.redpen-mark::after {
+  content: "";
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  bottom: -0.12em;
+  height: 0.22em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath d='M2 10 C 20 2, 40 14, 60 8 C 80 2, 100 14, 120 8 C 140 2, 160 14, 180 8 C 190 6, 195 9, 198 7' fill='none' stroke='%23C63D2F' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+html.dark .redpen-mark::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath d='M2 10 C 20 2, 40 14, 60 8 C 80 2, 100 14, 120 8 C 140 2, 160 14, 180 8 C 190 6, 195 9, 198 7' fill='none' stroke='%23E8786C' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .redpen-mark::after {
+    animation: draw-in 0.6s ease-out 0.15s both;
+    transform-origin: left;
+  }
+  @keyframes draw-in {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+}
+
+/* ─── Prose (article body) ───────────────────────────────────────────────── */
+.prose {
+  --tw-prose-body: rgb(var(--ink));
+  --tw-prose-headings: rgb(var(--ink));
+  --tw-prose-lead: rgb(var(--ink-soft));
+  --tw-prose-links: rgb(var(--redpen));
+  --tw-prose-bold: rgb(var(--ink));
+  --tw-prose-counters: rgb(var(--stamp));
+  --tw-prose-bullets: rgb(var(--redpen));
+  --tw-prose-hr: rgb(var(--rule));
+  --tw-prose-quotes: rgb(var(--ink-soft));
+  --tw-prose-quote-borders: rgb(var(--redpen));
+  --tw-prose-captions: rgb(var(--stamp));
+  --tw-prose-code: rgb(var(--ink));
+  --tw-prose-pre-code: rgb(var(--ink));
+  --tw-prose-pre-bg: rgb(var(--surface));
+  --tw-prose-th-borders: rgb(var(--rule));
+  --tw-prose-td-borders: rgb(var(--rule));
+  /* Invert palette keys used by prose-invert if applied */
+  --tw-prose-invert-body: rgb(var(--ink));
+  --tw-prose-invert-headings: rgb(var(--ink));
+  --tw-prose-invert-links: rgb(var(--redpen));
+  --tw-prose-invert-bold: rgb(var(--ink));
+}
+
+.prose h1 {
+  font-family: var(--font-fraunces);
+  font-weight: 500;
+}
+
+/* Skeleton loaders */
+html.dark .bg-rule {
+  /* already token-based via --rule */
+}
