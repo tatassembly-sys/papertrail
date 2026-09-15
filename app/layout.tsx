@@ -30,13 +30,30 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: "Paper Trail — Research, Translated",
+  title: {
+    default: "Paper Trail — Research, Translated",
+    template: "%s — Paper Trail",
+  },
   description:
     "Dense academic papers, translated into plain language for curious readers.",
   alternates: {
     types: {
       "application/rss+xml": "/feed.xml",
     },
+  },
+  openGraph: {
+    siteName: "Paper Trail",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
+  other: {
+    "theme-color": "#EEF0F2",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -60,8 +77,30 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-paper font-sans text-base leading-relaxed text-ink antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Paper Trail",
+              url: getSiteUrl(),
+              description:
+                "Dense academic papers, translated into plain language for curious readers.",
+            }),
+          }}
+        />
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-ink focus:px-3 focus:py-2 focus:text-paper"
+        >
+          Skip to content
+        </a>
         <Navbar />
-        <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
+        <main
+          id="main-content"
+          className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10"
+        >
           {children}
         </main>
         <SiteFooter />

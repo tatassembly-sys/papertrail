@@ -145,8 +145,11 @@ export default function EditorForm({
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <label className="mb-1 block text-sm font-medium text-ink">Title</label>
+        <label htmlFor="editor-title" className="mb-1 block text-sm font-medium text-ink">
+          Title
+        </label>
         <input
+          id="editor-title"
           className="pt-input"
           value={form.title}
           onChange={(e) => update("title", e.target.value)}
@@ -154,8 +157,11 @@ export default function EditorForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-ink">Slug</label>
+        <label htmlFor="editor-slug" className="mb-1 block text-sm font-medium text-ink">
+          Slug
+        </label>
         <input
+          id="editor-slug"
           className="pt-input"
           value={form.slug}
           onChange={(e) => update("slug", e.target.value)}
@@ -163,10 +169,11 @@ export default function EditorForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-ink">
+        <label htmlFor="editor-source" className="mb-1 block text-sm font-medium text-ink">
           Source URL <span className="font-normal text-stamp">(required to publish)</span>
         </label>
         <input
+          id="editor-source"
           className="pt-input"
           value={form.source_url}
           onChange={(e) => update("source_url", e.target.value)}

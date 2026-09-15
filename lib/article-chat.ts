@@ -48,8 +48,22 @@ export async function getOrCreateThread(
     created_at: new Date(),
     updated_at: new Date(),
   };
-  const result = await col.insertOne(doc as ChatThreadDoc);
-  return { ...doc, _id: result.insertedId } as ChatThreadDoc;
+  try {
+    const result = await col.insertOne(doc as ChatThreadDoc);
+    return { ...doc, _id: result.insertedId } as ChatThreadDoc;
+  } catch (err) {
+    const code =
+      typeof err === "object" && err !== null && "code" in err
+        ? (err as { code: number }).code
+        : 0;
+    if (code !== 11000) throw err;
+    const raced = await col.findOne({
+      article_slug: article.slug,
+      session_key: sessionKey,
+    });
+    if (raced) return raced;
+    throw err;
+  }
 }
 
 export async function getThreadMessages(

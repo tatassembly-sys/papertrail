@@ -25,7 +25,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="rounded-sm border border-rule bg-surface px-2 py-1 font-mono text-xs uppercase tracking-wide text-ink-soft hover:border-ink hover:text-ink"
+      className="inline-flex min-h-11 items-center rounded-sm border border-rule bg-surface px-3 py-1 font-mono text-xs uppercase tracking-wide text-ink-soft hover:border-ink hover:text-ink sm:min-h-0"
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       aria-pressed={dark}
       suppressHydrationWarning

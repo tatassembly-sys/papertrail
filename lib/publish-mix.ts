@@ -106,14 +106,22 @@ export async function publishDailyFieldMix(options: {
   const runs = db.collection("publish_mix_runs");
 
   if (!options.force) {
-    const already = await runs.findOne({ dateKey });
-    if (already) {
-      return {
-        published: 0,
-        skipped: "already_ran_today",
-        dateKey,
-        items: [],
-      };
+    try {
+      await runs.insertOne({ dateKey, at: new Date(), published: 0, items: [] });
+    } catch (err) {
+      const code =
+        typeof err === "object" && err !== null && "code" in err
+          ? (err as { code: number }).code
+          : 0;
+      if (code === 11000) {
+        return {
+          published: 0,
+          skipped: "already_ran_today",
+          dateKey,
+          items: [],
+        };
+      }
+      throw err;
     }
   }
 
@@ -168,9 +176,10 @@ export async function publishDailyFieldMix(options: {
       continue;
     }
     if (chosen.length + toFile.length >= MAX_PUBLISH) break;
-    const row = (await queue.findOne(
+    const row = (await queue.findOneAndUpdate(
       { status: "pending", source: "arxiv", category: { $regex: rx } },
-      { sort: { created_at: -1 } }
+      { $set: { status: "processing", processing_started_at: new Date() } },
+      { sort: { created_at: -1 }, returnDocument: "after" }
     )) as QueueRow | null;
     if (row?.external_id) toFile.push({ name, row });
   }
@@ -228,6 +237,14 @@ export async function publishDailyFieldMix(options: {
     } catch (err) {
       const code = typeof err === "object" && err && "code" in err ? (err as { code: number }).code : 0;
       if (code !== 11000) throw err;
+      const keyValue =
+        typeof err === "object" && err && "keyValue" in err
+          ? (err as { keyValue?: Record<string, unknown> }).keyValue
+          : undefined;
+      if (keyValue && typeof keyValue.source_url === "string") {
+        await queue.updateOne({ _id: row._id }, { $set: { status: "done" } });
+        continue;
+      }
       const retrySlug = `${slugBase}-${Date.now().toString(36)}`;
       const ins = await col.insertOne({ ...doc, slug: retrySlug });
       chosen.push({

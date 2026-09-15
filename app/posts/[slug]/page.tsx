@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getArticleBySlug } from "@/lib/articles";
+import { getArticleBySlug, getRelatedPublishedArticles } from "@/lib/articles";
 import { recordReading } from "@/lib/users";
 import { getCurrentUserSession } from "@/lib/user-auth";
 import ArticleChat from "@/components/ArticleChat";
@@ -30,13 +30,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!article) notFound();
 
+  const url = `${getSiteUrl()}/posts/${article.slug}`;
   return {
-    title: `${article.title} — Paper Trail`,
+    title: article.title,
     description: article.headline,
+    alternates: { canonical: url },
     openGraph: {
       title: article.title,
       description: article.headline,
       type: "article",
+      url,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.headline,
     },
   };
 }
@@ -74,9 +82,26 @@ export default async function PostPage({ params }: PageProps) {
           : "arXiv";
 
   const sourceHref = sanitizeHttpUrl(article.source_url);
+  const related = await getRelatedPublishedArticles(article.slug, article.category, 3);
+  const canonical = `${getSiteUrl()}/posts/${article.slug}`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    headline: article.title,
+    description: article.headline,
+    url: canonical,
+    datePublished: article.published_at || article.created_at,
+    author: (article.authors || []).map((name) => ({ "@type": "Person", name })),
+    keywords: [...(article.keywords || []), ...(article.tags || [])].join(", "),
+    isBasedOn: sourceHref || undefined,
+  };
 
   return (
     <article className="mx-auto max-w-2xl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link
         href="/"
         className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-stamp hover:text-redpen sm:mb-8"
@@ -197,9 +222,28 @@ export default async function PostPage({ params }: PageProps) {
         </a>
       </div>
 
-      {article.id && (
-        <ArticleChat articleId={article.id} articleSlug={article.slug} />
+      {related.length > 0 && (
+        <section className="mt-12 border-t border-rule pt-8" aria-labelledby="related-notes">
+          <h2
+            id="related-notes"
+            className="font-mono text-xs uppercase tracking-widest text-stamp"
+          >
+            Related notes
+          </h2>
+          <ul className="mt-4 space-y-3">
+            {related.map((item) => (
+              <li key={item.slug}>
+                <Link href={`/posts/${item.slug}`} className="group block">
+                  <p className="font-medium text-ink group-hover:text-redpen">{item.title}</p>
+                  <p className="mt-0.5 line-clamp-2 text-sm text-ink-soft">{item.headline}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
+
+      {article.id && <ArticleChat articleId={article.id} />}
     </article>
   );
 }

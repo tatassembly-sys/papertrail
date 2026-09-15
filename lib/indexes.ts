@@ -62,6 +62,11 @@ async function createAll(db: Db): Promise<void> {
   await safeIndex(articles, { status: 1, category: 1 }, { name: "articles_status_category" });
   await safeIndex(articles, { status: 1, source: 1 }, { name: "articles_status_source" });
   await safeIndex(articles, { source_url: 1 }, { name: "articles_source_url" });
+  await safeIndex(articles, { source_url: 1 }, {
+    unique: true,
+    sparse: true,
+    name: "articles_source_url_unique",
+  });
   await safeIndex(articles, { tags: 1 }, { name: "articles_tags" });
   await safeIndex(articles, { authors: 1 }, { name: "articles_authors" });
   await safeIndex(articles, { status: 1, share_approved: 1 }, { name: "articles_share_approved" });

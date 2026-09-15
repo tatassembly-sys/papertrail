@@ -118,8 +118,12 @@ export default async function AdminPage({ searchParams }: PageProps) {
       <form action="/admin" method="GET" className="mb-4 flex flex-wrap gap-2">
         {statusFilter && <input type="hidden" name="status" value={statusFilter} />}
         {activeCategory && <input type="hidden" name="category" value={activeCategory} />}
+        <label htmlFor="admin-search" className="sr-only">
+          Search articles
+        </label>
         <input
-          type="text"
+          id="admin-search"
+          type="search"
           name="q"
           defaultValue={query}
           placeholder="Search your articles…"

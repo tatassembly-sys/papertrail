@@ -60,7 +60,11 @@ function NewsletterForm() {
       </h1>
       <p className="mt-3 text-base leading-relaxed text-ink-soft">
         Every week: newest papers, trending notes, editor picks, and a short AI
-        summary of the week — in plain language.
+        summary of the week — in plain language. Unsubscribe any time. See the{" "}
+        <Link href="/privacy" className="text-redpen hover:underline">
+          privacy policy
+        </Link>
+        .
       </p>
 
       <ul className="mt-5 space-y-2 text-sm text-ink-soft">

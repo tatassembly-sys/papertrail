@@ -180,8 +180,11 @@ export default function ShareSection({
 
         <form onSubmit={handleSchedule} className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-stamp">Platform</label>
+            <label htmlFor="share-platform" className="text-xs text-stamp">
+              Platform
+            </label>
             <select
+              id="share-platform"
               value={schedulePlatform}
               onChange={(e) => setSchedulePlatform(e.target.value)}
               className="rounded-sm border border-rule bg-surface px-2 py-1.5 text-sm text-ink"
@@ -195,8 +198,11 @@ export default function ShareSection({
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-stamp">Date &amp; time</label>
+            <label htmlFor="share-when" className="text-xs text-stamp">
+              Date &amp; time
+            </label>
             <input
+              id="share-when"
               type="datetime-local"
               value={scheduleTime}
               onChange={(e) => setScheduleTime(e.target.value)}

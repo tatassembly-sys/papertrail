@@ -6,11 +6,13 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminSubmissionsPage() {
   let submissions: Awaited<ReturnType<typeof getSubmissions>> = [];
+  let loadError: string | null = null;
 
   try {
     submissions = await getSubmissions("pending");
   } catch (error) {
     console.error("Failed to load submissions:", error);
+    loadError = "Could not load suggestions right now. Try again shortly.";
   }
 
   return (
@@ -33,7 +35,9 @@ export default async function AdminSubmissionsPage() {
         translated or published — pick one to process, or dismiss it.
       </p>
 
-      {submissions.length === 0 && (
+      {loadError && <p className="pt-alert-error">{loadError}</p>}
+
+      {!loadError && submissions.length === 0 && (
         <p className="text-ink-soft">No pending suggestions right now.</p>
       )}
 

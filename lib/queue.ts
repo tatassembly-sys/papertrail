@@ -83,22 +83,29 @@ export async function claimQueueBatch(batchSize: number): Promise<QueueDoc[]> {
   const claimed: QueueDoc[] = [];
   const stuckBefore = new Date(Date.now() - STUCK_PROCESSING_MS);
   const claimFilter = {
-    $or: [
-      { status: "pending" as const },
-      { status: "processing" as const, processing_started_at: { $lt: stuckBefore } },
-      // Legacy rows claimed before processing_started_at existed.
+    $and: [
       {
-        status: "processing" as const,
-        processing_started_at: { $exists: false },
-        created_at: { $lt: stuckBefore },
+        $or: [
+          { status: "pending" as const },
+          { status: "processing" as const, processing_started_at: { $lt: stuckBefore } },
+          {
+            status: "processing" as const,
+            processing_started_at: { $exists: false },
+            created_at: { $lt: stuckBefore },
+          },
+        ],
       },
+      { $or: [{ attempts: { $lt: 3 } }, { attempts: { $exists: false } }] },
     ],
   };
 
   for (let i = 0; i < batchSize; i++) {
     const result = await col.findOneAndUpdate(
       claimFilter,
-      { $set: { status: "processing", processing_started_at: new Date() } },
+      {
+        $set: { status: "processing", processing_started_at: new Date() },
+        $inc: { attempts: 1 },
+      },
       { sort: { created_at: 1 }, returnDocument: "after" }
     );
     if (!result) break; // queue is empty

@@ -65,11 +65,13 @@ export default function SubmitPage() {
           {/* Honeypot field — hidden from real visitors via CSS, bots often fill every field */}
           <input
             type="text"
+            name="website"
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
             className="hidden"
             tabIndex={-1}
             autoComplete="off"
+            aria-hidden="true"
           />
 
           <div className="flex flex-col gap-1">

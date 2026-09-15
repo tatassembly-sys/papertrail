@@ -7,6 +7,7 @@ import {
 import { categoryLabel } from "@/lib/arxivCategories";
 import ArticleCard from "@/components/ArticleCard";
 import SearchBar from "@/components/SearchBar";
+import ActiveFilters from "@/components/ActiveFilters";
 import { getLastPublishMix } from "@/lib/publish-mix";
 import {
   buildSearchHref,
@@ -28,7 +29,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   // Pills only control category; ignore empty/whitespace
   const activeCategory = filters.category?.trim() || "";
   const query = filters.query?.trim() || "";
-  const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
+  const page = Math.min(100, Math.max(1, parseInt(String(sp.page || "1"), 10) || 1));
 
   const listFilters = {
     ...filters,
@@ -102,13 +103,25 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       <SearchBar
         initialQuery={query}
-        preserve={activeCategory ? { category: activeCategory } : undefined}
+        preserve={{
+          category: activeCategory || undefined,
+          author: filters.author || undefined,
+          institution: filters.institution || undefined,
+          tag: filters.tag || undefined,
+          source: filters.source || undefined,
+          from: filters.from || undefined,
+          to: filters.to || undefined,
+          sort: filters.sort && filters.sort !== "newest" ? filters.sort : undefined,
+        }}
       />
+
+      <ActiveFilters filters={listFilters} />
 
       <div className="mb-8 flex flex-wrap gap-2 sm:mb-10" role="navigation" aria-label="Categories">
         <Link
           href={buildSearchHref("/", {
-            query: query || undefined,
+            ...listFilters,
+            category: undefined,
             page: 1,
           })}
           className={`inline-flex min-h-9 items-center rounded-full border px-3.5 py-1.5 font-mono text-xs uppercase tracking-wide transition ${
@@ -129,7 +142,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <Link
               key={code}
               href={buildSearchHref("/", {
-                query: query || undefined,
+                ...listFilters,
                 category: code,
                 page: 1,
               })}
@@ -150,7 +163,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         {otherCount > 0 && (
           <Link
             href={buildSearchHref("/", {
-              query: query || undefined,
+              ...listFilters,
               category: "other",
               page: 1,
             })}
@@ -224,11 +237,37 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       {!error && articles.length > 0 && (
         <>
-          <p className="mb-4 text-sm text-ink-soft">
-            {total} paper{total === 1 ? "" : "s"}
-            {query ? ` matching “${query}”` : ""}
-            {activeCategory ? ` in ${categoryLabel(activeCategory)}` : ""}
-          </p>
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+            <p className="text-sm text-ink-soft">
+              {total} paper{total === 1 ? "" : "s"}
+              {query ? ` matching “${query}”` : ""}
+              {activeCategory ? ` in ${categoryLabel(activeCategory)}` : ""}
+            </p>
+            {query ? (
+              <nav className="flex gap-3 font-mono text-[11px] uppercase tracking-wide text-stamp" aria-label="Sort">
+                {(
+                  [
+                    ["relevance", "Relevance"],
+                    ["newest", "Newest"],
+                    ["oldest", "Oldest"],
+                  ] as const
+                ).map(([value, label]) => {
+                  const current = listFilters.sort || "relevance";
+                  const active = current === value;
+                  return (
+                    <Link
+                      key={value}
+                      href={buildSearchHref("/", { ...listFilters, sort: value, page: 1 })}
+                      className={active ? "text-ink" : "hover:text-ink"}
+                      aria-current={active ? "page" : undefined}
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
+              </nav>
+            ) : null}
+          </div>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
             {articles.map((article) => (
               <ArticleCard key={article.slug} article={article} />

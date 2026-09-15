@@ -1,8 +1,18 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
-import { getCurrentUserSession } from "@/lib/user-auth";
-import { getUserPublic, updateUserProfile, toggleSavedSlug } from "@/lib/users";
+import {
+  getCurrentUserSession,
+  USER_SESSION_COOKIE,
+  userSessionCookieOptions,
+} from "@/lib/user-auth";
+import {
+  getUserPublic,
+  updateUserProfile,
+  toggleSavedSlug,
+  deleteUserAccount,
+} from "@/lib/users";
+import { getPublishedArticlesBySlugs } from "@/lib/articles";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
 
 export const runtime = "nodejs";
@@ -14,8 +24,22 @@ export async function GET() {
     session ? getUserPublic(session.userId) : Promise.resolve(null),
     verifySessionToken(store.get(SESSION_COOKIE)?.value),
   ]);
+
+  const slugs = user
+    ? [
+        ...user.saved_slugs,
+        ...user.bookmarks,
+        ...user.reading_history.map((h) => h.slug),
+      ]
+    : [];
+  const listed = slugs.length
+    ? await getPublishedArticlesBySlugs(slugs, 50)
+    : [];
+  const titles: Record<string, string> = {};
+  for (const article of listed) titles[article.slug] = article.title;
+
   return NextResponse.json(
-    { user, admin },
+    { user, admin, titles },
     { headers: { "Cache-Control": "no-store" } }
   );
 }
@@ -55,4 +79,18 @@ export async function PATCH(req: NextRequest) {
     followed_topics: topics,
   });
   return NextResponse.json({ user });
+}
+
+export async function DELETE() {
+  const session = await getCurrentUserSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const ok = await deleteUserAccount(session.userId);
+  if (!ok) {
+    return NextResponse.json({ error: "Could not delete account." }, { status: 404 });
+  }
+
+  const res = NextResponse.json({ success: true });
+  res.cookies.set(USER_SESSION_COOKIE, "", { ...userSessionCookieOptions(0), maxAge: 0 });
+  return res;
 }

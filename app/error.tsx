@@ -25,8 +25,9 @@ export default function Error({
         It&apos;s not you — something failed loading this content. Try again.
       </p>
       <button
+        type="button"
         onClick={reset}
-        className="mt-6 font-mono text-sm uppercase tracking-wide text-redpen hover:underline"
+        className="mt-6 inline-flex min-h-11 items-center font-mono text-sm uppercase tracking-wide text-redpen hover:underline"
       >
         Try again →
       </button>

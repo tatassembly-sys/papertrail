@@ -36,8 +36,10 @@ export async function POST(req: NextRequest) {
       emailSent: result.emailSent,
       note: result.emailSent
         ? "Check your inbox for a confirmation link."
-        : "If that address is new, a confirmation link was generated.",
-      ...(process.env.NODE_ENV !== "production" ? { verifyUrl: result.verifyUrl } : {}),
+        : "You're on the list.",
+      ...(process.env.NODE_ENV !== "production" && result.verifyUrl
+        ? { verifyUrl: result.verifyUrl }
+        : {}),
     });
   } catch (err) {
     console.error("newsletter subscribe:", err);

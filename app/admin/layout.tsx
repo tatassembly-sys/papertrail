@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import SignOutButton from "@/components/SignOutButton";
+
+export const metadata: Metadata = {
+  title: "Admin",
+  robots: { index: false, follow: false },
+};
 
 /**
  * Admin chrome only — session already verified by middleware.

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About — Paper Trail",
+  title: "About",
   description:
     "How Paper Trail translates academic papers into plain language, and what we never do.",
 };

@@ -105,7 +105,9 @@ export async function getPublishedArticles(
   options: SearchFilters = {}
 ): Promise<{ articles: ArticleRow[]; total: number }> {
   const col = await articlesCollection();
-  const skip = (page - 1) * pageSize;
+  const safePage = Math.min(500, Math.max(1, page || 1));
+  const safeSize = Math.min(50, Math.max(1, pageSize || 8));
+  const skip = (safePage - 1) * safeSize;
   const filter = buildArticleMongoFilter(
     { status: "published" },
     options
@@ -138,7 +140,7 @@ export async function getPublishedArticles(
         .find(filter, { projection })
         .sort(sort)
         .skip(skip)
-        .limit(pageSize)
+        .limit(safeSize)
         .toArray() as Promise<(ArticleDoc & { score?: number })[]>,
       col.countDocuments(filter),
     ]);
@@ -159,7 +161,7 @@ export async function getPublishedArticles(
       .find(filter, { projection: LIST_PROJECTION })
       .sort({ published_at: -1, created_at: -1 })
       .skip(skip)
-      .limit(pageSize)
+      .limit(safeSize)
       .toArray() as Promise<(ArticleDoc & { score?: number })[]>;
     [docs, total] = await Promise.all([fallback, col.countDocuments(filter)]);
   }
@@ -185,9 +187,10 @@ export async function suggestPublishedArticles(
 }
 
 export async function getPublishedArticlesBySlugs(
-  slugs: string[]
+  slugs: string[],
+  limit = 50
 ): Promise<ArticleRow[]> {
-  const unique = [...new Set(slugs.map((s) => s.trim()).filter(Boolean))].slice(0, 24);
+  const unique = [...new Set(slugs.map((s) => s.trim()).filter(Boolean))].slice(0, limit);
   if (unique.length === 0) return [];
   const col = await articlesCollection();
   const docs = await col
@@ -214,6 +217,35 @@ export async function getAllPublishedArticles(limit = 50): Promise<ArticleRow[]>
     .limit(limit)
     .toArray();
   return docs.map(toArticleRow);
+}
+
+export async function getRelatedPublishedArticles(
+  slug: string,
+  category: string | null | undefined,
+  limit = 3
+): Promise<ArticleRow[]> {
+  const col = await articlesCollection();
+  const filter: Filter<ArticleDoc> = {
+    status: "published",
+    slug: { $ne: slug },
+  };
+  if (category) filter.category = category;
+  const docs = await col
+    .find(filter, { projection: LIST_PROJECTION })
+    .sort({ published_at: -1, created_at: -1 })
+    .limit(limit)
+    .toArray();
+  if (docs.length >= limit || !category) return docs.map(toArticleRow);
+
+  const extra = await col
+    .find(
+      { status: "published", slug: { $nin: [slug, ...docs.map((d) => d.slug)] } },
+      { projection: LIST_PROJECTION }
+    )
+    .sort({ published_at: -1, created_at: -1 })
+    .limit(limit - docs.length)
+    .toArray();
+  return [...docs, ...extra].map(toArticleRow);
 }
 
 export async function getTrendingArticles(limit = 5): Promise<ArticleRow[]> {
@@ -299,7 +331,9 @@ export async function getAdminArticles(
     base as Filter<Record<string, unknown>>,
     options
   ) as Filter<ArticleDoc>;
-  const skip = (page - 1) * pageSize;
+  const safePage = Math.min(500, Math.max(1, page || 1));
+  const safeSize = Math.min(50, Math.max(1, pageSize || 15));
+  const skip = (safePage - 1) * safeSize;
   const usesText = Boolean(
     (filter as Filter<Record<string, unknown>> & { $text?: unknown }).$text
   );
@@ -314,7 +348,7 @@ export async function getAdminArticles(
 
   try {
     const [docs, total] = await Promise.all([
-      cursor.skip(skip).limit(pageSize).toArray() as Promise<
+      cursor.skip(skip).limit(safeSize).toArray() as Promise<
         (ArticleDoc & { score?: number })[]
       >,
       col.countDocuments(filter),
@@ -331,7 +365,7 @@ export async function getAdminArticles(
         .find(filter)
         .sort({ created_at: -1 })
         .skip(skip)
-        .limit(pageSize)
+        .limit(safeSize)
         .toArray() as Promise<(ArticleDoc & { score?: number })[]>,
       col.countDocuments(filter),
     ]);
@@ -406,11 +440,46 @@ export async function insertDraftArticle(
       (err as { code: number }).code === 11000;
     if (!isDuplicateKey) throw err;
 
+    const existing = await existingDraftFromDuplicate(col, err, doc.source_url);
+    if (existing) return existing;
+
     const retrySlug = `${baseSlug}-${Date.now().toString(36)}`;
     const retryDoc = { ...doc, slug: retrySlug };
-    const result = await col.insertOne(retryDoc as ArticleDoc);
-    return toArticleRow({ ...retryDoc, _id: result.insertedId } as ArticleDoc);
+    try {
+      const result = await col.insertOne(retryDoc as ArticleDoc);
+      return toArticleRow({ ...retryDoc, _id: result.insertedId } as ArticleDoc);
+    } catch (retryErr: unknown) {
+      const retryDup =
+        typeof retryErr === "object" &&
+        retryErr !== null &&
+        "code" in retryErr &&
+        (retryErr as { code: number }).code === 11000;
+      if (!retryDup) throw retryErr;
+      const again = await existingDraftFromDuplicate(col, retryErr, doc.source_url);
+      if (again) return again;
+      throw retryErr;
+    }
   }
+}
+
+async function existingDraftFromDuplicate(
+  col: Awaited<ReturnType<typeof articlesCollection>>,
+  err: unknown,
+  sourceUrl: string | null
+): Promise<ArticleRow | null> {
+  const keyValue =
+    typeof err === "object" && err !== null && "keyValue" in err
+      ? (err as { keyValue?: Record<string, unknown> }).keyValue
+      : undefined;
+  if (keyValue && typeof keyValue.source_url === "string") {
+    const found = await col.findOne({ source_url: keyValue.source_url });
+    return found ? toArticleRow(found) : null;
+  }
+  if (sourceUrl) {
+    const found = await col.findOne({ source_url: sourceUrl });
+    return found ? toArticleRow(found) : null;
+  }
+  return null;
 }
 
 export async function updateArticle(

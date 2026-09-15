@@ -134,6 +134,18 @@ export async function verifyUserPassword(
   }
 }
 
+export async function issueEmailVerifyToken(userId: string): Promise<string | null> {
+  const user = await findUserById(userId);
+  if (!user || user.email_verified) return null;
+  const token = randomBytes(24).toString("hex");
+  const col = await users();
+  await col.updateOne(
+    { _id: user._id },
+    { $set: { verify_token: hashToken(token) } }
+  );
+  return token;
+}
+
 export async function verifyEmailToken(token: string): Promise<boolean> {
   const candidates = tokenLookupValues(token);
   if (candidates.length === 0) return false;
@@ -195,6 +207,13 @@ export async function resetPasswordWithToken(
     }
   );
   return true;
+}
+
+export async function deleteUserAccount(userId: string): Promise<boolean> {
+  if (!isValidObjectId(userId)) return false;
+  const col = await users();
+  const result = await col.deleteOne({ _id: new ObjectId(userId) });
+  return result.deletedCount > 0;
 }
 
 export async function bumpTokenVersion(userId: string): Promise<void> {

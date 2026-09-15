@@ -37,10 +37,11 @@ export async function GET() {
     .join("");
 
   const feed = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Paper Trail — Research, Translated</title>
     <link>${baseUrl}</link>
+    <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml"/>
     <description>Dense academic papers, translated into plain language for curious readers.</description>
     <language>en-us</language>${items}
   </channel>

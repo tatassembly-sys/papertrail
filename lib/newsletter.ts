@@ -69,14 +69,17 @@ export async function subscribeEmail(
   const verifyToken = token();
   const rawUnsubscribe = token();
   const unsubscribeToken = existing?.unsubscribe_token || hashToken(rawUnsubscribe);
+  const emailReady = isEmailConfigured();
+  const status: SubscriberDoc["status"] = emailReady ? "pending" : "active";
 
   if (existing) {
     await col.updateOne(
       { _id: existing._id },
       {
         $set: {
-          status: "pending",
-          verify_token: hashToken(verifyToken),
+          status,
+          verify_token: emailReady ? hashToken(verifyToken) : null,
+          verified_at: emailReady ? existing.verified_at || null : new Date(),
           unsubscribed_at: null,
         },
       }
@@ -84,17 +87,26 @@ export async function subscribeEmail(
   } else {
     await col.insertOne({
       email: normalized,
-      status: "pending",
-      verify_token: hashToken(verifyToken),
+      status,
+      verify_token: emailReady ? hashToken(verifyToken) : null,
       unsubscribe_token: unsubscribeToken,
       created_at: new Date(),
-      verified_at: null,
+      verified_at: emailReady ? null : new Date(),
       unsubscribed_at: null,
     } as SubscriberDoc);
   }
 
   const site = getSiteUrl();
   const verifyUrl = `${site}/api/newsletter/verify?token=${verifyToken}`;
+
+  if (!emailReady) {
+    return {
+      ok: true,
+      verifyToken: "",
+      verifyUrl: "",
+      emailSent: false,
+    };
+  }
 
   const mail = await sendEmail({
     to: normalized,
@@ -145,9 +157,10 @@ export async function unsubscribeByToken(tokenStr: string): Promise<boolean> {
   return result.modifiedCount > 0;
 }
 
-export async function listActiveSubscribers(): Promise<SubscriberDoc[]> {
+export async function listActiveSubscribers(limit = 200): Promise<SubscriberDoc[]> {
   const col = await subs();
-  return col.find({ status: "active" }).toArray();
+  const cap = Math.min(500, Math.max(1, limit));
+  return col.find({ status: "active" }).sort({ created_at: 1 }).limit(cap).toArray();
 }
 
 async function generateAiWeeklySummary(articles: ArticleRow[]): Promise<string> {
@@ -277,14 +290,16 @@ export async function sendWeeklyDigest(): Promise<{
   subscribers: number;
   sent: number;
   failed: number;
+  logged: number;
   mode: "log" | "resend";
   articleCount: number;
 }> {
   const digest = await buildWeeklyDigest();
-  const subscribers = await listActiveSubscribers();
+  const subscribers = await listActiveSubscribers(200);
   const site = getSiteUrl();
   let sent = 0;
   let failed = 0;
+  let logged = 0;
   let mode: "log" | "resend" = isEmailConfigured() ? "resend" : "log";
 
   for (const sub of subscribers) {
@@ -303,7 +318,12 @@ export async function sendWeeklyDigest(): Promise<{
       text,
     });
 
-    if (result.mode === "log") mode = "log";
+    if (result.mode === "log") {
+      mode = "log";
+      if (result.ok) logged++;
+      else failed++;
+      continue;
+    }
     if (result.ok) sent++;
     else failed++;
   }
@@ -324,6 +344,7 @@ export async function sendWeeklyDigest(): Promise<{
     subscribers: subscribers.length,
     sent,
     failed,
+    logged,
     subject: digest.subject,
     articleCount: digest.articleCount,
     aiSummary: digest.sections.aiSummary,
@@ -333,6 +354,7 @@ export async function sendWeeklyDigest(): Promise<{
     subscribers: subscribers.length,
     sent,
     failed,
+    logged,
     mode,
     articleCount: digest.articleCount,
   };

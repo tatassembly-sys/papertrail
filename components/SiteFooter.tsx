@@ -27,11 +27,20 @@ export default function SiteFooter() {
           <a href="/feed.xml" className="hover:text-redpen">
             RSS
           </a>
+          <Link href="/privacy" className="hover:text-redpen">
+            Privacy
+          </Link>
+          <Link href="/terms" className="hover:text-redpen">
+            Terms
+          </Link>
           <Link href="/login" className="hover:text-redpen">
             Staff
           </Link>
         </nav>
       </div>
+      <p className="mx-auto max-w-4xl px-4 pb-8 font-mono text-[10px] uppercase tracking-wide text-stamp sm:px-6">
+        © {new Date().getFullYear()} Paper Trail. Editorial notes, not advice.
+      </p>
     </footer>
   );
 }

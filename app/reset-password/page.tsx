@@ -9,11 +9,16 @@ function ResetForm() {
   const token = sp.get("token") || "";
   const router = useRouter();
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (password !== confirm) {
+      setError("Passwords do not match.");
+      return;
+    }
     setLoading(true);
     setError(null);
     const res = await fetch("/api/auth/reset-password", {
@@ -54,6 +59,19 @@ function ResetForm() {
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
           placeholder="At least 8 characters"
+          className="pt-input mt-1"
+        />
+      </label>
+      <label className="text-sm font-medium text-ink">
+        Confirm password
+        <input
+          type="password"
+          required
+          minLength={8}
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          autoComplete="new-password"
+          placeholder="Repeat password"
           className="pt-input mt-1"
         />
       </label>

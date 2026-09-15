@@ -9,6 +9,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
@@ -18,6 +19,11 @@ export default function RegisterPage() {
     setLoading(true);
     setError(null);
     setVerifyUrl(null);
+    if (password !== confirm) {
+      setLoading(false);
+      setError("Passwords do not match.");
+      return;
+    }
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -92,6 +98,30 @@ export default function RegisterPage() {
             placeholder="At least 8 characters"
           />
         </label>
+        <label className="text-sm font-medium text-ink">
+          Confirm password
+          <input
+            className={`${input} mt-1`}
+            type="password"
+            required
+            minLength={8}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            autoComplete="new-password"
+            placeholder="Repeat password"
+          />
+        </label>
+        <p className="text-xs text-ink-soft">
+          By creating an account you agree to the{" "}
+          <Link href="/terms" className="text-redpen hover:underline">
+            terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="text-redpen hover:underline">
+            privacy policy
+          </Link>
+          .
+        </p>
 
         {error && (
           <p className="text-sm text-redpen" role="alert">

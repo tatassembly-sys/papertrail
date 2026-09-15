@@ -8,9 +8,11 @@ export default function ForgotPasswordPage() {
   const [done, setDone] = useState(false);
   const [devUrl, setDevUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
     const res = await fetch("/api/auth/forgot-password", {
       method: "POST",
@@ -19,6 +21,14 @@ export default function ForgotPasswordPage() {
     });
     const body = await res.json().catch(() => ({}));
     setLoading(false);
+    if (!res.ok) {
+      setError(
+        typeof body.error === "string"
+          ? body.error
+          : "Could not send a reset link. Try again later."
+      );
+      return;
+    }
     setDone(true);
     if (body.resetUrl) setDevUrl(body.resetUrl);
   }
@@ -44,7 +54,11 @@ export default function ForgotPasswordPage() {
         </div>
       ) : (
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
+          <label htmlFor="reset-email" className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+            Email
+          </label>
           <input
+            id="reset-email"
             type="email"
             required
             value={email}
@@ -53,6 +67,11 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
             className="pt-input"
           />
+          {error && (
+            <p className="text-sm text-redpen" role="alert">
+              {error}
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading}

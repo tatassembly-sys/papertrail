@@ -17,10 +17,13 @@ interface User {
 
 function AccountInner() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
+  const [titles, setTitles] = useState<Record<string, string>>({});
   const [topics, setTopics] = useState("");
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
   const router = useRouter();
   const sp = useSearchParams();
   const verified = sp.get("verified");
@@ -39,6 +42,7 @@ function AccountInner() {
         }
       : null;
     setUser(next);
+    setTitles(d?.titles && typeof d.titles === "object" ? d.titles : {});
     if (next) {
       setName(next.name || "");
       setTopics(next.followed_topics.join(", "));
@@ -139,10 +143,37 @@ function AccountInner() {
           <p className="mt-2 text-sm font-medium text-redpen">Email verified.</p>
         )}
         {!user.email_verified && (
-          <p className="mt-2 text-sm text-ink-soft">
-            Email not verified yet. Use the verification link from registration
-            (or server logs if email is not configured).
-          </p>
+          <div className="mt-2 space-y-2">
+            <p className="text-sm text-ink-soft">
+              Email not verified yet. Check your inbox, or send a new link.
+            </p>
+            <button
+              type="button"
+              disabled={resending}
+              onClick={async () => {
+                setResending(true);
+                setResendMsg(null);
+                const res = await fetch("/api/auth/resend-verify", { method: "POST" });
+                const body = await res.json().catch(() => ({}));
+                setResending(false);
+                if (typeof body.verifyUrl === "string") {
+                  setResendMsg(body.verifyUrl);
+                  return;
+                }
+                setResendMsg(
+                  typeof body.note === "string"
+                    ? body.note
+                    : res.ok
+                      ? "If email is configured, a new link is on its way."
+                      : body.error || "Could not resend."
+                );
+              }}
+              className="text-sm font-medium text-redpen hover:underline disabled:opacity-50"
+            >
+              {resending ? "Sending…" : "Resend verification email"}
+            </button>
+            {resendMsg && <p className="text-sm text-ink-soft">{resendMsg}</p>}
+          </div>
         )}
       </div>
 
@@ -185,6 +216,7 @@ function AccountInner() {
         title="Saved papers"
         empty="No saved papers yet. Open an article and click Save paper."
         slugs={user.saved_slugs}
+        titles={titles}
         onRemove={(slug) => removeSlug(slug, "save")}
         removeLabel="Unsave"
       />
@@ -193,6 +225,7 @@ function AccountInner() {
         title="Bookmarks"
         empty="No bookmarks yet. Open an article and click Bookmark."
         slugs={user.bookmarks}
+        titles={titles}
         onRemove={(slug) => removeSlug(slug, "bookmark")}
         removeLabel="Remove"
       />
@@ -230,7 +263,7 @@ function AccountInner() {
           {user.reading_history.map((h) => (
             <li key={h.slug + h.at} className="flex flex-wrap items-baseline gap-2 text-sm">
               <Link href={`/posts/${h.slug}`} className="font-medium text-ink hover:text-redpen">
-                {titleFromSlug(h.slug)}
+                {titles[h.slug] || titleFromSlug(h.slug)}
               </Link>
               <span className="text-xs text-stamp">
                 {new Date(h.at).toLocaleString()}
@@ -240,13 +273,37 @@ function AccountInner() {
         </ul>
       </section>
 
-      <button
-        type="button"
-        onClick={logout}
-        className="min-h-11 text-sm font-medium text-ink-soft hover:text-redpen"
-      >
-        Sign out
-      </button>
+      <div className="flex flex-wrap items-center gap-4">
+        <button
+          type="button"
+          onClick={logout}
+          className="min-h-11 text-sm font-medium text-ink-soft hover:text-redpen"
+        >
+          Sign out
+        </button>
+        <button
+          type="button"
+          onClick={async () => {
+            if (
+              !confirm(
+                "Delete your account and saved papers permanently? This cannot be undone."
+              )
+            ) {
+              return;
+            }
+            const res = await fetch("/api/me", { method: "DELETE" });
+            if (!res.ok) {
+              setSaveMsg("Could not delete account.");
+              return;
+            }
+            router.push("/");
+            router.refresh();
+          }}
+          className="min-h-11 text-sm font-medium text-stamp hover:text-redpen"
+        >
+          Delete account
+        </button>
+      </div>
     </div>
   );
 }
@@ -262,12 +319,14 @@ function SlugList({
   title,
   empty,
   slugs,
+  titles,
   onRemove,
   removeLabel,
 }: {
   title: string;
   empty: string;
   slugs: string[];
+  titles: Record<string, string>;
   onRemove: (slug: string) => void;
   removeLabel: string;
 }) {
@@ -287,7 +346,7 @@ function SlugList({
               href={`/posts/${s}`}
               className="font-medium text-ink hover:text-redpen"
             >
-              {titleFromSlug(s)}
+              {titles[s] || titleFromSlug(s)}
             </Link>
             <button
               type="button"

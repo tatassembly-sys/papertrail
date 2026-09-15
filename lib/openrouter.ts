@@ -307,6 +307,15 @@ export async function translatePaperToArticle(
     rawContent = result.content;
     model = result.model;
   } catch (err) {
+    const message = err instanceof Error ? err.message : "";
+    // Config failures must surface so cron can release the batch instead of
+    // filing extract-only drafts and marking the queue done.
+    if (
+      /OPENROUTER_API_KEY is not set/i.test(message) ||
+      /OpenRouter rejected the API key/i.test(message)
+    ) {
+      throw err;
+    }
     console.warn("[openrouter] translator failed, trying xAI then extract", err);
     if (isXaiConfigured()) {
       try {

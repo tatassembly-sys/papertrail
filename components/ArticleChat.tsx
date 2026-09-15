@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 interface Msg {
   role: "user" | "assistant";
@@ -14,24 +14,30 @@ const SUGGESTIONS = [
   "Compare with typical prior research",
 ];
 
-export default function ArticleChat({
-  articleId,
-}: {
-  articleId: string;
-  articleSlug: string;
-}) {
+export default function ArticleChat({ articleId }: { articleId: string }) {
+  const inputId = useId();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     fetch(`/api/articles/${articleId}/chat`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (Array.isArray(d.messages)) setMessages(d.messages);
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || "Could not load chat.");
+        return d;
       })
-      .catch(() => {});
+      .then((d) => {
+        if (!cancelled && Array.isArray(d.messages)) setMessages(d.messages);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Could not load previous messages.");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [articleId]);
 
   async function send(text: string) {
@@ -50,7 +56,9 @@ export default function ArticleChat({
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(body.error || "Chat failed.");
+        setMessages((m) => m.slice(0, -1));
+        setInput(message);
+        setError(typeof body.error === "string" ? body.error : "Chat failed.");
         setLoading(false);
         return;
       }
@@ -59,6 +67,8 @@ export default function ArticleChat({
         setMessages((m) => [...m, { role: "assistant", content: body.reply }]);
       }
     } catch {
+      setMessages((m) => m.slice(0, -1));
+      setInput(message);
       setError("Network error.");
     }
     setLoading(false);
@@ -104,7 +114,11 @@ export default function ArticleChat({
         ))}
       </div>
 
-      {error && <p className="mt-2 pt-alert-error">{error}</p>}
+      {error && (
+        <p className="mt-2 pt-alert-error" role="alert">
+          {error}
+        </p>
+      )}
 
       <form
         className="mt-4 flex flex-col gap-2 sm:flex-row"
@@ -113,7 +127,11 @@ export default function ArticleChat({
           send(input);
         }}
       >
+        <label htmlFor={inputId} className="sr-only">
+          Ask a question about this paper
+        </label>
         <input
+          id={inputId}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question…"
