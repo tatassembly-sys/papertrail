@@ -27,6 +27,12 @@ async function threads() {
   return db.collection<ChatThreadDoc>("article_chats");
 }
 
+export async function deleteThreadsForUser(userId: string): Promise<void> {
+  if (!userId) return;
+  const col = await threads();
+  await col.deleteMany({ user_id: userId });
+}
+
 export async function getOrCreateThread(
   article: ArticleRow,
   sessionKey: string,

@@ -39,10 +39,7 @@ export default function RegisterPage() {
         return;
       }
 
-      if (typeof body.verifyUrl === "string") {
-        setVerifyUrl(body.verifyUrl);
-        return;
-      }
+      if (typeof body.verifyUrl === "string") setVerifyUrl(body.verifyUrl);
       router.push("/account?registered=1");
       router.refresh();
     } catch {

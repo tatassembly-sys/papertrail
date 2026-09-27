@@ -13,6 +13,7 @@ import {
   deleteUserAccount,
 } from "@/lib/users";
 import { getPublishedArticlesBySlugs } from "@/lib/articles";
+import { deleteThreadsForUser } from "@/lib/article-chat";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
 
 export const runtime = "nodejs";
@@ -85,6 +86,7 @@ export async function DELETE() {
   const session = await getCurrentUserSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  await deleteThreadsForUser(session.userId);
   const ok = await deleteUserAccount(session.userId);
   if (!ok) {
     return NextResponse.json({ error: "Could not delete account." }, { status: 404 });

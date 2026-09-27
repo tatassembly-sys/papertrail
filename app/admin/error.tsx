@@ -18,7 +18,9 @@ export default function AdminError({
       <h2 className="mb-1 text-lg font-semibold text-ink">
         Something went wrong loading this page.
       </h2>
-      <p className="mb-4 text-sm text-danger">{error.message}</p>
+      <p className="mb-4 text-sm text-ink-soft">
+        This admin view failed to load. Try again.
+      </p>
       <button onClick={reset} className="pt-btn-ghost text-sm">
         Try again
       </button>

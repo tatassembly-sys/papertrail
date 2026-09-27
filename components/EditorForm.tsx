@@ -182,11 +182,12 @@ export default function EditorForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-ink">
+        <label htmlFor="editor-category" className="mb-1 block text-sm font-medium text-ink">
           Category{" "}
           <span className="font-normal text-stamp">(controls homepage filtering)</span>
         </label>
         <select
+          id="editor-category"
           className="pt-input"
           value={form.category}
           onChange={(e) => update("category", e.target.value)}
@@ -201,8 +202,11 @@ export default function EditorForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-ink">Headline</label>
+        <label htmlFor="editor-headline" className="mb-1 block text-sm font-medium text-ink">
+          Headline
+        </label>
         <input
+          id="editor-headline"
           className="pt-input"
           value={form.headline}
           onChange={(e) => update("headline", e.target.value)}
@@ -210,10 +214,11 @@ export default function EditorForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-ink">
+        <label htmlFor="editor-why" className="mb-1 block text-sm font-medium text-ink">
           Why it matters (one point per line)
         </label>
         <textarea
+          id="editor-why"
           className="pt-input"
           rows={3}
           value={form.why_it_matters}
@@ -222,8 +227,11 @@ export default function EditorForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-ink">Plain explanation</label>
+        <label htmlFor="editor-body" className="mb-1 block text-sm font-medium text-ink">
+          Plain explanation
+        </label>
         <textarea
+          id="editor-body"
           className="pt-input"
           rows={12}
           value={form.plain_explanation}
@@ -232,8 +240,11 @@ export default function EditorForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-ink">Caveats</label>
+        <label htmlFor="editor-caveats" className="mb-1 block text-sm font-medium text-ink">
+          Caveats
+        </label>
         <textarea
+          id="editor-caveats"
           className="pt-input"
           rows={4}
           value={form.caveats}
@@ -243,10 +254,11 @@ export default function EditorForm({
 
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-medium text-ink">
+          <label htmlFor="editor-authors" className="mb-1 block text-sm font-medium text-ink">
             Authors <span className="font-normal text-stamp">(one per line)</span>
           </label>
           <textarea
+            id="editor-authors"
             className="pt-input"
             rows={3}
             value={form.authors}
@@ -254,10 +266,11 @@ export default function EditorForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-ink">
+          <label htmlFor="editor-institutions" className="mb-1 block text-sm font-medium text-ink">
             Institutions <span className="font-normal text-stamp">(one per line)</span>
           </label>
           <textarea
+            id="editor-institutions"
             className="pt-input"
             rows={3}
             value={form.institutions}
@@ -265,10 +278,11 @@ export default function EditorForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-ink">
+          <label htmlFor="editor-keywords" className="mb-1 block text-sm font-medium text-ink">
             Keywords <span className="font-normal text-stamp">(comma or line)</span>
           </label>
           <textarea
+            id="editor-keywords"
             className="pt-input"
             rows={3}
             value={form.keywords}
@@ -276,10 +290,11 @@ export default function EditorForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-ink">
+          <label htmlFor="editor-tags" className="mb-1 block text-sm font-medium text-ink">
             Tags <span className="font-normal text-stamp">(comma or line)</span>
           </label>
           <textarea
+            id="editor-tags"
             className="pt-input"
             rows={3}
             value={form.tags}
@@ -292,15 +307,16 @@ export default function EditorForm({
       {message && <p className="pt-alert-success">{message}</p>}
 
       <div className="flex flex-wrap items-center gap-3 border-t border-rule pt-4">
-        <button onClick={() => save()} disabled={saving} className="pt-btn-ghost">
+        <button type="button" onClick={() => save()} disabled={saving} className="pt-btn-ghost">
           Save draft
         </button>
-        <button onClick={() => save("published")} disabled={saving} className="pt-btn">
+        <button type="button" onClick={() => save("published")} disabled={saving} className="pt-btn">
           {article.status === "published" ? "Update & keep published" : "Publish"}
         </button>
         <button
+          type="button"
           onClick={handleDelete}
-          className="ml-auto rounded-sm px-4 py-2 text-sm font-medium text-danger hover:bg-redpen-soft"
+          className="ml-auto min-h-11 rounded-sm px-4 py-2 text-sm font-medium text-danger hover:bg-redpen-soft"
         >
           {article.status === "draft" ? "Discard draft" : "Delete"}
         </button>
