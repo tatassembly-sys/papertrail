@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { publicErrorMessage } from "@/lib/safe-error";
 import { isEmailConfigured } from "@/lib/mail";
+import { isBillingConfigured } from "@/lib/entitlements";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,6 +27,7 @@ export async function GET() {
       xai: hasXaiKey,
       translator: hasOpenRouterKey ? "openrouter" : hasXaiKey ? "xai" : "extract",
       email: isEmailConfigured() ? "resend" : "log",
+      billing: isBillingConfigured() ? "stripe" : "off",
     });
   } catch (err) {
     // Never expose raw driver/TLS messages publicly in production.

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { safeRelativePath } from "@/lib/safe-redirect";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -40,7 +41,11 @@ export default function RegisterPage() {
       }
 
       if (typeof body.verifyUrl === "string") setVerifyUrl(body.verifyUrl);
-      router.push("/account?registered=1");
+      const next = safeRelativePath(
+        new URLSearchParams(window.location.search).get("next"),
+        "/account"
+      );
+      router.push(next === "/account" ? "/account?registered=1" : next);
       router.refresh();
     } catch {
       setLoading(false);
@@ -56,7 +61,12 @@ export default function RegisterPage() {
         Create account
       </h1>
       <p className="mt-2 text-base leading-relaxed text-ink-soft">
-        Save papers, bookmark favorites, follow topics, and keep reading history.
+        Save papers, bookmark favorites, follow topics, and keep reading
+        history. Upgrade anytime from{" "}
+        <Link href="/pricing" className="text-redpen hover:underline">
+          Pro
+        </Link>
+        .
       </p>
 
       <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">

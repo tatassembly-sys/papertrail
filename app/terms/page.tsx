@@ -15,7 +15,7 @@ export default function TermsPage() {
       <h1 className="font-display text-3xl font-medium tracking-tight text-ink sm:text-4xl">
         Terms of use
       </h1>
-      <p className="mt-2 text-sm text-stamp">Last updated: 15 September 2026</p>
+      <p className="mt-2 text-sm text-stamp">Last updated: 29 September 2026</p>
 
       <div className="mt-6 space-y-4 text-base leading-relaxed text-ink-soft">
         <p>
@@ -50,6 +50,15 @@ export default function TermsPage() {
           Original papers remain with their authors and publishers. Paper Trail
           notes and the site design are ours. You may share links to published
           notes; do not scrape, bulk-copy, or republish the corpus as your own.
+        </p>
+
+        <h2 className="font-display text-xl font-medium text-ink">Paid plans</h2>
+        <p>
+          Paper Trail Pro is billed by Stripe in GBP. You can cancel from the
+          account billing portal; access continues until the end of the paid
+          period. Refunds are handled case-by-case. Comping an account (for
+          press or labs) does not create a Stripe charge. Institutional quotes
+          are not a subscription until we send terms in writing.
         </p>
 
         <h2 className="font-display text-xl font-medium text-ink">Availability</h2>

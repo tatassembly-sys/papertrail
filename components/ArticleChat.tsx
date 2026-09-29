@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import Link from "next/link";
 
 interface Msg {
   role: "user" | "assistant";
@@ -20,6 +21,12 @@ export default function ArticleChat({ articleId }: { articleId: string }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [upgrade, setUpgrade] = useState(false);
+  const [quota, setQuota] = useState<{
+    remaining: number | null;
+    limit: number | null;
+    plan: string;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,6 +38,7 @@ export default function ArticleChat({ articleId }: { articleId: string }) {
       })
       .then((d) => {
         if (!cancelled && Array.isArray(d.messages)) setMessages(d.messages);
+        if (!cancelled && d.quota) setQuota(d.quota);
       })
       .catch(() => {
         if (!cancelled) setError("Could not load previous messages.");
@@ -45,6 +53,7 @@ export default function ArticleChat({ articleId }: { articleId: string }) {
     if (!message || loading) return;
     setLoading(true);
     setError(null);
+    setUpgrade(false);
     setInput("");
     setMessages((m) => [...m, { role: "user", content: message }]);
 
@@ -59,9 +68,11 @@ export default function ArticleChat({ articleId }: { articleId: string }) {
         setMessages((m) => m.slice(0, -1));
         setInput(message);
         setError(typeof body.error === "string" ? body.error : "Chat failed.");
+        setUpgrade(body.code === "upgrade_required");
         setLoading(false);
         return;
       }
+      if (body.quota) setQuota(body.quota);
       if (Array.isArray(body.messages)) setMessages(body.messages);
       else if (body.reply) {
         setMessages((m) => [...m, { role: "assistant", content: body.reply }]);
@@ -80,8 +91,14 @@ export default function ArticleChat({ articleId }: { articleId: string }) {
         Ask about this paper
       </h2>
       <p className="mt-1 text-sm text-ink-soft">
-        AI answers use only this article&apos;s summary. Free OpenRouter models.
+        AI answers use only this article&apos;s summary. Free accounts get 5
+        questions a day; Pro is unlimited.
       </p>
+      {quota && quota.limit != null && (
+        <p className="mt-1 font-mono text-[10px] uppercase tracking-wide text-stamp">
+          {quota.remaining} of {quota.limit} free questions left today
+        </p>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-2">
         {SUGGESTIONS.map((s) => (
@@ -116,7 +133,12 @@ export default function ArticleChat({ articleId }: { articleId: string }) {
 
       {error && (
         <p className="mt-2 pt-alert-error" role="alert">
-          {error}
+          {error}{" "}
+          {upgrade && (
+            <Link href="/pricing" className="font-medium underline">
+              See Pro
+            </Link>
+          )}
         </p>
       )}
 

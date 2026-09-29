@@ -18,6 +18,9 @@ export default function SiteFooter() {
           <Link href="/about" className="hover:text-redpen">
             About
           </Link>
+          <Link href="/pricing" className="hover:text-redpen">
+            Pro
+          </Link>
           <Link href="/newsletter" className="hover:text-redpen">
             Newsletter
           </Link>

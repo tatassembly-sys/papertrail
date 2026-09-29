@@ -50,6 +50,11 @@ tricky ones inline as comments. A few worth calling out:
   without it, the cron routes are unauthenticated (fine for testing, not for production)
 - **`NEXT_PUBLIC_SITE_URL`** — must be correct before sitemap/RSS/OG images are meaningful
 - Everything under "Social posting" is optional and independently skippable
+- **Stripe (Paper Trail Pro)** — optional. Without `STRIPE_SECRET_KEY` +
+  `STRIPE_PRICE_MONTHLY` + `STRIPE_PRICE_YEARLY`, `/pricing` still renders and
+  checkout returns 503. Add a webhook to `POST /api/billing/webhook` with
+  `STRIPE_WEBHOOK_SECRET`. Comp accounts with `BILLING_GRANT_EMAILS` or the
+  grant form on `/admin/status`.
 
 ## Database
 No schema migration needed — MongoDB collections are created automatically on

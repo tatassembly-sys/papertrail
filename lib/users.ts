@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { getDb } from "./mongodb";
 import { isValidObjectId } from "./object-id";
 import { hashToken, tokenLookupValues } from "./token-hash";
+import { entitlementsFor, isProUser, type Entitlements, type PlanName } from "./entitlements";
 
 export { hashToken } from "./token-hash";
 
@@ -26,6 +27,14 @@ export interface UserDoc {
   followed_topics: string[];
   reading_history: { slug: string; at: Date }[];
   token_version?: number;
+  plan?: PlanName;
+  plan_status?: string | null;
+  plan_interval?: "month" | "year" | null;
+  plan_period_end?: Date | null;
+  plan_cancel_at_period_end?: boolean;
+  plan_override?: "pro" | null;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
   created_at: Date;
 }
 
@@ -38,6 +47,12 @@ export interface UserPublic {
   bookmarks: string[];
   followed_topics: string[];
   reading_history: { slug: string; at: string }[];
+  plan: PlanName;
+  plan_status: string | null;
+  plan_interval: "month" | "year" | null;
+  plan_period_end: string | null;
+  cancel_at_period_end: boolean;
+  entitlements: Entitlements;
 }
 
 function toPublic(u: UserDoc): UserPublic {
@@ -53,6 +68,12 @@ function toPublic(u: UserDoc): UserPublic {
       slug: h.slug,
       at: h.at.toISOString(),
     })),
+    plan: isProUser(u) ? "pro" : "free",
+    plan_status: u.plan_status || null,
+    plan_interval: u.plan_interval || null,
+    plan_period_end: u.plan_period_end ? u.plan_period_end.toISOString() : null,
+    cancel_at_period_end: Boolean(u.plan_cancel_at_period_end),
+    entitlements: entitlementsFor(u),
   };
 }
 
@@ -291,6 +312,76 @@ export async function recordReading(userId: string, slug: string): Promise<void>
       },
     }
   );
+}
+
+export interface BillingState {
+  plan: PlanName;
+  plan_status: string;
+  plan_interval?: "month" | "year" | null;
+  plan_period_end?: Date | null;
+  plan_cancel_at_period_end?: boolean;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+}
+
+export async function applyBillingState(
+  userId: string,
+  state: BillingState
+): Promise<UserPublic | null> {
+  if (!isValidObjectId(userId)) return null;
+  const col = await users();
+  const $set: Record<string, unknown> = {
+    plan: state.plan,
+    plan_status: state.plan_status,
+  };
+  if (state.plan_interval !== undefined) $set.plan_interval = state.plan_interval;
+  if (state.plan_period_end !== undefined) $set.plan_period_end = state.plan_period_end;
+  if (state.plan_cancel_at_period_end !== undefined) {
+    $set.plan_cancel_at_period_end = state.plan_cancel_at_period_end;
+  }
+  if (state.stripe_customer_id !== undefined) {
+    $set.stripe_customer_id = state.stripe_customer_id;
+  }
+  if (state.stripe_subscription_id !== undefined) {
+    $set.stripe_subscription_id = state.stripe_subscription_id;
+  }
+  const result = await col.findOneAndUpdate(
+    { _id: new ObjectId(userId) },
+    { $set },
+    { returnDocument: "after" }
+  );
+  return result ? toPublic(result) : null;
+}
+
+export async function findUserByStripeCustomerId(
+  customerId: string
+): Promise<UserDoc | null> {
+  if (!customerId) return null;
+  const col = await users();
+  return col.findOne({ stripe_customer_id: customerId });
+}
+
+export async function setPlanOverride(
+  email: string,
+  override: "pro" | null
+): Promise<UserPublic | null> {
+  const col = await users();
+  const result = await col.findOneAndUpdate(
+    { email: email.trim().toLowerCase() },
+    { $set: { plan_override: override } },
+    { returnDocument: "after" }
+  );
+  return result ? toPublic(result) : null;
+}
+
+export async function countProUsers(): Promise<number> {
+  const col = await users();
+  return col.countDocuments({
+    $or: [
+      { plan: "pro", plan_status: { $in: ["active", "trialing", "past_due"] } },
+      { plan_override: "pro" },
+    ],
+  });
 }
 
 

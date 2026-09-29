@@ -50,6 +50,19 @@ export async function hitRateLimit(
   }
 }
 
+export async function getRateCount(
+  bucket: string,
+  key: string,
+  windowMs: number
+): Promise<number> {
+  const safeKey = key || "unknown";
+  const safeWindow = windowMs > 0 ? windowMs : 60_000;
+  const windowId = Math.floor(Date.now() / safeWindow);
+  const col = await collection();
+  const doc = await col.findOne({ bucket, key: safeKey, window: windowId });
+  return doc?.count ?? 0;
+}
+
 async function collection() {
   const db = await getDb();
   return db.collection<RateDoc>("rate_limits");

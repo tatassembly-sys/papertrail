@@ -115,6 +115,12 @@ async function createAll(db: Db): Promise<void> {
   await safeIndex(users, { email: 1 }, { unique: true, name: "users_email_unique" });
   await safeIndex(users, { verify_token: 1 }, { name: "users_verify_token" });
   await safeIndex(users, { reset_token: 1 }, { name: "users_reset_token" });
+  await safeIndex(
+    users,
+    { stripe_customer_id: 1 },
+    { unique: true, sparse: true, name: "users_stripe_customer" }
+  );
+  await safeIndex(users, { plan: 1, plan_status: 1 }, { name: "users_plan_status" });
 
   const newsletter = db.collection("newsletter_subscribers");
   await safeIndex(newsletter, { email: 1 }, { unique: true, name: "newsletter_email_unique" });
@@ -135,6 +141,10 @@ async function createAll(db: Db): Promise<void> {
 
   const mixRuns = db.collection("publish_mix_runs");
   await safeIndex(mixRuns, { dateKey: 1 }, { unique: true, name: "publish_mix_date" });
+
+  const inquiries = db.collection("billing_inquiries");
+  await safeIndex(inquiries, { created_at: -1 }, { name: "billing_inquiries_created" });
+  await safeIndex(inquiries, { email: 1 }, { name: "billing_inquiries_email" });
 }
 
 async function ensureTextIndex(

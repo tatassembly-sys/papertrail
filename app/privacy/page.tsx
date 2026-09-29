@@ -15,7 +15,7 @@ export default function PrivacyPage() {
       <h1 className="font-display text-3xl font-medium tracking-tight text-ink sm:text-4xl">
         Privacy policy
       </h1>
-      <p className="mt-2 text-sm text-stamp">Last updated: 15 September 2026</p>
+      <p className="mt-2 text-sm text-stamp">Last updated: 29 September 2026</p>
 
       <div className="mt-6 space-y-4 text-base leading-relaxed text-ink-soft">
         <p>
@@ -56,6 +56,16 @@ export default function PrivacyPage() {
             account so the thread can continue.
           </li>
           <li>
+            <strong className="text-ink">Billing:</strong> if you subscribe,
+            Stripe sees your email, card, and tax details. We store Stripe
+            customer and subscription IDs on your account, plus plan status —
+            never the card number.
+          </li>
+          <li>
+            <strong className="text-ink">Lab enquiries:</strong> name, work
+            email, organisation, and the note you send.
+          </li>
+          <li>
             <strong className="text-ink">Cookies:</strong> httpOnly session
             cookies for signed-in readers and editors, plus a chat session
             cookie. Theme preference is stored in localStorage on your device.
@@ -74,7 +84,8 @@ export default function PrivacyPage() {
         <p>
           Hosting and MongoDB: Railway. AI replies and paper translation:
           OpenRouter (and, if configured, xAI). Email, when configured: Resend.
-          Those providers only see what is required to perform that job.
+          Payments, when configured: Stripe. Those providers only see what is
+          required to perform that job.
         </p>
 
         <h2 className="font-display text-xl font-medium text-ink">Retention</h2>

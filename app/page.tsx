@@ -99,6 +99,13 @@ export default async function HomePage({ searchParams }: PageProps) {
           Every entry starts as a real paper. We strip the jargon, keep the
           accuracy, and flag exactly what the study can&apos;t claim.
         </p>
+        <p className="mt-3 text-sm text-ink-soft">
+          Reading is free.{" "}
+          <Link href="/pricing" className="font-medium text-redpen hover:underline">
+            Pro
+          </Link>{" "}
+          is unlimited chat, exports, and priority paper requests.
+        </p>
       </section>
 
       <SearchBar

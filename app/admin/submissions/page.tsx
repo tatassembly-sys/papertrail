@@ -56,6 +56,7 @@ export default async function AdminSubmissionsPage() {
                 </a>
                 {s.note && <p className="mt-1 text-sm text-ink-soft">&ldquo;{s.note}&rdquo;</p>}
                 <p className="mt-1 text-xs text-stamp">
+                  {s.priority ? "Pro priority · " : ""}
                   {new Date(s.submitted_at).toLocaleDateString(undefined, {
                     month: "short",
                     day: "numeric",

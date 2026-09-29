@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { safeRelativePath } from "@/lib/safe-redirect";
 
 export default function UserLoginPage() {
   const router = useRouter();
@@ -31,7 +32,11 @@ export default function UserLoginPage() {
         return;
       }
 
-      router.push("/account");
+      const next = safeRelativePath(
+        new URLSearchParams(window.location.search).get("next"),
+        "/account"
+      );
+      router.push(next);
       router.refresh();
     } catch {
       setLoading(false);

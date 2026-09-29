@@ -6,6 +6,10 @@ All notable modifications from the engineering session culminating 2026-08-04.
 
 ### Added
 
+- Paper Trail Pro: Stripe Checkout + Customer Portal + signed webhooks, free
+  quotas on chat / saves / suggestions, markdown export, lab enquiry form,
+  `/pricing`, account billing panel, admin grant-Pro. No Stripe package —
+  REST + HMAC. Checkout stays off until keys are set.
 - `lib/site-url.ts` — Railway-aware public origin resolution  
 - `lib/cron-auth.ts` — production-required cron Bearer auth  
 - `lib/indexes.ts` — idempotent Mongo index bootstrap  

@@ -1,4 +1,5 @@
 import { getAdminOpsStatus } from "@/lib/admin-status";
+import GrantProForm from "@/components/GrantProForm";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,8 @@ export default async function AdminStatusPage() {
             {" · "}
             Email: {status.email.mode}
             {" · "}
+            Billing: {status.billing.mode}
+            {" · "}
             OpenRouter: {status.openrouter.ok ? "ok" : "not ready"}
             {status.lastMix?.dateKey
               ? ` · Last daily mix ${String(status.lastMix.dateKey)} (${status.lastMix.published ?? 0})`
@@ -62,7 +65,10 @@ export default async function AdminStatusPage() {
             <Stat label="Suggestions" value={status.submissionsPending} />
             <Stat label="Newsletter active" value={status.newsletter.active} />
             <Stat label="Scheduled posts" value={status.scheduledPending} />
+            <Stat label="Pro readers" value={status.billing.proUsers} />
+            <Stat label="Lab enquiries" value={status.billing.inquiries} />
           </div>
+          <GrantProForm />
         </>
       )}
     </div>

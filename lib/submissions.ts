@@ -9,6 +9,8 @@ export interface SubmissionDoc {
   status: "pending" | "processed" | "dismissed";
   ip_hash: string;
   submitted_at: Date;
+  priority?: boolean;
+  user_id?: string | null;
 }
 
 export interface SubmissionRow {
@@ -17,6 +19,7 @@ export interface SubmissionRow {
   note?: string;
   status: SubmissionDoc["status"];
   submitted_at: string;
+  priority?: boolean;
 }
 
 function toRow(doc: SubmissionDoc): SubmissionRow {
@@ -26,6 +29,7 @@ function toRow(doc: SubmissionDoc): SubmissionRow {
     note: doc.note,
     status: doc.status,
     submitted_at: doc.submitted_at.toISOString(),
+    priority: Boolean(doc.priority),
   };
 }
 
@@ -50,7 +54,8 @@ export async function isRateLimited(ipHash: string): Promise<boolean> {
 export async function createSubmission(
   url: string,
   note: string | undefined,
-  ipHash: string
+  ipHash: string,
+  opts?: { priority?: boolean; userId?: string | null }
 ): Promise<SubmissionRow> {
   const col = await collection();
   const doc: Omit<SubmissionDoc, "_id"> = {
@@ -59,6 +64,8 @@ export async function createSubmission(
     status: "pending",
     ip_hash: ipHash,
     submitted_at: new Date(),
+    priority: Boolean(opts?.priority),
+    user_id: opts?.userId || null,
   };
   const result = await col.insertOne(doc as SubmissionDoc);
   return toRow({ ...doc, _id: result.insertedId } as SubmissionDoc);
@@ -67,7 +74,10 @@ export async function createSubmission(
 export async function getSubmissions(status?: SubmissionDoc["status"]): Promise<SubmissionRow[]> {
   const col = await collection();
   const filter = status ? { status } : {};
-  const docs = await col.find(filter).sort({ submitted_at: -1 }).toArray();
+  const docs = await col
+    .find(filter)
+    .sort({ priority: -1, submitted_at: -1 })
+    .toArray();
   return docs.map(toRow);
 }
 

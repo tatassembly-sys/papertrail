@@ -6,6 +6,7 @@ import { recordReading } from "@/lib/users";
 import { getCurrentUserSession } from "@/lib/user-auth";
 import ArticleChat from "@/components/ArticleChat";
 import SaveActions from "@/components/SaveActions";
+import ExportNote from "@/components/ExportNote";
 import { buildShareLinks } from "@/lib/share-links";
 import { getSiteUrl } from "@/lib/site-url";
 import { categoryLabel } from "@/lib/arxivCategories";
@@ -185,6 +186,7 @@ export default async function PostPage({ params }: PageProps) {
       )}
 
       <SaveActions slug={article.slug} />
+      {article.id && <ExportNote articleId={article.id} slug={article.slug} />}
 
       <div className="mt-6 flex flex-wrap gap-3 border-t border-rule pt-6 font-mono text-xs uppercase tracking-wide text-ink-soft">
         <span className="text-stamp">Share:</span>

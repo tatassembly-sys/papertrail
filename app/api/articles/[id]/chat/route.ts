@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { getArticleById, getArticleBySlug } from "@/lib/articles";
 import { askArticleAssistant, getThreadMessages } from "@/lib/article-chat";
 import { getCurrentUserSession } from "@/lib/user-auth";
+import { findUserById } from "@/lib/users";
 import { getClientIp, hashIp } from "@/lib/request-ip";
-import { hitRateLimit } from "@/lib/rate-limit";
+import { getRateCount, hitRateLimit } from "@/lib/rate-limit";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
+import {
+  CHAT_ABUSE_PER_HOUR,
+  DAY_MS,
+  FREE_CHAT_PER_DAY,
+  HOUR_MS,
+  isProUser,
+} from "@/lib/entitlements";
 import { randomBytes } from "crypto";
 
 export const runtime = "nodejs";
@@ -30,6 +38,23 @@ function cookieChatKey(req: NextRequest): { key: string; fresh: boolean } {
 
 function threadKey(userId: string | undefined, cookieKey: string): string {
   return userId ? `user:${userId}` : cookieKey;
+}
+
+function quotaKey(userId: string | undefined, ipKey: string): string {
+  return userId ? `user:${userId}` : `ip:${ipKey}`;
+}
+
+async function chatQuota(userId: string | undefined, ipKey: string, pro: boolean) {
+  if (pro) {
+    return { plan: "pro" as const, limit: null as number | null, remaining: null as number | null, used: 0 };
+  }
+  const used = await getRateCount("chat_day", quotaKey(userId, ipKey), DAY_MS);
+  return {
+    plan: "free" as const,
+    limit: FREE_CHAT_PER_DAY,
+    remaining: Math.max(0, FREE_CHAT_PER_DAY - used),
+    used,
+  };
 }
 
 function setChatCookie(res: NextResponse, key: string, fresh: boolean) {
@@ -58,12 +83,16 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   const cookie = cookieChatKey(req);
   const key = threadKey(session?.userId, cookie.key);
   const messages = await getThreadMessages(article.slug, key);
+  const user = session ? await findUserById(session.userId) : null;
+  const ipKey = hashIp(getClientIp(req));
+  const quota = await chatQuota(session?.userId, ipKey, isProUser(user));
   const res = NextResponse.json({
     messages: messages.map((m) => ({
       role: m.role,
       content: m.content,
       at: m.at instanceof Date ? m.at.toISOString() : m.at,
     })),
+    quota,
   });
   if (!session) setChatCookie(res, cookie.key, cookie.fresh);
   return res;
@@ -89,7 +118,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   }
 
   const ipKey = hashIp(getClientIp(req));
-  if (await hitRateLimit("chat", ipKey, 30, 60 * 60 * 1000)) {
+  if (await hitRateLimit("chat", ipKey, CHAT_ABUSE_PER_HOUR, HOUR_MS)) {
     return NextResponse.json(
       { error: "Chat rate limit reached. Try again later." },
       { status: 429 }
@@ -97,6 +126,30 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   }
 
   const session = await getCurrentUserSession();
+  const user = session ? await findUserById(session.userId) : null;
+  const pro = isProUser(user);
+
+  if (!pro) {
+    const over = await hitRateLimit(
+      "chat_day",
+      quotaKey(session?.userId, ipKey),
+      FREE_CHAT_PER_DAY,
+      DAY_MS
+    );
+    if (over) {
+      return NextResponse.json(
+        {
+          error: session
+            ? "Free plan includes 5 questions a day. Upgrade to Pro for unlimited chat."
+            : "Free visitors get 5 questions a day. Sign in or upgrade to Pro for more.",
+          code: "upgrade_required",
+          upgradeUrl: "/pricing",
+        },
+        { status: 402 }
+      );
+    }
+  }
+
   const cookie = cookieChatKey(req);
   const key = threadKey(session?.userId, cookie.key);
 
@@ -107,6 +160,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       message,
       session?.userId
     );
+    const quota = await chatQuota(session?.userId, ipKey, pro);
     const res = NextResponse.json({
       reply,
       messages: messages.map((m) => ({
@@ -114,6 +168,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         content: m.content,
         at: m.at instanceof Date ? m.at.toISOString() : m.at,
       })),
+      quota,
     });
     if (!session) setChatCookie(res, cookie.key, cookie.fresh);
     return res;

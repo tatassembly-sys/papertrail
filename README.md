@@ -34,6 +34,10 @@ checklist at the top; start there when you're ready to ship.
 - **Public site**: home feed with search + category filtering, article pages,
   RSS/sitemap, Open Graph images, and a public "suggest a paper" form
   (submissions require editor review before anything gets translated or published)
+- **Paper Trail Pro**: optional Stripe subscription. Reading stays free; Pro
+  unlocks unlimited paper chat, markdown export, a larger library, and
+  priority suggestions. Labs can request a quote from `/pricing`. Checkout is
+  off until Stripe keys are set.
 - **Admin**: dashboard (search/filter/paginate), an editor per article (edit,
   publish, share to socials immediately or on a schedule), manual paper
   submission (URL or pasted text), and a queue for visitor suggestions

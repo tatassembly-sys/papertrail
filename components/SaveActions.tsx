@@ -94,7 +94,16 @@ export default function SaveActions({ slug }: { slug: string }) {
       <Link href="/account" className="min-h-10 px-2 py-2 text-sm text-ink-soft hover:text-redpen">
         Account →
       </Link>
-      {msg && <p className="w-full pt-alert-error">{msg}</p>}
+      {msg && (
+        <p className="w-full pt-alert-error">
+          {msg}{" "}
+          {/upgrade|Pro/i.test(msg) && (
+            <Link href="/pricing" className="underline">
+              See Pro
+            </Link>
+          )}
+        </p>
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import BillingPanel from "@/components/BillingPanel";
 
 interface User {
   id: string;
@@ -13,6 +14,11 @@ interface User {
   bookmarks: string[];
   followed_topics: string[];
   reading_history: { slug: string; at: string }[];
+  plan: "free" | "pro";
+  plan_status: string | null;
+  plan_interval: "month" | "year" | null;
+  plan_period_end: string | null;
+  cancel_at_period_end: boolean;
 }
 
 function AccountInner() {
@@ -24,10 +30,21 @@ function AccountInner() {
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [resendMsg, setResendMsg] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
+  const [usage, setUsage] = useState<{
+    chatToday: number;
+    chatLimit: number | null;
+    saves: number;
+    saveLimit: number | null;
+    bookmarks: number;
+    bookmarkLimit: number | null;
+  } | null>(null);
+  const [billingConfigured, setBillingConfigured] = useState(false);
   const router = useRouter();
   const sp = useSearchParams();
   const verified = sp.get("verified");
   const registered = sp.get("registered");
+  const billingSuccess = sp.get("billing") === "success";
+  const billingCanceled = sp.get("billing") === "canceled";
 
   async function load() {
     const d = await fetch("/api/me").then((r) => r.json());
@@ -39,10 +56,17 @@ function AccountInner() {
           bookmarks: raw.bookmarks || [],
           followed_topics: raw.followed_topics || [],
           reading_history: raw.reading_history || [],
+          plan: raw.plan === "pro" ? "pro" : "free",
+          plan_status: raw.plan_status || null,
+          plan_interval: raw.plan_interval || null,
+          plan_period_end: raw.plan_period_end || null,
+          cancel_at_period_end: Boolean(raw.cancel_at_period_end),
         }
       : null;
     setUser(next);
     setTitles(d?.titles && typeof d.titles === "object" ? d.titles : {});
+    setUsage(d?.usage && typeof d.usage === "object" ? d.usage : null);
+    setBillingConfigured(Boolean(d?.billing?.configured));
     if (next) {
       setName(next.name || "");
       setTopics(next.followed_topics.join(", "));
@@ -64,8 +88,8 @@ function AccountInner() {
           Your account
         </h1>
         <p className="mt-3 text-base leading-relaxed text-ink-soft">
-          Sign in to save papers, bookmark favorites, follow topics, and keep a
-          reading history.
+          Sign in to save papers, bookmark favorites, follow topics, keep a
+          reading history, and upgrade to Pro.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
@@ -176,6 +200,14 @@ function AccountInner() {
           </div>
         )}
       </div>
+
+      <BillingPanel
+        user={user}
+        usage={usage}
+        configured={billingConfigured}
+        success={billingSuccess}
+        canceled={billingCanceled}
+      />
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-stamp">

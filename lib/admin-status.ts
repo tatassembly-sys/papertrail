@@ -2,6 +2,9 @@ import { getDb } from "@/lib/mongodb";
 import { isEmailConfigured } from "@/lib/mail";
 import { getSiteUrl } from "@/lib/site-url";
 import { probeOpenRouterKey } from "@/lib/openrouter-health";
+import { isBillingConfigured } from "@/lib/entitlements";
+import { countProUsers } from "@/lib/users";
+import { countBillingInquiries } from "@/lib/billing-inquiries";
 
 export interface AdminOpsStatus {
   siteUrl: string;
@@ -28,6 +31,7 @@ export interface AdminOpsStatus {
   submissionsPending: number;
   scheduledPending: number;
   lastMix: { at?: unknown; published?: unknown; dateKey?: unknown } | null;
+  billing: { configured: boolean; mode: "stripe" | "off"; proUsers: number; inquiries: number };
   blockers: string[];
 }
 
@@ -48,6 +52,8 @@ export async function getAdminOpsStatus(): Promise<AdminOpsStatus> {
     lastDigest,
     lastMix,
     openrouter,
+    proUsers,
+    inquiries,
   ] = await Promise.all([
     db.collection("articles").countDocuments({ status: "draft" }),
     db.collection("articles").countDocuments({ status: "published" }),
@@ -62,6 +68,8 @@ export async function getAdminOpsStatus(): Promise<AdminOpsStatus> {
     db.collection("newsletter_runs").find().sort({ at: -1 }).limit(1).next(),
     db.collection("publish_mix_runs").find().sort({ at: -1 }).limit(1).next(),
     probeOpenRouterKey(),
+    countProUsers(),
+    countBillingInquiries(),
   ]);
 
   const emailConfigured = isEmailConfigured();
@@ -71,6 +79,9 @@ export async function getAdminOpsStatus(): Promise<AdminOpsStatus> {
       : null,
     !emailConfigured
       ? "Email is log-mode only (set RESEND_API_KEY for real delivery)."
+      : null,
+    !isBillingConfigured()
+      ? "Stripe billing is off (set STRIPE_SECRET_KEY and price IDs to take payments)."
       : null,
   ].filter((item): item is string => Boolean(item));
 
@@ -106,6 +117,12 @@ export async function getAdminOpsStatus(): Promise<AdminOpsStatus> {
     lastMix: lastMix
       ? { at: lastMix.at, published: lastMix.published, dateKey: lastMix.dateKey }
       : null,
+    billing: {
+      configured: isBillingConfigured(),
+      mode: isBillingConfigured() ? "stripe" : "off",
+      proUsers,
+      inquiries,
+    },
     blockers,
   };
 }

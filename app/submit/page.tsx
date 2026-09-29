@@ -47,7 +47,11 @@ export default function SubmitPage() {
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
         Send us a link. Every suggestion is reviewed by an editor before it's translated
         or published — nothing goes live automatically, and submitting doesn't guarantee
-        it'll be picked up.
+        it'll be picked up. Free accounts can send three suggestions a week;{" "}
+        <a href="/pricing" className="text-redpen hover:underline">
+          Pro
+        </a>{" "}
+        requests jump the editor queue.
       </p>
 
       {status === "done" ? (

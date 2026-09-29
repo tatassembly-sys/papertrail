@@ -45,6 +45,15 @@ export default function AboutPage() {
           </Link>{" "}
           page.
         </p>
+        <p>
+          The notes stay free.{" "}
+          <Link href="/pricing" className="text-redpen hover:underline">
+            Paper Trail Pro
+          </Link>{" "}
+          is how the lights stay on: unlimited questions about a paper, markdown
+          export, and priority translation requests. Labs can ask for a quote on
+          the same page.
+        </p>
       </div>
     </article>
   );
