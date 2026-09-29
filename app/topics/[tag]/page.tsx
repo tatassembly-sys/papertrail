@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublishedArticles, getPublishedTagCounts } from "@/lib/articles";
-import { labelMatchesSlug } from "@/lib/name-slug";
+import { labelMatchesSlug, slugifyLabel } from "@/lib/name-slug";
 import ArticleCard from "@/components/ArticleCard";
+import FollowTopic from "@/components/FollowTopic";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +50,12 @@ export default async function TopicPage({ params }: PageProps) {
         <Link href={`/?tag=${encodeURIComponent(label)}`} className="text-redpen hover:underline">
           Open in search
         </Link>
+        {" · "}
+        <a href={`/feed.xml?tag=${encodeURIComponent(label)}`} className="text-redpen hover:underline">
+          RSS
+        </a>
       </p>
+      <FollowTopic topic={label} nextPath={`/topics/${encodeURIComponent(slugifyLabel(label))}`} />
       {articles.length === 0 ? (
         <p className="mt-8 text-sm text-ink-soft">Nothing filed under this topic yet.</p>
       ) : (

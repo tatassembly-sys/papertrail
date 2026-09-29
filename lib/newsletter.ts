@@ -5,8 +5,10 @@ import { hashToken, tokenLookupValues } from "./token-hash";
 import {
   getAllPublishedArticles,
   getEditorPicks,
+  getForYouArticles,
   getTrendingArticles,
 } from "./articles";
+import { findUserByEmail } from "./users";
 import { getSiteUrl } from "./site-url";
 import { sendEmail, isEmailConfigured } from "./mail";
 import { openRouterChat } from "./openrouter";
@@ -248,6 +250,7 @@ export async function buildWeeklyDigest(): Promise<WeeklyDigest> {
           <h1 style="font-family:Georgia,serif;font-weight:500;font-size:28px;margin:8px 0 16px;color:#16213D">This week in research, translated</h1>
           <p style="font-size:16px;line-height:1.55;color:#16213D;margin:0 0 8px">${escapeHtml(aiSummary)}</p>
           ${listHtml("Newest papers", newest)}
+          {{FORYOU}}
           ${listHtml("Trending", trending)}
           ${listHtml("Editor picks", picks)}
           <p style="font-size:12px;color:#5B6B73;margin-top:32px;line-height:1.5">
@@ -302,14 +305,51 @@ export async function sendWeeklyDigest(): Promise<{
   let logged = 0;
   let mode: "log" | "resend" = isEmailConfigured() ? "resend" : "log";
 
+  const forYouCache = new Map<string, Awaited<ReturnType<typeof getForYouArticles>>>();
+
   for (const sub of subscribers) {
     const unsubUrl = `${site}/api/newsletter/unsubscribe?token=${sub.unsubscribe_token}`;
-    const html = digest.html.replace(
-      "{{UNSUBSCRIBE}}",
-      `<a href="${unsubUrl}" style="color:#C63D2F">Unsubscribe</a>`
-    );
+    let extraHtml = "";
+    let extraText = "";
+    try {
+      const account = await findUserByEmail(sub.email);
+      const topics = account?.followed_topics || [];
+      if (topics.length) {
+        const cacheKey = topics.map((t) => t.toLowerCase()).sort().join("|");
+        let forYou = forYouCache.get(cacheKey);
+        if (!forYou) {
+          forYou = await getForYouArticles(topics, 4);
+          forYouCache.set(cacheKey, forYou);
+        }
+        const newestSlugs = new Set(digest.sections.newest.map((a) => a.slug));
+        const unique = forYou.filter((a) => !newestSlugs.has(a.slug));
+        if (unique.length) {
+          extraHtml = `<h2 style="font-size:16px;margin:28px 0 4px;color:#16213D;font-family:Georgia,serif">For you</h2>
+            <table width="100%" cellpadding="0" cellspacing="0">${unique
+              .map((a) => {
+                const href = `${site}/posts/${a.slug}`;
+                return `<tr><td style="padding:12px 0;border-bottom:1px solid #C7CCD1">
+                  <a href="${href}" style="color:#16213D;font-weight:600;text-decoration:none;font-size:16px">${escapeHtml(a.title)}</a>
+                  <div style="color:#4A5568;font-size:14px;margin-top:4px;line-height:1.45">${escapeHtml(a.headline)}</div>
+                </td></tr>`;
+              })
+              .join("")}</table>`;
+          extraText =
+            "\n\nFor you:\n" + unique.map((a) => `- ${a.title}: ${site}/posts/${a.slug}`).join("\n");
+        }
+      }
+    } catch (err) {
+      console.warn("[newsletter] for-you lookup failed", err);
+    }
+
+    const html = digest.html
+      .replace("{{FORYOU}}", extraHtml)
+      .replace(
+        "{{UNSUBSCRIBE}}",
+        `<a href="${unsubUrl}" style="color:#C63D2F">Unsubscribe</a>`
+      );
     const text =
-      digest.text + `\n\nUnsubscribe: ${unsubUrl}`;
+      digest.text + extraText + `\n\nUnsubscribe: ${unsubUrl}`;
 
     const result = await sendEmail({
       to: sub.email,

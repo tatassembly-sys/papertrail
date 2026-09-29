@@ -96,8 +96,9 @@ export function buildArticleMongoFilter(
   }
   if (filters.source) filter.source = filters.source;
   if (filters.tag) {
+    const tagRx = new RegExp(`^${escapeRegex(filters.tag)}$`, "i");
     and.push({
-      $or: [{ tags: filters.tag }, { keywords: filters.tag }],
+      $or: [{ tags: tagRx }, { keywords: tagRx }],
     });
   }
   if (filters.author) {
