@@ -38,6 +38,9 @@ checklist at the top; start there when you're ready to ship.
   unlocks unlimited paper chat, markdown export, a larger library, and
   priority suggestions. Labs can request a quote from `/pricing`. Checkout is
   off until Stripe keys are set.
+- **Library & discovery**: author and topic pages, today's mix, reading lists,
+  highlights, APA/MLA/Chicago/BibTeX cite (Zotero Highwire meta tags on
+  articles), personalized Home ("For you"), and `/` to focus search.
 - **Admin**: dashboard (search/filter/paginate), an editor per article (edit,
   publish, share to socials immediately or on a schedule), manual paper
   submission (URL or pasted text), and a queue for visitor suggestions

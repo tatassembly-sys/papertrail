@@ -7,11 +7,11 @@ import ThemeToggle from "./ThemeToggle";
 
 const LINKS = [
   { href: "/", label: "Home" },
-  { href: "/submit", label: "Suggest" },
-  { href: "/newsletter", label: "Newsletter" },
+  { href: "/today", label: "Today" },
+  { href: "/topics", label: "Topics" },
+  { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pro" },
   { href: "/account", label: "Account" },
-  { href: "/about", label: "About" },
 ] as const;
 
 export default function NavMenu() {

@@ -7,10 +7,15 @@ import { getCurrentUserSession } from "@/lib/user-auth";
 import ArticleChat from "@/components/ArticleChat";
 import SaveActions from "@/components/SaveActions";
 import ExportNote from "@/components/ExportNote";
+import CiteButton from "@/components/CiteButton";
+import CollectionSave from "@/components/CollectionSave";
+import HighlightTools from "@/components/HighlightTools";
 import { buildShareLinks } from "@/lib/share-links";
 import { getSiteUrl } from "@/lib/site-url";
 import { categoryLabel } from "@/lib/arxivCategories";
 import { sanitizeHttpUrl } from "@/lib/http-url";
+import { slugifyLabel } from "@/lib/name-slug";
+import { readingMinutes, readingTimeLabel } from "@/lib/reading-time";
 
 export const dynamic = "force-dynamic";
 
@@ -83,7 +88,13 @@ export default async function PostPage({ params }: PageProps) {
           : "arXiv";
 
   const sourceHref = sanitizeHttpUrl(article.source_url);
-  const related = await getRelatedPublishedArticles(article.slug, article.category, 3);
+  const related = await getRelatedPublishedArticles(
+    article.slug,
+    article.category,
+    3,
+    [...(article.tags || []), ...(article.keywords || [])]
+  );
+  const minutes = readingMinutes(article);
   const canonical = `${getSiteUrl()}/posts/${article.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
@@ -110,9 +121,18 @@ export default async function PostPage({ params }: PageProps) {
         ← All entries
       </Link>
 
+      {(article.authors || []).map((name) => (
+        <meta key={name} name="citation_author" content={name} />
+      ))}
+      <meta name="citation_title" content={article.title} />
+      <meta name="citation_publication_date" content={article.published_at || article.created_at || ""} />
+      <meta name="citation_fulltext_html_url" content={canonical} />
+      {sourceHref && <meta name="citation_abstract_html_url" content={sourceHref} />}
+
       <p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-stamp">
         {sourceLabel}
         {article.category ? ` · ${categoryLabel(article.category)}` : ""}
+        {` · ${readingTimeLabel(minutes)}`}
       </p>
 
       <h1 className="font-display text-2xl font-medium leading-tight text-ink sm:text-4xl">
@@ -124,7 +144,17 @@ export default async function PostPage({ params }: PageProps) {
 
       {!!article.authors?.length && (
         <p className="mt-3 font-mono text-xs text-stamp">
-          {article.authors.join(" · ")}
+          {article.authors.map((name, i) => (
+            <span key={name}>
+              {i > 0 ? " · " : ""}
+              <Link
+                href={`/authors/${encodeURIComponent(slugifyLabel(name))}`}
+                className="hover:text-redpen"
+              >
+                {name}
+              </Link>
+            </span>
+          ))}
         </p>
       )}
       {!!article.institutions?.length && (
@@ -147,23 +177,25 @@ export default async function PostPage({ params }: PageProps) {
         ))}
       </ol>
 
-      <div className="prose prose-lg mt-8 max-w-none whitespace-pre-line leading-relaxed text-ink sm:mt-10">
-        {article.plain_explanation}
-      </div>
+      <HighlightTools slug={article.slug}>
+        <div className="prose prose-lg mt-8 max-w-none whitespace-pre-line leading-relaxed text-ink sm:mt-10">
+          {article.plain_explanation}
+        </div>
 
-      <div className="mt-8 rounded-sm border-l-2 border-redpen bg-redpen-soft/40 p-4 sm:mt-10 sm:p-5">
-        <h3 className="mb-2 font-mono text-xs uppercase tracking-widest text-redpen">
-          Editor&apos;s caveats
-        </h3>
-        <p className="text-sm leading-relaxed text-ink">{article.caveats}</p>
-      </div>
+        <div className="mt-8 rounded-sm border-l-2 border-redpen bg-redpen-soft/40 p-4 sm:mt-10 sm:p-5">
+          <h3 className="mb-2 font-mono text-xs uppercase tracking-widest text-redpen">
+            Editor&apos;s caveats
+          </h3>
+          <p className="text-sm leading-relaxed text-ink">{article.caveats}</p>
+        </div>
+      </HighlightTools>
 
       {!!(article.tags?.length || article.keywords?.length) && (
         <div className="mt-6 flex flex-wrap gap-2">
           {(article.tags?.length ? article.tags : article.keywords || []).map((t) => (
             <Link
               key={t}
-              href={`/?tag=${encodeURIComponent(t)}`}
+              href={`/topics/${encodeURIComponent(slugifyLabel(t))}`}
               className="rounded-full border border-rule px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-stamp hover:border-ink hover:text-ink"
             >
               {t}
@@ -185,8 +217,14 @@ export default async function PostPage({ params }: PageProps) {
         </p>
       )}
 
-      <SaveActions slug={article.slug} />
-      {article.id && <ExportNote articleId={article.id} slug={article.slug} />}
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        <SaveActions slug={article.slug} />
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <CiteButton article={article} siteUrl={getSiteUrl()} />
+        <CollectionSave slug={article.slug} />
+        {article.id && <ExportNote articleId={article.id} slug={article.slug} />}
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-3 border-t border-rule pt-6 font-mono text-xs uppercase tracking-wide text-ink-soft">
         <span className="text-stamp">Share:</span>

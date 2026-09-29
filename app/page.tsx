@@ -4,10 +4,13 @@ import {
   getPublishedArticlesBySlugs,
   getPublishedCategoryCounts,
 } from "@/lib/articles";
+import { getCurrentUserSession } from "@/lib/user-auth";
+import { getUserPublic } from "@/lib/users";
 import { categoryLabel } from "@/lib/arxivCategories";
 import ArticleCard from "@/components/ArticleCard";
 import SearchBar from "@/components/SearchBar";
 import ActiveFilters from "@/components/ActiveFilters";
+import ForYou from "@/components/ForYou";
 import { getLastPublishMix } from "@/lib/publish-mix";
 import {
   buildSearchHref,
@@ -41,6 +44,9 @@ export default async function HomePage({ searchParams }: PageProps) {
   let total = 0;
   let error: string | null = null;
   let categoryCounts: Record<string, number> = {};
+
+  const session = await getCurrentUserSession();
+  const user = session ? await getUserPublic(session.userId) : null;
 
   const [listOutcome, countsOutcome, mixOutcome] = await Promise.allSettled([
     getPublishedArticles(page, PAGE_SIZE, listFilters),
@@ -85,6 +91,17 @@ export default async function HomePage({ searchParams }: PageProps) {
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
   const otherCount = categoryCounts["other"] || categoryCounts[""] || 0;
+
+  const continueSlug = user?.reading_history?.[0]?.slug;
+  let continueTitle: string | null = null;
+  if (continueSlug) {
+    try {
+      const [cont] = await getPublishedArticlesBySlugs([continueSlug], 1);
+      continueTitle = cont?.title || null;
+    } catch {
+      continueTitle = null;
+    }
+  }
 
   return (
     <div>
@@ -192,6 +209,22 @@ export default async function HomePage({ searchParams }: PageProps) {
         </p>
       )}
 
+      {!isFiltered && page === 1 && continueSlug && continueTitle && (
+        <p className="mb-6 text-sm text-ink-soft">
+          Continue reading{" "}
+          <Link
+            href={`/posts/${continueSlug}`}
+            className="font-medium text-redpen hover:underline"
+          >
+            {continueTitle}
+          </Link>
+        </p>
+      )}
+
+      {!isFiltered && page === 1 && user?.followed_topics?.length ? (
+        <ForYou topics={user.followed_topics} />
+      ) : null}
+
       {!isFiltered && page === 1 && mixArticles.length > 0 && (
         <section className="mb-8 sm:mb-10" aria-labelledby="todays-mix">
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
@@ -201,9 +234,9 @@ export default async function HomePage({ searchParams }: PageProps) {
             >
               Today&apos;s mix{mixDate ? ` · ${mixDate}` : ""}
             </h2>
-            <p className="text-xs text-ink-soft">
-              One paper per field, so search keeps growing.
-            </p>
+            <Link href="/today" className="text-xs text-ink-soft hover:text-redpen">
+              Full briefing →
+            </Link>
           </div>
           <ul className="divide-y divide-rule rounded-sm border border-rule bg-surface">
             {mixArticles.map((article) => (

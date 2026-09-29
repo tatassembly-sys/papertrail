@@ -35,6 +35,12 @@ export default function SearchBar({
   }, [initialQuery]);
 
   useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#search") {
+      wrapRef.current?.querySelector("input")?.focus();
+    }
+  }, []);
+
+  useEffect(() => {
     const q = query.trim();
     if (q.length < 2) {
       setSuggestions([]);
@@ -108,6 +114,7 @@ export default function SearchBar({
       ref={wrapRef}
       action="/"
       method="GET"
+      id="search"
       className="relative mb-6 w-full max-w-xl sm:mb-8"
       role="search"
     >
@@ -124,8 +131,9 @@ export default function SearchBar({
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => suggestions.length > 0 && setOpen(true)}
             onKeyDown={onKeyDown}
-            placeholder="Try tech, space, health, math…"
+            placeholder="Try tech, space, health, math…  (press / )"
             autoComplete="off"
+            data-search-input="true"
             className="pt-input w-full"
             aria-label="Search papers"
             aria-autocomplete="list"

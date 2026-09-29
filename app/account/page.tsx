@@ -160,6 +160,15 @@ function AccountInner() {
           Hi, {user.name}
         </h1>
         <p className="mt-1 text-sm text-ink-soft">{user.email}</p>
+        <p className="mt-2 text-sm">
+          <Link href="/library" className="text-redpen hover:underline">
+            Open library
+          </Link>
+          {" · "}
+          <Link href="/welcome" className="text-redpen hover:underline">
+            Edit topics
+          </Link>
+        </p>
         {registered === "1" && (
           <p className="mt-2 text-sm text-ink-soft">Welcome — your account is ready.</p>
         )}

@@ -1,5 +1,7 @@
-import { getAllPublishedArticles } from "@/lib/articles";
+import { NextRequest } from "next/server";
+import { getAllPublishedArticles, getPublishedArticles } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/site-url";
+import { parseSearchParams } from "@/lib/search";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -13,12 +15,18 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const baseUrl = getSiteUrl();
+  const filters = parseSearchParams(Object.fromEntries(req.nextUrl.searchParams));
   let articles: Awaited<ReturnType<typeof getAllPublishedArticles>> = [];
 
   try {
-    articles = await getAllPublishedArticles(50);
+    if (filters.category || filters.tag || filters.author) {
+      const result = await getPublishedArticles(1, 50, filters);
+      articles = result.articles;
+    } else {
+      articles = await getAllPublishedArticles(50);
+    }
   } catch (error) {
     console.error("Failed to load feed articles:", error);
   }
@@ -39,9 +47,9 @@ export async function GET() {
   const feed = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Paper Trail — Research, Translated</title>
+    <title>Paper Trail — Research, Translated${filters.category ? ` · ${filters.category}` : filters.tag ? ` · ${filters.tag}` : ""}</title>
     <link>${baseUrl}</link>
-    <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="${baseUrl}/feed.xml${req.nextUrl.search}" rel="self" type="application/rss+xml"/>
     <description>Dense academic papers, translated into plain language for curious readers.</description>
     <language>en-us</language>${items}
   </channel>

@@ -2,6 +2,7 @@ import { ObjectId, Filter, Sort } from "mongodb";
 import { getDb } from "./mongodb";
 import { isValidObjectId } from "./object-id";
 import { sanitizeHttpUrl } from "./http-url";
+import { escapeRegex, labelMatchesSlug, slugToLooseRegex } from "./name-slug";
 import type { ArticleRow, PaperSourceKind, TranslatedArticle } from "./prompts";
 import {
   applyHighlights,
@@ -222,20 +223,28 @@ export async function getAllPublishedArticles(limit = 50): Promise<ArticleRow[]>
 export async function getRelatedPublishedArticles(
   slug: string,
   category: string | null | undefined,
-  limit = 3
+  limit = 3,
+  tags: string[] = []
 ): Promise<ArticleRow[]> {
   const col = await articlesCollection();
+  const or: Filter<ArticleDoc>[] = [];
+  if (category) or.push({ category });
+  const cleanTags = tags.map((t) => t.trim()).filter(Boolean).slice(0, 8);
+  if (cleanTags.length) {
+    or.push({ tags: { $in: cleanTags } });
+    or.push({ keywords: { $in: cleanTags } });
+  }
   const filter: Filter<ArticleDoc> = {
     status: "published",
     slug: { $ne: slug },
+    ...(or.length ? { $or: or } : {}),
   };
-  if (category) filter.category = category;
   const docs = await col
     .find(filter, { projection: LIST_PROJECTION })
     .sort({ published_at: -1, created_at: -1 })
     .limit(limit)
     .toArray();
-  if (docs.length >= limit || !category) return docs.map(toArticleRow);
+  if (docs.length >= limit) return docs.map(toArticleRow);
 
   const extra = await col
     .find(
@@ -246,6 +255,83 @@ export async function getRelatedPublishedArticles(
     .limit(limit - docs.length)
     .toArray();
   return [...docs, ...extra].map(toArticleRow);
+}
+
+export async function getForYouArticles(
+  topics: string[],
+  limit = 6
+): Promise<ArticleRow[]> {
+  const cleaned = [...new Set(topics.map((t) => t.trim()).filter(Boolean))].slice(0, 12);
+  if (!cleaned.length) return [];
+  const col = await articlesCollection();
+  const or: Filter<ArticleDoc>[] = cleaned.flatMap((t) => {
+    const rx = new RegExp(escapeRegex(t), "i");
+    return [
+      { tags: rx },
+      { keywords: rx },
+      { title: rx },
+      { category: rx },
+    ];
+  });
+  const docs = await col
+    .find({ status: "published", $or: or }, { projection: LIST_PROJECTION })
+    .sort({ published_at: -1, created_at: -1 })
+    .limit(limit)
+    .toArray();
+  return docs.map(toArticleRow);
+}
+
+export async function getPublishedTagCounts(
+  limit = 40
+): Promise<{ tag: string; count: number }[]> {
+  const col = await articlesCollection();
+  const rows = await col
+    .aggregate<{ _id: string; count: number }>([
+      { $match: { status: "published" } },
+      {
+        $project: {
+          labels: {
+            $setUnion: [{ $ifNull: ["$tags", []] }, { $ifNull: ["$keywords", []] }],
+          },
+        },
+      },
+      { $unwind: "$labels" },
+      { $match: { labels: { $type: "string" } } },
+      { $group: { _id: "$labels", count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      { $limit: limit },
+    ])
+    .toArray();
+  return rows.map((r) => ({ tag: r._id, count: r.count }));
+}
+
+export async function getPublishedAuthorCounts(
+  limit = 40
+): Promise<{ name: string; count: number }[]> {
+  const col = await articlesCollection();
+  const rows = await col
+    .aggregate<{ _id: string; count: number }>([
+      { $match: { status: "published", authors: { $exists: true, $ne: [] } } },
+      { $unwind: "$authors" },
+      { $match: { authors: { $type: "string", $ne: "" } } },
+      { $group: { _id: "$authors", count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      { $limit: limit },
+    ])
+    .toArray();
+  return rows.map((r) => ({ name: r._id, count: r.count }));
+}
+
+export async function resolveAuthorNameFromSlug(slug: string): Promise<string | null> {
+  if (!slug) return null;
+  const col = await articlesCollection();
+  const rx = slugToLooseRegex(slug);
+  const doc = await col.findOne(
+    { status: "published", authors: rx },
+    { projection: { authors: 1 } }
+  );
+  const match = (doc?.authors || []).find((name) => labelMatchesSlug(name, slug));
+  return match || doc?.authors?.find((name) => rx.test(name)) || null;
 }
 
 export async function getTrendingArticles(limit = 5): Promise<ArticleRow[]> {

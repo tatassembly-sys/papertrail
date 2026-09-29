@@ -4,6 +4,8 @@ export const FREE_BOOKMARKS = 20;
 export const FREE_TOPICS = 8;
 export const FREE_SUBMISSIONS_PER_WEEK = 3;
 export const PRO_SUBMISSIONS_PER_DAY = 20;
+export const FREE_COLLECTIONS = 1;
+export const FREE_HIGHLIGHTS = 15;
 export const CHAT_ABUSE_PER_HOUR = 40;
 export const DAY_MS = 24 * 60 * 60 * 1000;
 export const WEEK_MS = 7 * DAY_MS;
@@ -34,6 +36,8 @@ export interface Entitlements {
   submissionsPerWeek: number | null;
   export: boolean;
   prioritySubmit: boolean;
+  collections: number | null;
+  highlights: number | null;
 }
 
 export function grantedProEmails(): Set<string> {
@@ -67,6 +71,8 @@ export function entitlementsFor(user: PlanUser | null | undefined): Entitlements
       submissionsPerWeek: null,
       export: true,
       prioritySubmit: true,
+      collections: null,
+      highlights: null,
     };
   }
   return {
@@ -78,6 +84,8 @@ export function entitlementsFor(user: PlanUser | null | undefined): Entitlements
     submissionsPerWeek: FREE_SUBMISSIONS_PER_WEEK,
     export: false,
     prioritySubmit: false,
+    collections: FREE_COLLECTIONS,
+    highlights: FREE_HIGHLIGHTS,
   };
 }
 

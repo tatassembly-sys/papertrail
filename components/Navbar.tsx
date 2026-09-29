@@ -1,5 +1,6 @@
 import Link from "next/link";
 import NavMenu from "./NavMenu";
+import SearchHotkey from "./SearchHotkey";
 
 export default function Navbar() {
   return (
@@ -14,6 +15,7 @@ export default function Navbar() {
           </span>
         </Link>
         <div className="font-mono text-xs font-medium uppercase tracking-wide text-ink-soft">
+          <SearchHotkey />
           <NavMenu />
         </div>
       </nav>

@@ -145,6 +145,14 @@ async function createAll(db: Db): Promise<void> {
   const inquiries = db.collection("billing_inquiries");
   await safeIndex(inquiries, { created_at: -1 }, { name: "billing_inquiries_created" });
   await safeIndex(inquiries, { email: 1 }, { name: "billing_inquiries_email" });
+
+  const collections = db.collection("collections");
+  await safeIndex(collections, { user_id: 1, updated_at: -1 }, { name: "collections_user_updated" });
+  await safeIndex(collections, { public: 1, updated_at: -1 }, { name: "collections_public" });
+
+  const highlights = db.collection("highlights");
+  await safeIndex(highlights, { user_id: 1, created_at: -1 }, { name: "highlights_user_created" });
+  await safeIndex(highlights, { user_id: 1, article_slug: 1 }, { name: "highlights_user_slug" });
 }
 
 async function ensureTextIndex(

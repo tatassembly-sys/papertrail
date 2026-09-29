@@ -1,5 +1,10 @@
 import type { MetadataRoute } from "next";
-import { getAllPublishedArticles } from "@/lib/articles";
+import {
+  getAllPublishedArticles,
+  getPublishedAuthorCounts,
+  getPublishedTagCounts,
+} from "@/lib/articles";
+import { slugifyLabel } from "@/lib/name-slug";
 import { getSiteUrl } from "@/lib/site-url";
 
 // The sitemap contains live database data and must not query Atlas at build time.
@@ -13,6 +18,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     articles = await getAllPublishedArticles(1000);
   } catch (error) {
     console.error("Failed to load sitemap articles:", error);
+  }
+
+  let tags: Awaited<ReturnType<typeof getPublishedTagCounts>> = [];
+  let authors: Awaited<ReturnType<typeof getPublishedAuthorCounts>> = [];
+  try {
+    [tags, authors] = await Promise.all([
+      getPublishedTagCounts(40),
+      getPublishedAuthorCounts(40),
+    ]);
+  } catch (error) {
+    console.error("Failed to load sitemap taxonomy:", error);
   }
 
   const articleEntries: MetadataRoute.Sitemap = articles.map((article) => ({
@@ -57,6 +73,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    {
+      url: `${baseUrl}/today`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/topics`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/authors`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+    ...tags.map((t) => ({
+      url: `${baseUrl}/topics/${encodeURIComponent(slugifyLabel(t.tag))}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.45,
+    })),
+    ...authors.map((a) => ({
+      url: `${baseUrl}/authors/${encodeURIComponent(slugifyLabel(a.name))}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.4,
+    })),
     {
       url: `${baseUrl}/privacy`,
       lastModified: new Date(),

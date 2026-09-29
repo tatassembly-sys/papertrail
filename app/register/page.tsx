@@ -45,7 +45,7 @@ export default function RegisterPage() {
         new URLSearchParams(window.location.search).get("next"),
         "/account"
       );
-      router.push(next === "/account" ? "/account?registered=1" : next);
+      router.push(next === "/account" ? "/welcome" : next);
       router.refresh();
     } catch {
       setLoading(false);

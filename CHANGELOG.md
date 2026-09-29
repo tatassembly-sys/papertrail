@@ -6,6 +6,9 @@ All notable modifications from the engineering session culminating 2026-08-04.
 
 ### Added
 
+- Library layer (Semantic Scholar / Readwise / Zotero / The Conversation):
+  author + topic hubs, `/today` briefing, collections, highlights, cite
+  formats, Highwire meta tags, For you + continue reading, `/` search hotkey.
 - Paper Trail Pro: Stripe Checkout + Customer Portal + signed webhooks, free
   quotas on chat / saves / suggestions, markdown export, lab enquiry form,
   `/pricing`, account billing panel, admin grant-Pro. No Stripe package —

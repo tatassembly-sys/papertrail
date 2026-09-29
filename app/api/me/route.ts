@@ -15,6 +15,8 @@ import {
 } from "@/lib/users";
 import { getPublishedArticlesBySlugs } from "@/lib/articles";
 import { deleteThreadsForUser } from "@/lib/article-chat";
+import { deleteCollectionsForUser } from "@/lib/collections";
+import { deleteHighlightsForUser } from "@/lib/highlights";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
 import {
   DAY_MS,
@@ -145,6 +147,8 @@ export async function DELETE() {
   }
 
   await deleteThreadsForUser(session.userId);
+  await deleteCollectionsForUser(session.userId);
+  await deleteHighlightsForUser(session.userId);
   const ok = await deleteUserAccount(session.userId);
   if (!ok) {
     return NextResponse.json({ error: "Could not delete account." }, { status: 404 });

@@ -45,6 +45,21 @@ const FEATURES = [
     free: "8",
     pro: "40",
   },
+  {
+    name: "Reading lists",
+    free: "1 list",
+    pro: "Unlimited",
+  },
+  {
+    name: "Highlights & notes",
+    free: "15",
+    pro: "Unlimited",
+  },
+  {
+    name: "Cite (APA, MLA, Chicago, BibTeX)",
+    free: "Yes",
+    pro: "Yes",
+  },
 ];
 
 export default async function PricingPage() {
