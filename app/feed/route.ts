@@ -47,9 +47,9 @@ export async function GET(req: NextRequest) {
   const feed = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Paper Trail — Research, Translated${filters.category ? ` · ${filters.category}` : filters.tag ? ` · ${filters.tag}` : ""}</title>
+    <title>Paper Trail — Research, Translated${filters.category ? ` · ${escapeXml(filters.category)}` : filters.tag ? ` · ${escapeXml(filters.tag)}` : ""}</title>
     <link>${baseUrl}</link>
-    <atom:link href="${baseUrl}/feed.xml${req.nextUrl.search}" rel="self" type="application/rss+xml"/>
+    <atom:link href="${escapeXml(`${baseUrl}/feed.xml${req.nextUrl.search}`)}" rel="self" type="application/rss+xml"/>
     <description>Dense academic papers, translated into plain language for curious readers.</description>
     <language>en-us</language>${items}
   </channel>

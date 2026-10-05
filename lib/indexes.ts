@@ -62,11 +62,7 @@ async function createAll(db: Db): Promise<void> {
   await safeIndex(articles, { status: 1, category: 1 }, { name: "articles_status_category" });
   await safeIndex(articles, { status: 1, source: 1 }, { name: "articles_status_source" });
   await safeIndex(articles, { source_url: 1 }, { name: "articles_source_url" });
-  await safeIndex(articles, { source_url: 1 }, {
-    unique: true,
-    sparse: true,
-    name: "articles_source_url_unique",
-  });
+  await ensureSourceUrlUnique(articles);
   await safeIndex(articles, { tags: 1 }, { name: "articles_tags" });
   await safeIndex(articles, { authors: 1 }, { name: "articles_authors" });
   await safeIndex(articles, { status: 1, share_approved: 1 }, { name: "articles_share_approved" });
@@ -106,10 +102,7 @@ async function createAll(db: Db): Promise<void> {
     name: "rate_bucket_key_window",
   });
   await safeIndex(rateLimits, { bucket: 1, key: 1, at: -1 }, { name: "rate_bucket_key_at" });
-  await safeIndex(rateLimits, { at: 1 }, {
-    expireAfterSeconds: 24 * 60 * 60,
-    name: "rate_limits_ttl",
-  });
+  await ensureRateLimitTtl(rateLimits);
 
   const users = db.collection("users");
   await safeIndex(users, { email: 1 }, { unique: true, name: "users_email_unique" });
@@ -153,6 +146,75 @@ async function createAll(db: Db): Promise<void> {
   const highlights = db.collection("highlights");
   await safeIndex(highlights, { user_id: 1, created_at: -1 }, { name: "highlights_user_created" });
   await safeIndex(highlights, { user_id: 1, article_slug: 1 }, { name: "highlights_user_slug" });
+}
+
+async function ensureRateLimitTtl(rateLimits: {
+  createIndex: (spec: IndexSpecification, opts?: CreateIndexesOptions) => Promise<string>;
+  dropIndex: (name: string) => Promise<unknown>;
+}): Promise<void> {
+  // Weekly submission windows are 7 days; a 24h TTL let free users reset after one day.
+  const opts: CreateIndexesOptions = {
+    expireAfterSeconds: 8 * 24 * 60 * 60,
+    name: "rate_limits_ttl",
+  };
+  try {
+    await rateLimits.createIndex({ at: 1 }, opts);
+    return;
+  } catch (err) {
+    const code =
+      typeof err === "object" && err !== null && "code" in err
+        ? (err as { code: number }).code
+        : 0;
+    if (code !== 85 && code !== 86) {
+      console.warn("rate_limits ttl index create failed:", err);
+      return;
+    }
+  }
+  try {
+    await rateLimits.dropIndex("rate_limits_ttl");
+  } catch {
+    /* not present */
+  }
+  try {
+    await rateLimits.createIndex({ at: 1 }, opts);
+  } catch (err) {
+    console.error("rate_limits ttl index recreate failed:", err);
+  }
+}
+
+async function ensureSourceUrlUnique(articles: {
+  createIndex: (spec: IndexSpecification, opts?: CreateIndexesOptions) => Promise<string>;
+  dropIndex: (name: string) => Promise<unknown>;
+}): Promise<void> {
+  const opts: CreateIndexesOptions = {
+    unique: true,
+    name: "articles_source_url_unique",
+    // Sparse still indexes explicit null. Only real URLs must be unique.
+    partialFilterExpression: { source_url: { $type: "string" } },
+  };
+  try {
+    await articles.createIndex({ source_url: 1 }, opts);
+    return;
+  } catch (err) {
+    const code =
+      typeof err === "object" && err !== null && "code" in err
+        ? (err as { code: number }).code
+        : 0;
+    if (code !== 85 && code !== 86) {
+      console.warn("source_url unique index create failed:", err);
+      return;
+    }
+  }
+  try {
+    await articles.dropIndex("articles_source_url_unique");
+  } catch {
+    /* not present */
+  }
+  try {
+    await articles.createIndex({ source_url: 1 }, opts);
+  } catch (err) {
+    console.error("source_url unique index recreate failed:", err);
+  }
 }
 
 async function ensureTextIndex(

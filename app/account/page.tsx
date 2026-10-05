@@ -19,6 +19,7 @@ interface User {
   plan_interval: "month" | "year" | null;
   plan_period_end: string | null;
   cancel_at_period_end: boolean;
+  has_billing_customer: boolean;
 }
 
 function AccountInner() {
@@ -61,6 +62,7 @@ function AccountInner() {
           plan_interval: raw.plan_interval || null,
           plan_period_end: raw.plan_period_end || null,
           cancel_at_period_end: Boolean(raw.cancel_at_period_end),
+          has_billing_customer: Boolean(raw.has_billing_customer),
         }
       : null;
     setUser(next);

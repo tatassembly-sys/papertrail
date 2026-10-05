@@ -28,7 +28,15 @@ export async function POST(req: NextRequest) {
     const result = await subscribeEmail(email);
 
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      const status = /not configured/i.test(result.error) ? 503 : 400;
+      return NextResponse.json({ error: result.error }, { status });
+    }
+
+    if (process.env.NODE_ENV === "production" && !result.emailSent) {
+      return NextResponse.json(
+        { error: "Could not send confirmation email. Try again shortly." },
+        { status: 503 }
+      );
     }
 
     return NextResponse.json({

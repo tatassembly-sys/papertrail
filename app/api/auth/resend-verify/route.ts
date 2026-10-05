@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No email on this account." }, { status: 400 });
   }
 
-  const verifyUrl = `${getSiteUrl()}/api/auth/verify-email?token=${token}`;
+  const verifyUrl = `${getSiteUrl()}/verify-email?token=${token}`;
   await sendEmail({
     to,
     subject: "Verify your Paper Trail account",

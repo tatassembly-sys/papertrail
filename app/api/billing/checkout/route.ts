@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserSession } from "@/lib/user-auth";
 import { findUserById } from "@/lib/users";
-import { isBillingConfigured, isProUser } from "@/lib/entitlements";
+import { LIVE_STATUSES, isBillingConfigured } from "@/lib/entitlements";
 import { createCheckoutSession, StripeConfigError } from "@/lib/stripe";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
 
@@ -29,9 +29,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Account not found." }, { status: 404 });
   }
 
-  if (isProUser(user) && user.stripe_subscription_id && user.plan_status === "active") {
+  if (user.stripe_subscription_id && LIVE_STATUSES.has(user.plan_status || "")) {
     return NextResponse.json(
-      { error: "You already have Pro. Manage it from your account." },
+      { error: "You already have a subscription. Manage it from your account." },
       { status: 409 }
     );
   }

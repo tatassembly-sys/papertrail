@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getArticleBySlug, getRelatedPublishedArticles } from "@/lib/articles";
@@ -14,6 +15,7 @@ import { buildShareLinks } from "@/lib/share-links";
 import { getSiteUrl } from "@/lib/site-url";
 import { categoryLabel } from "@/lib/arxivCategories";
 import { sanitizeHttpUrl } from "@/lib/http-url";
+import { jsonLdScript } from "@/lib/json-ld";
 import { slugifyLabel } from "@/lib/name-slug";
 import { readingMinutes, readingTimeLabel } from "@/lib/reading-time";
 
@@ -73,7 +75,10 @@ export default async function PostPage({ params }: PageProps) {
   if (!article) notFound();
 
   const session = await getCurrentUserSession();
-  if (session) {
+  const hdrs = await headers();
+  const prefetch =
+    hdrs.get("next-router-prefetch") === "1" || hdrs.get("purpose") === "prefetch";
+  if (session && !prefetch) {
     void recordReading(session.userId, slug);
   }
 
@@ -112,7 +117,7 @@ export default async function PostPage({ params }: PageProps) {
     <article className="mx-auto max-w-2xl">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
       />
       <Link
         href="/"

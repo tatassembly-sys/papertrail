@@ -2,6 +2,7 @@ import { ObjectId, Filter, Sort } from "mongodb";
 import { getDb } from "./mongodb";
 import { isValidObjectId } from "./object-id";
 import { sanitizeHttpUrl } from "./http-url";
+import { PublishGateError, publishBlocker } from "./publish-gate";
 import { escapeRegex, labelMatchesSlug, slugToLooseRegex } from "./name-slug";
 import type { ArticleRow, PaperSourceKind, TranslatedArticle } from "./prompts";
 import {
@@ -495,6 +496,7 @@ export async function insertDraftArticle(
   const col = await articlesCollection();
   const baseSlug = slugify(article.title || fallbackTitle);
 
+  const cleanSource = sanitizeHttpUrl(sourceUrl);
   const doc: Omit<ArticleDoc, "_id"> = {
     title: article.title,
     headline: article.headline,
@@ -506,7 +508,7 @@ export async function insertDraftArticle(
     authors: meta.authors || [],
     institutions: meta.institutions || [],
     slug: baseSlug,
-    source_url: sanitizeHttpUrl(sourceUrl),
+    source_url: cleanSource,
     source: meta.source ?? (sourceUrl?.includes("pubmed") ? "pubmed" : sourceUrl?.includes("arxiv") ? "arxiv" : "manual"),
     status: "draft",
     created_at: new Date(),
@@ -514,6 +516,9 @@ export async function insertDraftArticle(
     category,
     share_approved: false,
   };
+  if (!cleanSource) {
+    delete (doc as { source_url?: string | null }).source_url;
+  }
 
   try {
     const result = await col.insertOne(doc as ArticleDoc);
@@ -596,7 +601,9 @@ export async function updateArticle(
   if (updates.source_url === null) {
     safeUpdates.source_url = null;
   } else if (typeof updates.source_url === "string") {
-    safeUpdates.source_url = sanitizeHttpUrl(updates.source_url);
+    const clean = sanitizeHttpUrl(updates.source_url);
+    // Invalid strings must not wipe an existing source_url (javascript:, credentials).
+    if (clean) safeUpdates.source_url = clean;
   }
   if (updates.category === null) {
     safeUpdates.category = null;
@@ -605,9 +612,6 @@ export async function updateArticle(
   }
   if (updates.status === "draft" || updates.status === "published") {
     safeUpdates.status = updates.status;
-    if (updates.status === "published") {
-      safeUpdates.published_at = new Date();
-    }
   }
   if (typeof updates.share_approved === "boolean") {
     safeUpdates.share_approved = updates.share_approved;
@@ -635,9 +639,44 @@ export async function updateArticle(
 
   if (Object.keys(safeUpdates).length === 0) return null;
 
+  const existing = await col.findOne({ _id: new ObjectId(id) });
+  if (!existing) return null;
+
+  const nextStatus =
+    safeUpdates.status === "draft" || safeUpdates.status === "published"
+      ? safeUpdates.status
+      : existing.status;
+  const staysOrBecomesPublished = nextStatus === "published";
+
+  if (staysOrBecomesPublished) {
+    const nextSource =
+      "source_url" in safeUpdates
+        ? (safeUpdates.source_url as string | null)
+        : existing.source_url;
+    const nextCaveats =
+      typeof safeUpdates.caveats === "string" ? safeUpdates.caveats : existing.caveats;
+    const blocked = publishBlocker({ sourceUrl: nextSource, caveats: nextCaveats });
+    if (blocked) throw new PublishGateError(blocked);
+  }
+
+  if (safeUpdates.status === "published" && existing.status !== "published") {
+    safeUpdates.published_at = new Date();
+  }
+
+  const unset: Record<string, ""> = {};
+  if (safeUpdates.source_url === null) {
+    delete safeUpdates.source_url;
+    unset.source_url = "";
+  }
+
+  const update: Record<string, unknown> = {};
+  if (Object.keys(safeUpdates).length) update.$set = safeUpdates;
+  if (Object.keys(unset).length) update.$unset = unset;
+  if (!Object.keys(update).length) return toArticleRow(existing);
+
   const result = await col.findOneAndUpdate(
     { _id: new ObjectId(id) },
-    { $set: safeUpdates },
+    update,
     { returnDocument: "after" }
   );
 

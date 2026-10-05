@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import { getSiteUrl } from "@/lib/site-url";
+import { jsonLdScript } from "@/lib/json-ld";
 
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
@@ -80,7 +81,7 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: jsonLdScript({
               "@context": "https://schema.org",
               "@type": "WebSite",
               name: "Paper Trail",

@@ -8,19 +8,13 @@ function looksLikeIp(value: string): boolean {
 }
 
 /**
- * Client IP behind Railway / reverse proxies.
+ * Client IP behind a reverse proxy.
  *
- * The first X-Forwarded-For hop is attacker-controlled (the client can send
- * the header; the proxy appends). Prefer x-real-ip / cf-connecting-ip, then
- * the *last* XFF hop — the address the reverse proxy actually observed.
+ * X-Real-IP and CF-Connecting-IP are client-settable unless the edge
+ * overwrites them. Railway (and most proxies) append the observed address as
+ * the last X-Forwarded-For hop; the first hop is attacker-controlled.
  */
 export function getClientIp(req: NextRequest): string {
-  const real = req.headers.get("x-real-ip")?.trim();
-  if (real && looksLikeIp(real)) return real;
-
-  const cf = req.headers.get("cf-connecting-ip")?.trim();
-  if (cf && looksLikeIp(cf)) return cf;
-
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
     const parts = forwarded

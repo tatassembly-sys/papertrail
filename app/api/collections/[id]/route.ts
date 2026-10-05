@@ -15,7 +15,20 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   const row = await getCollection(id);
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (row.public) return NextResponse.json({ collection: row });
+  if (row.public) {
+    return NextResponse.json({
+      collection: {
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        description: row.description,
+        slugs: row.slugs,
+        public: row.public,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      },
+    });
+  }
   const session = await getCurrentUserSession();
   if (!session || session.userId !== row.user_id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

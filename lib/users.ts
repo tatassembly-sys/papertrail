@@ -52,6 +52,7 @@ export interface UserPublic {
   plan_interval: "month" | "year" | null;
   plan_period_end: string | null;
   cancel_at_period_end: boolean;
+  has_billing_customer: boolean;
   entitlements: Entitlements;
 }
 
@@ -73,6 +74,7 @@ function toPublic(u: UserDoc): UserPublic {
     plan_interval: u.plan_interval || null,
     plan_period_end: u.plan_period_end ? u.plan_period_end.toISOString() : null,
     cancel_at_period_end: Boolean(u.plan_cancel_at_period_end),
+    has_billing_customer: Boolean(u.stripe_customer_id),
     entitlements: entitlementsFor(u),
   };
 }
@@ -135,9 +137,20 @@ export async function registerUser(
     token_version: 1,
     created_at: new Date(),
   };
-  const result = await col.insertOne(doc as UserDoc);
-  const user = toPublic({ ...doc, _id: result.insertedId } as UserDoc);
-  return { user, verifyToken };
+  try {
+    const result = await col.insertOne(doc as UserDoc);
+    const user = toPublic({ ...doc, _id: result.insertedId } as UserDoc);
+    return { user, verifyToken };
+  } catch (err) {
+    const code =
+      typeof err === "object" && err !== null && "code" in err
+        ? (err as { code: number }).code
+        : 0;
+    if (code === 11000) {
+      return { error: "Unable to create that account. Try signing in instead." };
+    }
+    throw err;
+  }
 }
 
 export async function verifyUserPassword(
@@ -266,7 +279,7 @@ export async function updateUserProfile(
       .filter((t): t is string => typeof t === "string")
       .map((t) => t.trim())
       .filter(Boolean)
-      .slice(0, 30);
+      .slice(0, 80);
   }
   if (!Object.keys($set).length) return getUserPublic(id);
   const result = await col.findOneAndUpdate(
@@ -315,8 +328,8 @@ export async function recordReading(userId: string, slug: string): Promise<void>
 }
 
 export interface BillingState {
-  plan: PlanName;
-  plan_status: string;
+  plan?: PlanName;
+  plan_status?: string;
   plan_interval?: "month" | "year" | null;
   plan_period_end?: Date | null;
   plan_cancel_at_period_end?: boolean;
@@ -330,10 +343,9 @@ export async function applyBillingState(
 ): Promise<UserPublic | null> {
   if (!isValidObjectId(userId)) return null;
   const col = await users();
-  const $set: Record<string, unknown> = {
-    plan: state.plan,
-    plan_status: state.plan_status,
-  };
+  const $set: Record<string, unknown> = {};
+  if (state.plan !== undefined) $set.plan = state.plan;
+  if (state.plan_status !== undefined) $set.plan_status = state.plan_status;
   if (state.plan_interval !== undefined) $set.plan_interval = state.plan_interval;
   if (state.plan_period_end !== undefined) $set.plan_period_end = state.plan_period_end;
   if (state.plan_cancel_at_period_end !== undefined) {
@@ -345,6 +357,7 @@ export async function applyBillingState(
   if (state.stripe_subscription_id !== undefined) {
     $set.stripe_subscription_id = state.stripe_subscription_id;
   }
+  if (!Object.keys($set).length) return getUserPublic(userId);
   const result = await col.findOneAndUpdate(
     { _id: new ObjectId(userId) },
     { $set },

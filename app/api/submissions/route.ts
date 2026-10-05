@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSubmission, getSubmissions, hasPendingSubmission, isRateLimited } from "@/lib/submissions";
 import { requireAdmin } from "@/lib/auth-server";
 import { getClientIp, hashIp } from "@/lib/request-ip";
+import { sanitizeHttpUrl } from "@/lib/http-url";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
 import { getCurrentUserSession } from "@/lib/user-auth";
 import { findUserById } from "@/lib/users";
@@ -12,20 +13,21 @@ import {
   WEEK_MS,
   isProUser,
 } from "@/lib/entitlements";
-import { hitRateLimit } from "@/lib/rate-limit";
+import { getRateCount, hitRateLimit, undoRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 const MAX_NOTE_LENGTH = 500;
-const MAX_URL_LENGTH = 500;
 
-function isValidUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
+function freeWeeklyLimitResponse() {
+  return NextResponse.json(
+    {
+      error: "Free accounts can suggest 3 papers a week. Upgrade to Pro for priority requests.",
+      code: "upgrade_required",
+      upgradeUrl: "/pricing",
+    },
+    { status: 402 }
+  );
 }
 
 export async function GET(req: NextRequest) {
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
     if (!body) {
       return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
-    const url: string | undefined = typeof body.url === "string" ? body.url.trim() : undefined;
+    const rawUrl: string | undefined = typeof body.url === "string" ? body.url.trim() : undefined;
     const note: string | undefined =
       typeof body.note === "string" ? body.note.trim().slice(0, MAX_NOTE_LENGTH) : undefined;
 
@@ -56,41 +58,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true }, { status: 201 });
     }
 
-    if (!url || !isValidUrl(url) || url.length > MAX_URL_LENGTH) {
+    const url = sanitizeHttpUrl(rawUrl);
+    if (!url) {
       return NextResponse.json({ error: "Please provide a valid URL." }, { status: 400 });
-    }
-
-    const ipHash = hashIp(getClientIp(req));
-    const session = await getCurrentUserSession();
-    const user = session ? await findUserById(session.userId) : null;
-    const pro = isProUser(user);
-
-    if (pro) {
-      if (await hitRateLimit("submit_day", `user:${session!.userId}`, PRO_SUBMISSIONS_PER_DAY, DAY_MS)) {
-        return NextResponse.json(
-          { error: "Daily suggestion limit reached. Try again tomorrow." },
-          { status: 429 }
-        );
-      }
-    } else {
-      if (await isRateLimited(ipHash)) {
-        return NextResponse.json(
-          { error: "You've hit the submission limit for now — please try again later." },
-          { status: 429 }
-        );
-      }
-      const weekKey = session ? `user:${session.userId}` : `ip:${ipHash}`;
-      if (await hitRateLimit("submit_week", weekKey, FREE_SUBMISSIONS_PER_WEEK, WEEK_MS)) {
-        return NextResponse.json(
-          {
-            error:
-              "Free accounts can suggest 3 papers a week. Upgrade to Pro for priority requests.",
-            code: "upgrade_required",
-            upgradeUrl: "/pricing",
-          },
-          { status: 402 }
-        );
-      }
     }
 
     if (await hasPendingSubmission(url)) {
@@ -100,10 +70,47 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    await createSubmission(url, note, ipHash, {
-      priority: pro,
-      userId: session?.userId || null,
-    });
+    const ipHash = hashIp(getClientIp(req));
+    const session = await getCurrentUserSession();
+    const user = session ? await findUserById(session.userId) : null;
+    const pro = isProUser(user);
+
+    const weekKey = session ? `user:${session.userId}` : `ip:${ipHash}`;
+    let reservedDay = false;
+    let reservedWeek = false;
+    if (pro) {
+      if (await hitRateLimit("submit_day", `user:${session!.userId}`, PRO_SUBMISSIONS_PER_DAY, DAY_MS)) {
+        return NextResponse.json(
+          { error: "Daily suggestion limit reached. Try again tomorrow." },
+          { status: 429 }
+        );
+      }
+      reservedDay = true;
+    } else {
+      const weekUsed = await getRateCount("submit_week", weekKey, WEEK_MS);
+      if (weekUsed >= FREE_SUBMISSIONS_PER_WEEK) return freeWeeklyLimitResponse();
+      if (await isRateLimited(ipHash)) {
+        return NextResponse.json(
+          { error: "You've hit the submission limit for now — please try again later." },
+          { status: 429 }
+        );
+      }
+      if (await hitRateLimit("submit_week", weekKey, FREE_SUBMISSIONS_PER_WEEK, WEEK_MS)) {
+        return freeWeeklyLimitResponse();
+      }
+      reservedWeek = true;
+    }
+
+    try {
+      await createSubmission(url, note, ipHash, {
+        priority: pro,
+        userId: session?.userId || null,
+      });
+    } catch (err) {
+      if (reservedDay) await undoRateLimit("submit_day", `user:${session!.userId}`, DAY_MS);
+      if (reservedWeek) await undoRateLimit("submit_week", weekKey, WEEK_MS);
+      throw err;
+    }
     return NextResponse.json(
       {
         success: true,

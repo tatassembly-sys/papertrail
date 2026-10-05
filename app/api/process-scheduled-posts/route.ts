@@ -5,7 +5,7 @@ import {
   markScheduledError,
   markScheduledSent,
 } from "@/lib/scheduledPosts";
-import { POSTERS } from "@/lib/social";
+import { POSTERS, isSocialPlatform } from "@/lib/social";
 import { assertCronAuthorized } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
@@ -34,6 +34,17 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
+      if (article.status !== "published") {
+        await markScheduledError(post._id, 999, "Article is not published.");
+        results.push({
+          id: post._id.toString(),
+          platform: post.platform,
+          status: "error",
+          error: "not published",
+        });
+        continue;
+      }
+
       if (!article.share_approved) {
         await markScheduledError(post._id, 999, "Share approval revoked.");
         results.push({
@@ -45,7 +56,7 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      const poster = POSTERS[post.platform];
+      const poster = isSocialPlatform(post.platform) ? POSTERS[post.platform] : undefined;
       if (!poster) {
         // Force terminal error status (markScheduledError uses attempts >= 3).
         await markScheduledError(post._id, 999, `Unknown platform: ${post.platform}`);

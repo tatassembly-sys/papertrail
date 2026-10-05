@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
+import { publishBlocker } from "@/lib/publish-gate";
 
 const PER_FIELD = 1;
 const MAX_PUBLISH = 12;
@@ -105,9 +106,11 @@ export async function publishDailyFieldMix(options: {
   const queue = db.collection("fetch_queue");
   const runs = db.collection("publish_mix_runs");
 
+  let claimed = false;
   if (!options.force) {
     try {
       await runs.insertOne({ dateKey, at: new Date(), published: 0, items: [] });
+      claimed = true;
     } catch (err) {
       const code =
         typeof err === "object" && err !== null && "code" in err
@@ -125,19 +128,28 @@ export async function publishDailyFieldMix(options: {
     }
   }
 
+  try {
   const drafts = await col
     .find({
       status: "draft",
       source_url: { $type: "string", $ne: "" },
       title: { $type: "string", $ne: "" },
     })
-    .project({ title: 1, category: 1, source_url: 1, slug: 1 })
+    .project({ title: 1, category: 1, source_url: 1, slug: 1, caveats: 1 })
     .sort({ created_at: -1 })
     .limit(400)
     .toArray();
 
   const byField = new Map<string, typeof drafts>();
   for (const d of drafts) {
+    if (
+      publishBlocker({
+        sourceUrl: typeof d.source_url === "string" ? d.source_url : null,
+        caveats: typeof d.caveats === "string" ? d.caveats : "",
+      })
+    ) {
+      continue;
+    }
     const field = fieldOf(typeof d.category === "string" ? d.category : "");
     const list = byField.get(field) || [];
     list.push(d);
@@ -258,44 +270,62 @@ export async function publishDailyFieldMix(options: {
   }
 
   if (chosen.length === 0) {
-    await runs.updateOne(
-      { dateKey },
-      { $set: { at: new Date(), published: 0, items: [] }, $setOnInsert: { dateKey } },
-      { upsert: true }
-    );
+    if (claimed) await runs.deleteOne({ dateKey, published: 0 });
     return { published: 0, skipped: null, dateKey, items: [] };
   }
 
-  const result = await col.updateMany(
-    {
-      _id: { $in: chosen.map((c) => c._id) },
-      status: "draft",
-      source_url: { $type: "string", $ne: "" },
-    },
-    { $set: { status: "published", published_at: new Date() } }
-  );
+  const publishedIds: string[] = [];
+  for (const c of chosen) {
+    const result = await col.updateOne(
+      {
+        _id: c._id,
+        status: "draft",
+        source_url: { $type: "string", $ne: "" },
+        caveats: { $regex: /\S/ },
+      },
+      { $set: { status: "published", published_at: new Date() } }
+    );
+    if (result.modifiedCount) publishedIds.push(String(c._id));
+  }
 
-  const items = chosen.map((c) => ({
-    field: fieldOf(String(c.category || "")),
-    title: c.title,
-    slug: c.slug,
-  }));
+  const items = chosen
+    .filter((c) => publishedIds.includes(String(c._id)))
+    .map((c) => ({
+      field: fieldOf(String(c.category || "")),
+      title: c.title,
+      slug: c.slug,
+    }));
+
+  if (items.length === 0) {
+    if (claimed) await runs.deleteOne({ dateKey, published: 0 });
+    return { published: 0, skipped: null, dateKey, items: [] };
+  }
 
   await runs.updateOne(
     { dateKey },
     {
-      $set: { at: new Date(), published: result.modifiedCount, items },
+      $set: { at: new Date(), published: items.length, items },
       $setOnInsert: { dateKey },
     },
     { upsert: true }
   );
 
   return {
-    published: result.modifiedCount,
+    published: items.length,
     skipped: null,
     dateKey,
     items,
   };
+  } catch (err) {
+    if (claimed) {
+      try {
+        await runs.deleteOne({ dateKey, published: 0 });
+      } catch (cleanupErr) {
+        console.error("publish-mix claim cleanup failed:", cleanupErr);
+      }
+    }
+    throw err;
+  }
 }
 
 export async function getLastPublishMix(): Promise<{

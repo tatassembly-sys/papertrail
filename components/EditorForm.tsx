@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { ArticleRow } from "@/lib/prompts";
 import type { ScheduledPostRow } from "@/lib/scheduledPosts";
 import { ARXIV_CATEGORY_CODES, categoryLabel } from "@/lib/arxivCategories";
+import { isSafeHttpUrl } from "@/lib/http-url";
 import ShareSection from "./ShareSection";
 
 export default function EditorForm({
@@ -72,11 +73,17 @@ export default function EditorForm({
     setError(null);
     setMessage(null);
 
-    if (status === "published" && !form.source_url.trim()) {
-      setError(
-        "A source URL is required before publishing — every article must link back to the original paper."
-      );
-      return;
+    if (status === "published") {
+      if (!isSafeHttpUrl(form.source_url)) {
+        setError(
+          "A source URL is required before publishing — every article must link back to the original paper."
+        );
+        return;
+      }
+      if (!form.caveats.trim()) {
+        setError("Caveats are required before publishing.");
+        return;
+      }
     }
 
     setSaving(true);
@@ -241,7 +248,7 @@ export default function EditorForm({
 
       <div>
         <label htmlFor="editor-caveats" className="mb-1 block text-sm font-medium text-ink">
-          Caveats
+          Caveats <span className="font-normal text-stamp">(required to publish)</span>
         </label>
         <textarea
           id="editor-caveats"

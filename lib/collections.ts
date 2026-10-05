@@ -55,6 +55,7 @@ async function collection() {
 function caps(user: PlanUser | null) {
   const pro = entitlementsFor(user).collections == null;
   return {
+    pro,
     maxLists: pro ? PRO_COLLECTIONS : FREE_COLLECTIONS,
     maxItems: pro ? PRO_COLLECTION_ITEMS : FREE_COLLECTION_ITEMS,
   };
@@ -81,8 +82,11 @@ export async function createCollection(
   const name = input.name.trim().slice(0, 80);
   if (!name) return { error: "Name required." };
   const existing = await listCollections(userId);
-  const { maxLists } = caps(user);
+  const { maxLists, pro } = caps(user);
   if (existing.length >= maxLists) {
+    if (pro) {
+      return { error: `You can keep up to ${maxLists} reading lists.` };
+    }
     return {
       error: `Free accounts can keep ${maxLists} reading list. Upgrade to Pro for more.`,
       code: "upgrade_required",
@@ -118,7 +122,7 @@ export async function updateCollection(
 ): Promise<CollectionRow | { error: string; code?: string }> {
   const current = await getCollection(id);
   if (!current || current.user_id !== userId) return { error: "Not found." };
-  const { maxItems } = caps(user);
+  const { maxItems, pro } = caps(user);
   const $set: Record<string, unknown> = { updated_at: new Date() };
   if (typeof patch.name === "string") {
     const name = patch.name.trim().slice(0, 80);
@@ -137,6 +141,9 @@ export async function updateCollection(
     const slug = patch.addSlug.trim().slice(0, 120);
     if (slug && !slugs.includes(slug)) {
       if (slugs.length >= maxItems) {
+        if (pro) {
+          return { error: `This list is full (${maxItems} papers).` };
+        }
         return {
           error: `This list is full (${maxItems}). Upgrade to Pro for larger lists.`,
           code: "upgrade_required",

@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { getDb } from "./mongodb";
 import { ARTICLE_CHAT_SYSTEM, type ArticleRow } from "./prompts";
 import { openRouterChat } from "./openrouter";
+import { isOpenRouterConfigError } from "./openrouter-health";
 import { isXaiConfigured, xaiChat } from "./xai";
 import { answerFromArticle } from "./extract-draft";
 
@@ -128,6 +129,8 @@ export async function askArticleAssistant(
     });
     reply = result.content;
   } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (isOpenRouterConfigError(msg)) throw err;
     console.warn("[chat] OpenRouter failed, trying fallbacks", err);
     try {
       if (isXaiConfigured()) {
@@ -135,7 +138,9 @@ export async function askArticleAssistant(
       } else {
         throw err;
       }
-    } catch {
+    } catch (fallbackErr) {
+      const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : "";
+      if (isOpenRouterConfigError(fallbackMsg)) throw fallbackErr;
       reply = answerFromArticle(article, userMessage);
     }
   }

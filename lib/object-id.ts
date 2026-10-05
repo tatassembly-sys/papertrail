@@ -1,16 +1,12 @@
 import { ObjectId } from "mongodb";
 
 /**
- * Stricter than ObjectId.isValid alone, which accepts any 12-byte string
- * (including non-hex). Prefer 24-char hex for public route params.
+ * Public route params must be 24-char hex. MongoDB 6+ ObjectId.isValid already
+ * rejects many 12-byte ASCII strings; the hex check still blocks anything else
+ * the driver might accept (padded values, 12-byte buffers as strings).
  */
 export function isValidObjectId(id: string | undefined | null): boolean {
   if (!id || typeof id !== "string") return false;
   if (!/^[a-f0-9]{24}$/i.test(id)) return false;
   return ObjectId.isValid(id);
-}
-
-export function toObjectId(id: string): ObjectId | null {
-  if (!isValidObjectId(id)) return null;
-  return new ObjectId(id);
 }

@@ -6,6 +6,7 @@ import { insertDraftArticle } from "@/lib/articles";
 import type { TranslatedArticle } from "@/lib/prompts";
 import { publicErrorMessage } from "@/lib/safe-error";
 import { sanitizeHttpUrl } from "@/lib/http-url";
+import { parseArxivLocator } from "@/lib/paper-extract";
 import { JSON_LIMIT_ARTICLE, asRecord, readJsonBody } from "@/lib/json-body";
 
 export const runtime = "nodejs"; // required for PDF parsing (unpdf), the mongo driver, and larger fetches
@@ -32,10 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     const rawUrl = typeof body.url === "string" ? body.url.trim() : "";
-    const url: string | undefined = rawUrl
-      ? sanitizeHttpUrl(rawUrl) ||
-        (/(\d{4}\.\d{4,5})(v\d+)?/.test(rawUrl) && rawUrl.length <= 200 ? rawUrl : undefined)
-      : undefined;
+    const url: string | undefined = rawUrl ? parseArxivLocator(rawUrl) || undefined : undefined;
     const rawText: string | undefined =
       typeof body.rawText === "string" ? body.rawText.trim() : undefined;
     const sourceUrl: string | undefined =

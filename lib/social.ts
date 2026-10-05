@@ -13,3 +13,7 @@ export const POSTERS: Record<string, (article: ArticleRow) => Promise<SocialPost
 };
 
 export const VALID_PLATFORMS = Object.keys(POSTERS);
+
+export function isSocialPlatform(platform: string): boolean {
+  return Object.prototype.hasOwnProperty.call(POSTERS, platform);
+}

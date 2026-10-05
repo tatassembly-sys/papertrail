@@ -116,7 +116,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const current = await findUserById(session.userId);
-  const topicCap = entitlementsFor(current).topics ?? 40;
+  const topicCap = entitlementsFor(current).topics ?? 80;
   const topics = Array.isArray(body.followed_topics)
     ? body.followed_topics
         .filter((t): t is string => typeof t === "string")
@@ -143,6 +143,10 @@ export async function DELETE() {
       await cancelSubscriptionNow(existing.stripe_subscription_id);
     } catch (err) {
       console.error("cancel stripe on account delete:", err);
+      return NextResponse.json(
+        { error: "Could not cancel billing. Try the billing portal, then delete again." },
+        { status: 502 }
+      );
     }
   }
 

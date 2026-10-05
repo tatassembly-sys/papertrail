@@ -5,6 +5,7 @@ import LabInquiryForm from "@/components/LabInquiryForm";
 import { billingPublicConfig } from "@/lib/entitlements";
 import { getCurrentUserSession } from "@/lib/user-auth";
 import { getSiteUrl } from "@/lib/site-url";
+import { jsonLdScript } from "@/lib/json-ld";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -98,7 +99,7 @@ export default async function PricingPage() {
     <article className="mx-auto max-w-2xl">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
       />
       <p className="mb-3 font-mono text-xs uppercase tracking-widest text-stamp">
         Pricing

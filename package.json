@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:sandbox": "node sandbox/run.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

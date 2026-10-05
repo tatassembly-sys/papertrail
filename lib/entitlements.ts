@@ -16,7 +16,7 @@ export const PLAN_COPY = {
   yearly: { amount: 72, currency: "GBP", interval: "year" as const, label: "£72" },
 };
 
-const LIVE_STATUSES = new Set(["active", "trialing", "past_due"]);
+export const LIVE_STATUSES = new Set(["active", "trialing", "past_due"]);
 
 export type PlanName = "free" | "pro";
 

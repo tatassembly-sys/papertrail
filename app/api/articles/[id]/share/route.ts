@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-server";
 import { getArticleById, markShared } from "@/lib/articles";
-import { POSTERS } from "@/lib/social";
+import { POSTERS, isSocialPlatform } from "@/lib/social";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
 
 export const runtime = "nodejs";
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   const platforms = Array.isArray(body.platforms)
     ? body.platforms.filter((p): p is string => typeof p === "string")
     : [];
-  const validPlatforms = platforms.filter((p) => p in POSTERS);
+  const validPlatforms = platforms.filter((p) => isSocialPlatform(p));
 
   if (validPlatforms.length === 0) {
     return NextResponse.json(

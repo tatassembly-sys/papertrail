@@ -50,6 +50,22 @@ export async function hitRateLimit(
   }
 }
 
+/** Undo a reservation after a failed downstream call (e.g. LLM 502). */
+export async function undoRateLimit(
+  bucket: string,
+  key: string,
+  windowMs: number
+): Promise<void> {
+  const safeKey = key || "unknown";
+  const safeWindow = windowMs > 0 ? windowMs : 60_000;
+  const windowId = Math.floor(Date.now() / safeWindow);
+  const col = await collection();
+  await col.updateOne(
+    { bucket, key: safeKey, window: windowId, count: { $gt: 0 } },
+    { $inc: { count: -1 } }
+  );
+}
+
 export async function getRateCount(
   bucket: string,
   key: string,

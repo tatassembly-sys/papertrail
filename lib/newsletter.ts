@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { randomBytes } from "crypto";
 import { getDb } from "./mongodb";
-import { hashToken, tokenLookupValues } from "./token-hash";
+import { hashToken, tokenLookupValues, tokenLookupValuesAllowStored } from "./token-hash";
 import {
   getAllPublishedArticles,
   getEditorPicks,
@@ -65,13 +65,17 @@ export async function subscribeEmail(
   const col = await subs();
   const existing = await col.findOne({ email: normalized });
   if (existing?.status === "active") {
-    return { ok: false, error: "That email is already subscribed." };
+    // Same shape as a new signup so this endpoint cannot be used to probe who is on the list.
+    return { ok: true, verifyToken: "", verifyUrl: "", emailSent: true };
   }
 
   const verifyToken = token();
   const rawUnsubscribe = token();
   const unsubscribeToken = existing?.unsubscribe_token || hashToken(rawUnsubscribe);
   const emailReady = isEmailConfigured();
+  if (!emailReady && process.env.NODE_ENV === "production") {
+    return { ok: false, error: "Email delivery is not configured. Try again later." };
+  }
   const status: SubscriberDoc["status"] = emailReady ? "pending" : "active";
 
   if (existing) {
@@ -99,7 +103,7 @@ export async function subscribeEmail(
   }
 
   const site = getSiteUrl();
-  const verifyUrl = `${site}/api/newsletter/verify?token=${verifyToken}`;
+  const verifyUrl = `${site}/newsletter/confirm?token=${verifyToken}`;
 
   if (!emailReady) {
     return {
@@ -144,7 +148,7 @@ export async function confirmSubscription(verifyToken: string): Promise<boolean>
 }
 
 export async function unsubscribeByToken(tokenStr: string): Promise<boolean> {
-  const candidates = tokenLookupValues(tokenStr);
+  const candidates = tokenLookupValuesAllowStored(tokenStr);
   if (candidates.length === 0) return false;
   const col = await subs();
   const result = await col.updateOne(
@@ -159,10 +163,10 @@ export async function unsubscribeByToken(tokenStr: string): Promise<boolean> {
   return result.modifiedCount > 0;
 }
 
-export async function listActiveSubscribers(limit = 200): Promise<SubscriberDoc[]> {
+export async function listActiveSubscribers(limit = 500): Promise<SubscriberDoc[]> {
   const col = await subs();
   const cap = Math.min(500, Math.max(1, limit));
-  return col.find({ status: "active" }).sort({ created_at: 1 }).limit(cap).toArray();
+  return col.find({ status: "active" }).sort({ created_at: -1 }).limit(cap).toArray();
 }
 
 async function generateAiWeeklySummary(articles: ArticleRow[]): Promise<string> {
@@ -298,8 +302,9 @@ export async function sendWeeklyDigest(): Promise<{
   articleCount: number;
 }> {
   const digest = await buildWeeklyDigest();
-  const subscribers = await listActiveSubscribers(200);
+  const subscribers = await listActiveSubscribers(500);
   const site = getSiteUrl();
+  const col = await subs();
   let sent = 0;
   let failed = 0;
   let logged = 0;
@@ -308,7 +313,8 @@ export async function sendWeeklyDigest(): Promise<{
   const forYouCache = new Map<string, Awaited<ReturnType<typeof getForYouArticles>>>();
 
   for (const sub of subscribers) {
-    const unsubUrl = `${site}/api/newsletter/unsubscribe?token=${sub.unsubscribe_token}`;
+    const rawUnsub = token();
+    const unsubUrl = `${site}/newsletter/unsubscribe?token=${rawUnsub}`;
     let extraHtml = "";
     let extraText = "";
     try {
@@ -358,6 +364,12 @@ export async function sendWeeklyDigest(): Promise<{
       text,
     });
 
+    if (result.ok) {
+      await col.updateOne(
+        { _id: sub._id },
+        { $set: { unsubscribe_token: hashToken(rawUnsub) } }
+      );
+    }
     if (result.mode === "log") {
       mode = "log";
       if (result.ok) logged++;

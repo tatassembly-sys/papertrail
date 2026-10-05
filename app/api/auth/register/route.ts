@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    const verifyUrl = `${getSiteUrl()}/api/auth/verify-email?token=${result.verifyToken}`;
+    const verifyUrl = `${getSiteUrl()}/verify-email?token=${result.verifyToken}`;
 
     await sendEmail({
       to: result.user.email,

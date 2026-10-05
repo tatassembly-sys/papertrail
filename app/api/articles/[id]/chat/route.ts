@@ -4,7 +4,7 @@ import { askArticleAssistant, getThreadMessages } from "@/lib/article-chat";
 import { getCurrentUserSession } from "@/lib/user-auth";
 import { findUserById } from "@/lib/users";
 import { getClientIp, hashIp } from "@/lib/request-ip";
-import { getRateCount, hitRateLimit } from "@/lib/rate-limit";
+import { getRateCount, hitRateLimit, undoRateLimit } from "@/lib/rate-limit";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
 import {
   CHAT_ABUSE_PER_HOUR,
@@ -118,25 +118,13 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   }
 
   const ipKey = hashIp(getClientIp(req));
-  if (await hitRateLimit("chat", ipKey, CHAT_ABUSE_PER_HOUR, HOUR_MS)) {
-    return NextResponse.json(
-      { error: "Chat rate limit reached. Try again later." },
-      { status: 429 }
-    );
-  }
-
   const session = await getCurrentUserSession();
   const user = session ? await findUserById(session.userId) : null;
   const pro = isProUser(user);
 
+  const dayKey = quotaKey(session?.userId, ipKey);
   if (!pro) {
-    const over = await hitRateLimit(
-      "chat_day",
-      quotaKey(session?.userId, ipKey),
-      FREE_CHAT_PER_DAY,
-      DAY_MS
-    );
-    if (over) {
+    if (await hitRateLimit("chat_day", dayKey, FREE_CHAT_PER_DAY, DAY_MS)) {
       return NextResponse.json(
         {
           error: session
@@ -148,6 +136,14 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         { status: 402 }
       );
     }
+  }
+
+  if (await hitRateLimit("chat", ipKey, CHAT_ABUSE_PER_HOUR, HOUR_MS)) {
+    if (!pro) await undoRateLimit("chat_day", dayKey, DAY_MS);
+    return NextResponse.json(
+      { error: "Chat rate limit reached. Try again later." },
+      { status: 429 }
+    );
   }
 
   const cookie = cookieChatKey(req);
@@ -173,6 +169,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     if (!session) setChatCookie(res, cookie.key, cookie.fresh);
     return res;
   } catch (err) {
+    if (!pro) await undoRateLimit("chat_day", dayKey, DAY_MS);
     console.error("chat error:", err);
     const msg = err instanceof Error ? err.message : "";
     if (/OPENROUTER_API_KEY|rejected the API key|401/i.test(msg)) {

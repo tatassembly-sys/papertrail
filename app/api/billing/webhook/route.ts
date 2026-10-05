@@ -63,9 +63,9 @@ export async function POST(req: NextRequest) {
       if (userId && subscriptionId) {
         await syncStripeSubscriptionId(userId, subscriptionId);
       } else if (userId && customerId) {
+        // Remember the customer, but do not grant Pro without a subscription.
+        // checkout.session.completed can fire without one (setup / abandoned).
         await applyBillingState(userId, {
-          plan: "pro",
-          plan_status: "active",
           stripe_customer_id: customerId,
         });
       }

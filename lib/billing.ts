@@ -15,6 +15,17 @@ export async function syncNormalizedSubscription(
   userId: string,
   sub: NormalizedSubscription
 ) {
+  const user = await findUserById(userId);
+  if (!user) return null;
+  const storedId = user.stripe_subscription_id || "";
+  if (storedId && sub.id && storedId !== sub.id) {
+    const incomingLive = LIVE.has(sub.status);
+    const storedLive = LIVE.has(user.plan_status || "");
+    // A late deleted/incomplete event for an old sub must not wipe current Pro.
+    if (storedLive && !incomingLive) {
+      return applyBillingState(userId, {});
+    }
+  }
   const live = LIVE.has(sub.status);
   return applyBillingState(userId, {
     plan: live ? "pro" : "free",

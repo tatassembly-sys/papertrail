@@ -1,5 +1,22 @@
 import { extractText, getDocumentProxy } from "unpdf";
 import { normalizeCategory } from "./arxivCategories";
+import { sanitizeHttpUrl } from "./http-url";
+
+const BARE_ARXIV_ID = /^\d{4}\.\d{4,5}(v\d+)?$/;
+
+/**
+ * Accept http(s) paper URLs or a bare arXiv id (`2401.12345`).
+ * Rejects javascript:, credentials, and strings that merely contain an id.
+ */
+export function parseArxivLocator(input: string | null | undefined): string | null {
+  if (!input || typeof input !== "string") return null;
+  const trimmed = input.trim();
+  if (!trimmed || trimmed.length > 500) return null;
+  const clean = sanitizeHttpUrl(trimmed);
+  if (clean) return clean;
+  if (BARE_ARXIV_ID.test(trimmed)) return trimmed;
+  return null;
+}
 
 /**
  * Normalizes any arXiv URL (abs, pdf, or bare ID) into its

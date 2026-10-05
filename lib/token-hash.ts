@@ -6,10 +6,20 @@ export function hashToken(token: string): string {
 }
 
 /**
- * Values to match against a token column during the plaintext → hash migration.
- * New writes store only the hash; old rows may still hold the raw token.
+ * Lookup values for hashed token columns. The stored SHA-256 is not a valid
+ * bearer — submitting it hashes again and misses.
  */
 export function tokenLookupValues(raw: string): string[] {
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+  return [hashToken(trimmed)];
+}
+
+/**
+ * Digest emails used to carry the stored hash. Accept that hash as well as
+ * sha256(raw) until those links age out.
+ */
+export function tokenLookupValuesAllowStored(raw: string): string[] {
   const trimmed = raw.trim();
   if (!trimmed) return [];
   return [hashToken(trimmed), trimmed];

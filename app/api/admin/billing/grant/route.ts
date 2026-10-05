@@ -19,10 +19,13 @@ export async function POST(req: NextRequest) {
   }
 
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  const plan = body.plan === "pro" ? "pro" : body.plan === "free" ? null : null;
   if (!email.includes("@")) {
     return NextResponse.json({ error: "Valid email required." }, { status: 400 });
   }
+  if (body.plan !== "pro" && body.plan !== "free") {
+    return NextResponse.json({ error: "plan must be pro or free." }, { status: 400 });
+  }
+  const plan = body.plan === "pro" ? "pro" : null;
 
   const user = await setPlanOverride(email, plan);
   if (!user) {

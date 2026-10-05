@@ -9,6 +9,7 @@ interface BillingUser {
   plan_interval: "month" | "year" | null;
   plan_period_end: string | null;
   cancel_at_period_end: boolean;
+  has_billing_customer?: boolean;
 }
 
 interface Usage {
@@ -99,7 +100,7 @@ export default function BillingPanel({
             Upgrade to Pro
           </Link>
         )}
-        {pro && configured && (
+        {pro && configured && user.has_billing_customer && (
           <button type="button" onClick={openPortal} disabled={busy} className="pt-btn-ghost">
             {busy ? "Opening…" : "Manage billing"}
           </button>

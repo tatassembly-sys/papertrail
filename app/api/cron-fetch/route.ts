@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getExistingSourceUrls } from "@/lib/articles";
 import { enqueuePapers, getQueuedExternalIds } from "@/lib/queue";
-import { ARXIV_FEED_CATEGORIES } from "@/lib/arxivCategories";
+import { arxivFeedCategoriesFromEnv } from "@/lib/arxivCategories";
 import { assertCronAuthorized } from "@/lib/cron-auth";
 import { publicErrorMessage } from "@/lib/safe-error";
 
 export const runtime = "nodejs"; // needs the mongo driver's Node TCP APIs
 export const maxDuration = 60; // many field feeds; keep under Railway cron budget
 
-const ARXIV_CATEGORIES = (process.env.ARXIV_RSS_CATEGORIES || ARXIV_FEED_CATEGORIES.join(","))
-  .split(",")
-  .map((c) => c.trim())
-  .filter(Boolean);
+const ARXIV_CATEGORIES = arxivFeedCategoriesFromEnv();
 
 interface FeedEntry {
   absUrl: string;

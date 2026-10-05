@@ -75,6 +75,20 @@ export const ARXIV_FEED_CATEGORIES = [
   "physics.ao-ph",
 ];
 
+const ARXIV_FEED_SET = new Set(ARXIV_FEED_CATEGORIES);
+
+/** Env override for cron-fetch. Drops PubMed-only / unknown codes so they never hit arXiv RSS. */
+export function arxivFeedCategoriesFromEnv(
+  raw: string | null | undefined = process.env.ARXIV_RSS_CATEGORIES
+): string[] {
+  if (!raw?.trim()) return [...ARXIV_FEED_CATEGORIES];
+  const picked = raw
+    .split(",")
+    .map((c) => c.trim())
+    .filter((c) => ARXIV_FEED_SET.has(c));
+  return picked.length ? picked : [...ARXIV_FEED_CATEGORIES];
+}
+
 /**
  * PubMed search topics — polled by cron-fetch-pubmed, not the arXiv sweep.
  * `topic` is the natural-language PubMed search term; `category` is the

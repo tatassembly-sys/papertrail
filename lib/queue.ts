@@ -155,6 +155,7 @@ export async function releaseQueueClaim(
     { _id: id },
     {
       $set: set,
+      $inc: { attempts: -1 },
       $unset: { processing_started_at: "" },
     }
   );

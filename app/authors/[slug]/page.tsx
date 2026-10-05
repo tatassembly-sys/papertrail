@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getPublishedArticles, resolveAuthorNameFromSlug } from "@/lib/articles";
 import ArticleCard from "@/components/ArticleCard";
 import { getSiteUrl } from "@/lib/site-url";
+import { jsonLdScript } from "@/lib/json-ld";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function AuthorPage({ params }: PageProps) {
     <div>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
       />
       <p className="mb-3 font-mono text-xs uppercase tracking-widest text-stamp">
         <Link href="/authors" className="hover:text-redpen">
