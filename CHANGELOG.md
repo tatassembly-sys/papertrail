@@ -4,6 +4,11 @@ All notable modifications from the engineering session culminating 2026-08-04.
 
 ## [Unreleased] / Session ship
 
+### 2026-10-05 follow-ups
+- `npm test` alias for the offline sandbox suite (CI-friendly).
+- Confirm / verify / unsubscribe pages: POST via shared form; hide URL token; robots disallow.
+- Unsubscribe form POST truncates tokens like JSON path; richer `.env.example` Resend/DNS/Stripe notes.
+
 ### Added
 
 - Library layer (Semantic Scholar / Readwise / Zotero / The Conversation):

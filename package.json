@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
+    "test": "node sandbox/run.mjs",
     "test:sandbox": "node sandbox/run.mjs"
   },
   "dependencies": {

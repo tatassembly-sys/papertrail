@@ -3,12 +3,13 @@
 Isolated scenario suite. No MongoDB, no network, no deploy.
 
 ```
-npm run test:sandbox
+npm test
 ```
 
 or:
 
 ```
+npm run test:sandbox
 node sandbox/run.mjs
 ```
 

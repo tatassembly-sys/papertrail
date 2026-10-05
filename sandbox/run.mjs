@@ -1792,8 +1792,12 @@ test("labelMatchesSlug after accent fold", () => {
   assert(P.labelMatchesSlug("José", "jose"));
 });
 
-test("robots has 11 disallows", () => eq(P.ROBOTS_DISALLOW.length, 11));
+test("robots has 13 disallows", () => eq(P.ROBOTS_DISALLOW.length, 13));
 test("verify-email is robots-disallowed", () => assert(P.ROBOTS_DISALLOW.includes("/verify-email")));
+test("newsletter confirm is robots-disallowed", () =>
+  assert(P.ROBOTS_DISALLOW.includes("/newsletter/confirm")));
+test("newsletter unsubscribe is robots-disallowed", () =>
+  assert(P.ROBOTS_DISALLOW.includes("/newsletter/unsubscribe")));
 
 test("FREE_HIGHLIGHTS matches lib", () => eq(P.FREE_HIGHLIGHTS, 15));
 test("FREE_COLLECTIONS matches lib", () => eq(P.FREE_COLLECTIONS, 1));

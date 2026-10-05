@@ -52,6 +52,8 @@ export const ROBOTS_DISALLOW = [
   "/forgot-password",
   "/reset-password",
   "/verify-email",
+  "/newsletter/confirm",
+  "/newsletter/unsubscribe",
   "/api",
 ];
 

@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     } else {
       const form = await req.formData();
       const t = form.get("token");
-      token = typeof t === "string" ? t : "";
+      token = typeof t === "string" ? t.slice(0, 128) : "";
     }
     const ok = await unsubscribeByToken(token);
     if (!ok) {

@@ -47,7 +47,8 @@ See `README.md`, `SETUP.md`, and `HANDOVER.md` (Aug 2026 go-live history).
 
 ### Sandbox suite (`bc80e36`)
 
-- `npm run test:sandbox` → `sandbox/run.mjs` (500+ scenarios against in-memory `product.mjs`: entitlements, Stripe signatures, publish gates, quotas, auth tokens). No Mongo / no network / no deploy.
+- `npm test` / `npm run test:sandbox` → `sandbox/run.mjs` (500+ scenarios against in-memory `product.mjs`: entitlements, Stripe signatures, publish gates, quotas, auth tokens). No Mongo server / no network / no deploy (needs `mongodb` npm package for ObjectId only).
+- Confirm / verify / unsubscribe UI posts tokens deliberately (hidden when present in the link); newsletter confirm/unsubscribe disallowed in robots.txt; `.env.example` documents Resend DNS + Stripe test keys + custom domain.
 
 ---
 
@@ -99,7 +100,7 @@ Reading and the free tier do **not** require Stripe. Pro Checkout + portal + web
 
 | Check | How |
 |-------|-----|
-| Sandbox product rules | `npm run test:sandbox` (500+ scenarios) |
+| Sandbox product rules | `npm test` / `npm run test:sandbox` (500+ scenarios, offline) |
 | Typecheck | `npm run typecheck` / `npm run lint` |
 | Production build | `npm run build` |
 
