@@ -133,9 +133,26 @@ export function normalizeSubscription(raw: Record<string, unknown>): NormalizedS
         ? String((raw.customer as { id: unknown }).id)
         : "";
   const status = typeof raw.status === "string" ? raw.status : "canceled";
+  const items = raw.items as
+    | {
+        data?: Array<{
+          current_period_end?: unknown;
+          price?: { recurring?: { interval?: string } };
+        }>;
+      }
+    | undefined;
+  // Stripe API 2025-03-31 ("basil") and later moved current_period_end from
+  // the subscription onto each subscription item. Accept both shapes so
+  // accounts pinned to a newer default API version still record the period.
+  const itemPeriodEnds = (items?.data ?? [])
+    .map((item) => item?.current_period_end)
+    .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
   const periodEndUnix =
-    typeof raw.current_period_end === "number" ? raw.current_period_end : null;
-  const items = raw.items as { data?: Array<{ price?: { recurring?: { interval?: string } } }> } | undefined;
+    typeof raw.current_period_end === "number"
+      ? raw.current_period_end
+      : itemPeriodEnds.length
+        ? Math.max(...itemPeriodEnds)
+        : null;
   const intervalRaw = items?.data?.[0]?.price?.recurring?.interval;
   const interval = intervalRaw === "year" || intervalRaw === "month" ? intervalRaw : null;
   return {
@@ -146,6 +163,32 @@ export function normalizeSubscription(raw: Record<string, unknown>): NormalizedS
     periodEnd: periodEndUnix ? new Date(periodEndUnix * 1000) : null,
     cancelAtPeriodEnd: Boolean(raw.cancel_at_period_end),
   };
+}
+
+/**
+ * Subscription id on an invoice event. Legacy API versions expose
+ * `invoice.subscription`; 2025-03-31+ moved it to
+ * `invoice.parent.subscription_details.subscription`.
+ */
+export function invoiceSubscriptionId(invoice: Record<string, unknown>): string | null {
+  const pick = (value: unknown): string | null => {
+    if (typeof value === "string" && value) return value;
+    if (value && typeof value === "object" && "id" in value) {
+      const id = (value as { id: unknown }).id;
+      if (typeof id === "string" && id) return id;
+    }
+    return null;
+  };
+  const legacy = pick(invoice.subscription);
+  if (legacy) return legacy;
+  const parent = invoice.parent;
+  if (parent && typeof parent === "object") {
+    const details = (parent as { subscription_details?: unknown }).subscription_details;
+    if (details && typeof details === "object") {
+      return pick((details as { subscription?: unknown }).subscription);
+    }
+  }
+  return null;
 }
 
 /**

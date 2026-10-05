@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripeWebhookConfigured } from "@/lib/entitlements";
-import { normalizeSubscription, retrieveSubscription, verifyStripeSignature } from "@/lib/stripe";
+import {
+  invoiceSubscriptionId,
+  normalizeSubscription,
+  retrieveSubscription,
+  verifyStripeSignature,
+} from "@/lib/stripe";
 import { asRecord } from "@/lib/json-body";
 import {
   resolveUserIdFromStripe,
@@ -85,7 +90,7 @@ export async function POST(req: NextRequest) {
         await syncNormalizedSubscription(userId, sub);
       }
     } else if (type === "invoice.paid" || type === "invoice.payment_failed") {
-      const subscriptionId = stripeId(object.subscription);
+      const subscriptionId = invoiceSubscriptionId(object);
       const customerId = stripeId(object.customer);
       const userId = await resolveUserIdFromStripe({ customerId });
       if (userId && subscriptionId) {
