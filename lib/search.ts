@@ -7,6 +7,8 @@ import {
   SEARCH_WORD_ALIASES,
 } from "./arxivCategories";
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
 export type SearchSort = "relevance" | "newest" | "oldest";
 
 export interface SearchFilters {
@@ -120,7 +122,11 @@ export function buildArticleMongoFilter(
     if (filters.to) {
       const d = new Date(filters.to);
       if (!Number.isNaN(d.getTime())) {
-        d.setHours(23, 59, 59, 999);
+        // `yyyy-mm-dd` parses as UTC midnight, so extend to the end of that
+        // UTC day. setHours() used the server's local zone, which cut the
+        // last hour(s) of the day (or spilled into the next) off-UTC hosts.
+        // Full timestamps are an explicit bound and are kept as-is.
+        if (DATE_ONLY.test(filters.to.trim())) d.setUTCHours(23, 59, 59, 999);
         range.$lte = d;
       }
     }
