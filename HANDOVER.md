@@ -1,9 +1,13 @@
 # Paper Trail — Engineering Handover Report
 
-**Date:** 2026-08-04  
-**Repository:** `C:\Users\User\Downloads\papertrail`  
+**Original go-live session:** 2026-08-04  
+**Status refresh:** 2026-10-05 (BST)  
+**Repository:** https://github.com/tatassembly-sys/papertrail (`main`)  
+**Tip at refresh:** `bc80e36` — Pro/Stripe, library hubs, email confirmation harden, billing, sandbox suite  
 **Live URL:** https://papertrail-production-71d6.up.railway.app  
 **Audience:** Senior software engineer taking ownership  
+
+> **Current status:** see [`STATUS.md`](./STATUS.md) (5 Oct 2026). This handover body is the Aug 2026 go-live engineering report; remaining-work tables below were refreshed so they are not stuck on 2026-08-04.
 
 ---
 
@@ -13,32 +17,34 @@
 
 **Paper Trail** is a Next.js 15 application that turns academic papers (arXiv + PubMed) into plain-language articles for a general audience. Content is AI-translated via OpenRouter, always links to a source URL, requires “caveats” (limitations), and **never auto-publishes** — drafts require human admin publish.
 
-This engagement took a working local codebase through production hardening, Railway deployment, MongoDB remediation, ingestion pipeline activation, public content seeding, and scheduled cron infrastructure.
+This engagement took a working local codebase through production hardening, Railway deployment, MongoDB remediation, ingestion pipeline activation, public content seeding, and scheduled cron infrastructure. By tip `bc80e36` (Oct 2026) the product also includes **Paper Trail Pro** (optional Stripe), library hubs, hardened email confirmation, billing polish, and a 500+ scenario sandbox (`npm run test:sandbox`). See `STATUS.md`.
 
 ## Production readiness score
 
-| Score | **88 / 100** |
-|-------|----------------|
+| Score (code tip, refreshed 2026-10-05) | **90 / 100** |
+|----------------------------------------|----------------|
+| Live Railway vs tip | Behind — redeploy tip (see `STATUS.md`) |
 
 | Area | Score | Notes |
 |------|-------|--------|
 | Build / TypeScript / Tailwind | 100 | Clean `npm run build`, strict TS |
-| App architecture & routes | 98 | Full public + admin + API surface |
-| Security (code) | 90 | Hardened; rotate exposed keys |
+| App architecture & routes | 98 | Public + admin + Pro/library + API surface at tip |
+| Security (code) | 92 | Hardened; rotate exposed keys; hashed verify tokens |
 | Mongo / data layer | 92 | Railway Mongo healthy; indexes auto-bootstrapped |
-| Railway deploy ops | 90 | Live + crons; ops discipline still needed |
-| Content / product ops | 80 | Pipeline works; credit + publish process ongoing |
+| Railway deploy ops | 85 | Live + crons; **redeploy tip** still needed |
+| Content / product ops | 82 | Pipeline works; Resend + DNS still open |
 
-**Deduction drivers:** OpenRouter credit sensitivity, OpenRouter API key was pasted into chat (must rotate), no CSP, admin password is a session-generated temporary value, drafts require manual publish (by design).
+**Deduction drivers:** live image behind tip; Resend still log-mode; DNS unresolved for custom domain; secrets from earlier ops may need rotation; Stripe optional; OpenRouter free-model / credit sensitivity; drafts require manual publish (by design).
 
 ## Current deployment status
 
 | Component | Status |
 |-----------|--------|
-| Web service `papertrail` | **Online** · https://papertrail-production-71d6.up.railway.app |
+| Web service `papertrail` | **Online** · https://papertrail-production-71d6.up.railway.app · **older image** (tip Pro/library routes 404 — redeploy) |
 | Database `MongoDB` (Railway plugin) | **Online** · private network `mongodb.railway.internal` |
-| Health `/api/health` | **200** `{"status":"ok","db":"connected"}` |
-| Public homepage | **200** · **5 published** articles live |
+| Health `/api/health` | **200** · `ok` / `db:connected` / `email:"log"` / OpenRouter free |
+| Public homepage | **200** |
+| Tip features on live | **Not yet** — `/pricing`, `/library`, `/topics`, `/authors`, `/today`, `/verify-email` → 404 |
 | Cron: `cron-arxiv` | Scheduled daily **06:00 UTC** → `/api/cron-fetch` |
 | Cron: `cron-pubmed` | Scheduled daily **06:30 UTC** → `/api/cron-fetch-pubmed` |
 | Cron: `cron-process-queue` | Every **10 min** → `/api/process-queue` |
@@ -46,9 +52,9 @@ This engagement took a working local codebase through production hardening, Rail
 
 ## Overall assessment
 
-**Approve for production use with operational caveats.**
+**Approve code tip for production use with operational caveats; live must catch up.**
 
-The application is deployed, health-checked against a working MongoDB, serving public content, protecting admin routes, and scheduled for ongoing ingestion. Remaining risk is operational (secrets rotation, OpenRouter billing, monitoring cron success, changing default admin password) rather than structural code failure.
+Tip `bc80e36` is product-complete for free reading + optional Pro. Remaining risk is operational: **Railway redeploy of tip**, Resend + verified from-domain, DNS for `papertrailresearch.co.uk`, secret rotation, and optional Stripe keys — not structural code failure. Details: `STATUS.md`.
 
 ---
 
@@ -554,39 +560,40 @@ Social platform vars optional.
 - [x] Domain: `papertrail-production-71d6.up.railway.app`  
 - [x] Cron services scheduled  
 - [x] Sample content published  
-- [ ] Rotate OpenRouter key  
-- [ ] Change admin password  
-- [ ] Monitor first few automatic cron runs  
-- [ ] Fund OpenRouter for sustained processing  
-- [ ] Optional custom domain  
+- [ ] **Redeploy tip** `bc80e36`+ to Railway (Pro/library routes)  
+- [ ] Rotate OpenRouter / cron / admin secrets from earlier exposure  
+- [ ] Wire Resend (`RESEND_API_KEY` + `NEWSLETTER_FROM`)  
+- [ ] Finish DNS for `papertrailresearch.co.uk` + `NEXT_PUBLIC_SITE_URL`  
+- [ ] Monitor cron runs / OpenRouter free-model health  
+- [ ] Optional: Stripe keys for Pro checkout  
 
 ---
 
 # Remaining Issues
 
-## P0 — Must fix / do before calling ops “locked down”
+*(Refreshed 2026-10-05 BST — see also `STATUS.md`.)*
 
-1. **Rotate OpenRouter API key** (exposed in chat) and update Railway.  
-2. **Change admin password** and update `ADMIN_PASSWORD_HASH`.  
-3. **Confirm OpenRouter credits** so `cron-process-queue` does not 402.  
-4. **Watch first automated cron executions** (logs on `cron-*` services).
+## P0 — Must fix / do before calling ops "locked down"
+
+1. **Redeploy tip** (`bc80e36` or newer `main`) to Railway so live gets Pro/library/email-confirm routes.  
+2. **Rotate secrets** exposed in earlier ops history (OpenRouter API key, `CRON_SECRET`, admin password / `ADMIN_PASSWORD_HASH`) and update Railway.  
+3. **Resend** — set `RESEND_API_KEY` + `NEWSLETTER_FROM` on a verified domain (live health still `email:"log"`).  
+4. **Confirm OpenRouter** free-model / credits so `cron-process-queue` keeps succeeding.
 
 ## P1 — Should fix
 
-1. CSP after testing fonts/OG/images.  
+1. **DNS** for `papertrailresearch.co.uk` (does not resolve as of 2026-10-05); set `NEXT_PUBLIC_SITE_URL` and redeploy when ready.  
 2. Observability: structured logs + alerts on health 503 and process-queue errors.  
 3. Cap daily enqueue volume or process budget.  
-4. Document operator runbook for “publish drafts”.  
+4. Operator runbook for reviewing/publishing drafts.  
 5. Remove/rotate any residual Atlas credentials from password managers.
 
-## P2 — Nice to have
+## P2 — Nice to have / optional
 
-1. Soften public nav (hide Admin for consumers).  
-2. About page / footer with RSS.  
+1. **Stripe keys** for Paper Trail Pro checkout (optional — checkout stays off until set; comps via `BILLING_GRANT_EMAILS` / admin grant).  
+2. Tighten CSP further (nonce path when practical).  
 3. Auto-cleanup of old `error` queue rows.  
-4. Git init + GitHub remote (repo was not a git repo initially).  
-5. Delete empty `models/`, `services/`, `utils/` clutter.  
-6. Full E2E test suite.
+4. Playwright / browser E2E beyond the sandbox suite (`npm run test:sandbox` already covers 500+ product-rule scenarios).
 
 ---
 
@@ -623,14 +630,16 @@ Social platform vars optional.
 
 ## Would I approve for production?
 
-**Yes, conditional approval.**
+**Yes, conditional approval** of tip `bc80e36`; live still needs a tip redeploy.
 
 Conditions for full confidence:
 
-1. Rotate leaked OpenRouter key and change admin password.  
-2. Maintain OpenRouter balance.  
-3. Operator process for reviewing/publishing drafts (product intentional).  
-4. Monitor cron services for silent failures.  
+1. Redeploy tip to Railway; smoke `/pricing`, `/library`, `/topics`.  
+2. Rotate leaked/old secrets; change admin password if still temporary.  
+3. Wire Resend (or accept log-mode email until then).  
+4. Maintain OpenRouter free-model / credit health; monitor crons.  
+5. Operator process for reviewing/publishing drafts (product intentional).  
+6. Stripe only when ready to sell Pro (optional).
 
 Do **not** treat auto-publish as a feature request without revisiting product non-negotiables (human review before live).
 
@@ -653,4 +662,4 @@ Do **not** treat auto-publish as a feature request without revisiting product no
 
 ---
 
-*End of handover body. See `CHANGELOG.md` for session modification summary.*
+*End of handover body. See `STATUS.md` for current tip vs live (2026-10-05) and `CHANGELOG.md` for session modification summary.*
