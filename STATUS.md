@@ -1,7 +1,7 @@
 # Paper Trail — current project status
 
 **Date:** 5 October 2026 (BST)  
-**Source tip:** `bc80e36` (`main`) — *Harden publish, email confirmation, billing, and submissions.*  
+**Source tip:** `8dcb464` (`main`) — *Wire npm test, polish confirm flows, and clarify env docs.* (product harden still `bc80e36`)  
 **Verdict:** **Code tip is launch-capable for the free product**; live Railway is still on an **older image** (Pro / library routes 404). Wire Resend + DNS, rotate secrets, then **redeploy tip** before treating production as current. Stripe Pro checkout stays **optional**.
 
 Live app (older image as of this date): [https://papertrail-production-71d6.up.railway.app](https://papertrail-production-71d6.up.railway.app)
@@ -20,7 +20,7 @@ See `README.md`, `SETUP.md`, and `HANDOVER.md` (Aug 2026 go-live history).
 
 ---
 
-## What’s done at tip (`bc80e36`)
+## What’s done at tip (`8dcb464` / product `bc80e36`)
 
 ### Core product (earlier + tip)
 
@@ -76,7 +76,7 @@ As of **5 October 2026 BST**, production health is up:
 
 `email: "log"` — Resend is **not** wired on live (verify/reset/digest will not send real mail).
 
-**Action:** redeploy tip `bc80e36` (or newer `main`) to Railway (`railway up` or GitHub source → branch `main`), then smoke `/pricing`, `/library`, `/topics`, `/authors`, `/today`, `/verify-email`.
+**Action:** redeploy tip `8dcb464` (or newer `main`) to Railway (`railway up` or GitHub source → branch `main`), then smoke `/pricing`, `/library`, `/topics`, `/authors`, `/today`, `/verify-email`.
 
 ---
 
