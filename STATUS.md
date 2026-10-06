@@ -95,6 +95,8 @@ Checked 6 October 2026.
 | Digest cron | `cron-newsletter` is scheduled `0 15 * * 0` and calls `/api/newsletter/digest`. It cannot deliver until Resend is set. |
 | Confirm / reset / verify | Pages are POST-confirm. Failed Resend sends no longer claim success. Confirm mail includes an unsubscribe link. Deleting an account unsubscribes that email. |
 | Secrets in git | None in history. |
+| `CRON_SECRET` | Rotated 6 October 2026 on the web service and all six cron start commands. Unsigned cron calls return 401. A request with the new bearer returns 200. |
+| Admin password | Rotated the same day. The new password is not in git. |
 | OpenRouter key | Still the previously exposed key. Rotation needs a new key from the OpenRouter dashboard. |
 
 Railway still expects these records once a zone exists: apex CNAME `6mp7haey.up.railway.app`, `www` CNAME `su8i7gl4.up.railway.app`, plus the `_railway-verify` TXT records shown by `railway domain status`.
