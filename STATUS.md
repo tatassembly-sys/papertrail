@@ -1,10 +1,10 @@
 # Paper Trail — current project status
 
-**Date:** 5 October 2026 (BST)  
-**Source tip:** `8dcb464` (`main`) — *Wire npm test, polish confirm flows, and clarify env docs.* (product harden still `bc80e36`)  
-**Verdict:** **Code tip is launch-capable for the free product**; live Railway is still on an **older image** (Pro / library routes 404). Wire Resend + DNS, rotate secrets, then **redeploy tip** before treating production as current. Stripe Pro checkout stays **optional**.
+**Date:** 6 October 2026  
+**Verified runtime:** `a953950` on deployment `8c52b989-8219-4a01-b90d-cfcfe543a9d5` (GitHub `tatassembly-sys/papertrail` `main`, SUCCESS).  
+**Verdict:** **Milestone 1 closed.** That deployment is current `main` application code. Free reading is up. Email, DNS, and secret rotation stay open for Milestone 2. Stripe Pro checkout stays **off**.
 
-Live app (older image as of this date): [https://papertrail-production-71d6.up.railway.app](https://papertrail-production-71d6.up.railway.app)
+Live app: [https://papertrail-production-71d6.up.railway.app](https://papertrail-production-71d6.up.railway.app)
 
 ---
 
@@ -20,7 +20,7 @@ See `README.md`, `SETUP.md`, and `HANDOVER.md` (Aug 2026 go-live history).
 
 ---
 
-## What’s done at tip (`8dcb464` / product `bc80e36`)
+## What’s done at tip (`a953950`)
 
 ### Core product (earlier + tip)
 
@@ -52,41 +52,43 @@ See `README.md`, `SETUP.md`, and `HANDOVER.md` (Aug 2026 go-live history).
 
 ---
 
-## Live Railway vs this tip (honest gap)
+## Milestone 1 — production tip (closed)
 
-As of **5 October 2026 BST**, production health is up:
+Checked 6 October 2026. GitHub `main` and the active Railway deployment are the same commit. The previous September CLI image is `REMOVED`. No second web service is running.
+
+Health:
 
 ```json
-{"status":"ok","db":"connected","openrouter":true,"openrouter_mode":"free","email":"log"}
+{"status":"ok","db":"connected","openrouter":true,"openrouter_mode":"free","openrouter_model":"openrouter/free","xai":false,"translator":"openrouter","email":"log","billing":"off"}
 ```
 
-…but the **running image still lacks tip routes**:
+| Check | Result |
+|-------|--------|
+| `/`, `/pricing`, `/library`, `/topics`, `/authors`, `/today`, `/welcome` | 200 |
+| `/topics/daily-mix`, `/authors/andreas-dietzel`, homepage article | 200 |
+| `/verify-email`, `/newsletter/confirm`, `/newsletter/unsubscribe` | 200 |
+| `/login`, `/user-login`, `/register`, `/forgot-password`, `/reset-password`, `/account` | 200 |
+| `/admin`, `/admin/status` unsigned | 307 → `/login` |
+| `POST /api/auth/login` and `/api/auth/user-login` with a bad password | 401 |
+| `GET /api/me` unsigned | 200, `user: null` |
+| `/about`, `/submit`, `/privacy`, `/terms`, `/sitemap.xml`, `/robots.txt`, `/feed.xml` | 200 |
+| Deploy logs `@level:error` and HTTP 5xx over the last day | none |
+| `npm test` on this tip | 520 sandbox + 13 unit, all passed |
 
-| Path | Live |
-|------|------|
-| `/` | 200 |
-| `/account` | 200 |
-| `/pricing` | **404** |
-| `/library` | **404** |
-| `/topics` | **404** |
-| `/authors` | **404** |
-| `/today` | **404** |
-| `/verify-email` | **404** |
-| `/newsletter/confirm` | **404** |
+`email: "log"` and `billing: "off"` are expected until Milestone 2 and Stripe keys. They are not a tip mismatch.
 
-`email: "log"` — Resend is **not** wired on live (verify/reset/digest will not send real mail).
+Missing-post requests stream a shell and then a `NEXT_HTTP_ERROR_FALLBACK;404` payload. That matches this tip. It is not a live-vs-main gap.
 
-**Action:** redeploy tip `8dcb464` (or newer `main`) to Railway (`railway up` or GitHub source → branch `main`), then smoke `/pricing`, `/library`, `/topics`, `/authors`, `/today`, `/verify-email`.
+`www.papertrailresearch.co.uk` and the apex domain still do not resolve. Use the Railway hostname above. DNS is Milestone 2.
 
 ---
 
 ## Remaining launch blockers
 
-1. **Redeploy tip to Railway** so live matches Pro / library / email-confirm UI (see gap above).
-2. **Resend** — set `RESEND_API_KEY` + `NEWSLETTER_FROM` on a verified sending domain. Until then, auth verify / newsletter stay log-mode (`email: "log"` on health).
-3. **DNS** — `papertrailresearch.co.uk` does **not** resolve (GoDaddy / registrar still pending). Keep using the Railway domain, or finish DNS + set `NEXT_PUBLIC_SITE_URL` and redeploy.
-4. **Secret rotation** — rotate any secrets exposed in prior ops history (OpenRouter API key, `CRON_SECRET`, admin password / `ADMIN_PASSWORD_HASH`) and update Railway.
-5. **Stripe keys (optional)** — Pro checkout stays off without `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, and webhook secret on `POST /api/billing/webhook`. Comp Pro via `BILLING_GRANT_EMAILS` or admin grant without Stripe.
+1. **Resend** — set `RESEND_API_KEY` + `NEWSLETTER_FROM` on a verified sending domain. Until then, auth verify / newsletter stay log-mode (`email: "log"` on health). Milestone 2.
+2. **DNS** — `papertrailresearch.co.uk` does **not** resolve. Keep using the Railway domain, or finish DNS + set `NEXT_PUBLIC_SITE_URL` and redeploy. Milestone 2.
+3. **Secret rotation** — rotate any secrets exposed in prior ops history (OpenRouter API key, `CRON_SECRET`, admin password / `ADMIN_PASSWORD_HASH`) and update Railway. Milestone 2.
+4. **Stripe keys (optional)** — Pro checkout stays off without `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, and webhook secret on `POST /api/billing/webhook`. Comp Pro via `BILLING_GRANT_EMAILS` or admin grant without Stripe. Milestone 8.
 
 ## Stripe (explicitly optional)
 
