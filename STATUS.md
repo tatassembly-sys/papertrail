@@ -1,10 +1,30 @@
 # Paper Trail — current project status
 
 **Date:** 6 October 2026  
-**Verified runtime:** `a953950` on deployment `8c52b989-8219-4a01-b90d-cfcfe543a9d5` (GitHub `tatassembly-sys/papertrail` `main`, SUCCESS).  
-**Verdict:** **Milestone 1 closed.** Live production matches `main`. **Milestone 2 is not closed.** Real email still needs a Resend key and a registered sending domain. Stripe Pro checkout stays **off**.
+**Verified runtime:** `4f25f06d8685fc6b1f99df18733475a2456fb86c` on deployment `91f12539-35af-4842-8cac-152e6fe3639f` (GitHub `tatassembly-sys/papertrail` `main`, SUCCESS). Container start logged `Ready in 502ms` on Next.js 15.5.22. An earlier note that named `a953950` / `8c52b989` is stale.  
+**Verdict:** **Milestone 1 closed.** Deployment `91f12539` was checked while it served `4f25f06`, which was `main` at check time. **Milestone 2 is not closed.** Inbox delivery and the custom domain are **BLOCKED** on credentials and DNS this repo cannot create. Stripe Pro checkout stays **off**.
 
 Live app: [https://papertrail-production-71d6.up.railway.app](https://papertrail-production-71d6.up.railway.app)
+
+## Production verification on `91f12539`
+
+Checked in Edge headless and with direct API calls against that deployment. PASS means the behaviour was exercised on the running site. Static reading of the repo was not treated as PASS.
+
+| Result | Check |
+|--------|--------|
+| PASS | Home, pricing, library, and newsletter render visible copy. Health from the loaded page is `ok`, database `connected`, email `log`, billing `off`. |
+| PASS | Unsigned `/welcome` ends on `/register` (“Create account”). The first document status is HTTP 200; the browser then completes the redirect. |
+| PASS | `/verify-email` shows the paste-token instruction. `/account?verified=1` while signed out shows “Email verified. Sign in to use this account.” |
+| PASS | The reset form, after submit, shows “Email delivery is not configured.” Subscribe of a valid address returns 503. |
+| PASS | An article linked from home renders. Admin sign-in opens the dashboard and ops status; sign-out returns to `/login`. |
+| PASS | Bad reader password 401. Unsigned `/api/process-queue` 401. Cross-site login 403. Checkout 503. |
+| PARTIAL | Cron routes reject a missing secret (401). A call with the current bearer was not repeated on this deployment, because a 200 runs the job. |
+| BLOCKED | Confirmation, reset, and digest mail in an inbox. `RESEND_API_KEY` and `NEWSLETTER_FROM` are absent. |
+| BLOCKED | `www.papertrailresearch.co.uk` (`ENOTFOUND`). The name has no public DNS zone. |
+| BLOCKED | OpenRouter key rotation. Health only reports that a key is present. A replacement key has to come from the OpenRouter dashboard. |
+| FAIL | `/posts/does-not-exist-journey` shows the not-on-file page and returns HTTP 200, not 404. |
+
+No HTTP 500 or 502 was recorded for this deployment’s check window. The only error-level startup line is npm’s `production` config warning.
 
 ---
 
@@ -20,7 +40,7 @@ See `README.md`, `SETUP.md`, and `HANDOVER.md` (Aug 2026 go-live history).
 
 ---
 
-## What’s done at tip (`a953950`)
+## What’s done through `a953950`
 
 ### Core product (earlier + tip)
 
@@ -77,7 +97,7 @@ Health:
 
 `email: "log"` and `billing: "off"` are expected until Milestone 2 and Stripe keys. They are not a tip mismatch.
 
-Missing-post requests stream a shell and then a `NEXT_HTTP_ERROR_FALLBACK;404` payload. That matches this tip. It is not a live-vs-main gap.
+Missing-post requests show the not-on-file page and return HTTP 200 with `NEXT_HTTP_ERROR_FALLBACK;404`. That is a production **FAIL** for the HTTP status. It is not a live-vs-main gap, and it is outside the Milestone 2 exit.
 
 `www.papertrailresearch.co.uk` and the apex domain still do not resolve. Use the Railway hostname above. DNS is Milestone 2.
 
@@ -95,7 +115,7 @@ Checked 6 October 2026.
 | Digest cron | `cron-newsletter` is scheduled `0 15 * * 0` and calls `/api/newsletter/digest`. It cannot deliver until Resend is set. |
 | Confirm / reset / verify | Pages are POST-confirm. Failed Resend sends no longer claim success. Confirm mail includes an unsubscribe link. Deleting an account unsubscribes that email. |
 | Secrets in git | None in history. |
-| `CRON_SECRET` | Rotated 6 October 2026 on the web service and all six cron start commands. Unsigned cron calls return 401. A request with the new bearer returns 200. |
+| `CRON_SECRET` | Rotated 6 October 2026 on the web service and all six cron start commands. Unsigned cron calls return 401 on `91f12539`. The matching bearer was not sent again on this deployment. |
 | Admin password | Rotated the same day. The new password is not in git. |
 | OpenRouter key | Still the previously exposed key. Rotation needs a new key from the OpenRouter dashboard. |
 
