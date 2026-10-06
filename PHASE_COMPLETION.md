@@ -44,7 +44,7 @@
 | 11 Library hubs | **Done (code)** | `/library`, topics/authors, lists, highlights, cite, `/today`, topic-follow digest |
 | 12 Email confirm harden | **Done (code)** | Hashed verify tokens; POST confirm pages (`/verify-email`, `/newsletter/confirm`) |
 | 13 Sandbox suite | **Done** | `npm run test:sandbox` — 500+ product-rule scenarios |
-| 14 Tip on live Railway | **Open** | Live image still 404s Pro/library routes — redeploy tip |
+| 14 Tip on live Railway | **Done** | Live matches `main`. See `STATUS.md` |
 
 ---
 
@@ -83,12 +83,12 @@ Share/schedule require `share_approved === true`.
 
 ## 5. Remaining work
 
-*(Refreshed 2026-10-05 BST.)*
+*(Refreshed 2026-10-06.)*
 
 | P | Item |
 |---|------|
-| P0 | **Redeploy tip** `bc80e36`+ to Railway (live still 404s `/pricing`, `/library`, …) |
-| P0 | Rotate secrets exposed in ops history (OpenRouter, `CRON_SECRET`, admin password hash) |
+| — | **Redeploy tip** — closed 2026-10-06. Live matches `main`. See `STATUS.md`. |
+| P0 | Rotate secrets exposed in ops history (OpenRouter, `CRON_SECRET`, admin password hash). Milestone 2. |
 | P1 | **Ops:** set `RESEND_API_KEY` + `NEWSLETTER_FROM` for real email (live still `email:"log"`) |
 | P1 | Finish DNS for `papertrailresearch.co.uk` (does not resolve as of 2026-10-05) + `NEXT_PUBLIC_SITE_URL` |
 | P2 | Stripe keys for Pro checkout (**optional** — checkout off until set) |
@@ -114,25 +114,24 @@ Share/schedule require `share_approved === true`.
 
 ## 6. Production readiness score
 
-**90 / 100** (code tip `bc80e36`)
+**92 / 100** (live matches `main`; see `STATUS.md`)
 
 Strong: tip product (Pro, library, email harden, sandbox), Mongo, search, accounts, chat, newsletter APIs, free AI.  
-Gaps: live image behind tip; email still log-mode; DNS pending; secrets rotation; Stripe optional.
+Gaps: email still log-mode; DNS pending; secrets rotation; Stripe optional.
 
 ## 7. Deployment readiness score
 
-**85 / 100**
+**95 / 100**
 
-`npm run build` green at tip; Railway Online + health OK; **redeploy tip** still required before live matches tip routes.
+Railway serves GitHub `main`. Health is OK. Pro, library, and confirm routes return 200.
 
 ## 8. Product roadmap recommendations
 
-1. **Redeploy tip** to Railway and smoke Pro/library/confirm routes  
-2. Wire **Resend** for verification + weekly digest (verified from-domain)  
-3. Finish **`papertrailresearch.co.uk`** DNS + `NEXT_PUBLIC_SITE_URL`  
-4. Rotate exposed secrets; confirm admin password is not temporary  
-5. Optional: set **Stripe** keys when ready to sell Paper Trail Pro  
-6. Optional: paid OpenRouter models behind a feature flag later  
+1. Wire **Resend** for verification + weekly digest (verified from-domain)  
+2. Finish **`papertrailresearch.co.uk`** DNS + `NEXT_PUBLIC_SITE_URL`  
+3. Rotate exposed secrets; confirm admin password is not temporary  
+4. Optional: set **Stripe** keys when ready to sell Paper Trail Pro  
+5. Optional: paid OpenRouter models behind a feature flag later  
 
 ---
 

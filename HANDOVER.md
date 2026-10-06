@@ -1,13 +1,13 @@
 # Paper Trail — Engineering Handover Report
 
 **Original go-live session:** 2026-08-04  
-**Status refresh:** 2026-10-05 (BST)  
+**Status refresh:** 2026-10-06  
 **Repository:** https://github.com/tatassembly-sys/papertrail (`main`)  
 **Tip at refresh:** `bc80e36` — Pro/Stripe, library hubs, email confirmation harden, billing, sandbox suite  
 **Live URL:** https://papertrail-production-71d6.up.railway.app  
 **Audience:** Senior software engineer taking ownership  
 
-> **Current status:** see [`STATUS.md`](./STATUS.md) (5 Oct 2026). This handover body is the Aug 2026 go-live engineering report; remaining-work tables below were refreshed so they are not stuck on 2026-08-04.
+> **Current status:** see [`STATUS.md`](./STATUS.md) (6 Oct 2026). Milestone 1 is closed: live Railway matches `main`. This handover body is the Aug 2026 go-live engineering report.
 
 ---
 
@@ -23,7 +23,7 @@ This engagement took a working local codebase through production hardening, Rail
 
 | Score (code tip, refreshed 2026-10-05) | **90 / 100** |
 |----------------------------------------|----------------|
-| Live Railway vs tip | Behind — redeploy tip (see `STATUS.md`) |
+| Live Railway vs tip | Matches `main` (see `STATUS.md`) |
 
 | Area | Score | Notes |
 |------|-------|--------|
@@ -31,20 +31,20 @@ This engagement took a working local codebase through production hardening, Rail
 | App architecture & routes | 98 | Public + admin + Pro/library + API surface at tip |
 | Security (code) | 92 | Hardened; rotate exposed keys; hashed verify tokens |
 | Mongo / data layer | 92 | Railway Mongo healthy; indexes auto-bootstrapped |
-| Railway deploy ops | 85 | Live + crons; **redeploy tip** still needed |
+| Railway deploy ops | 95 | GitHub `main` autodeploy; crons scheduled |
 | Content / product ops | 82 | Pipeline works; Resend + DNS still open |
 
-**Deduction drivers:** live image behind tip; Resend still log-mode; DNS unresolved for custom domain; secrets from earlier ops may need rotation; Stripe optional; OpenRouter free-model / credit sensitivity; drafts require manual publish (by design).
+**Deduction drivers:** Resend still log-mode; DNS unresolved for custom domain; secrets from earlier ops may need rotation; Stripe optional; OpenRouter free-model / credit sensitivity; drafts require manual publish (by design).
 
 ## Current deployment status
 
 | Component | Status |
 |-----------|--------|
-| Web service `papertrail` | **Online** · https://papertrail-production-71d6.up.railway.app · **older image** (tip Pro/library routes 404 — redeploy) |
+| Web service `papertrail` | **Online** · https://papertrail-production-71d6.up.railway.app · GitHub `main` |
 | Database `MongoDB` (Railway plugin) | **Online** · private network `mongodb.railway.internal` |
 | Health `/api/health` | **200** · `ok` / `db:connected` / `email:"log"` / OpenRouter free |
 | Public homepage | **200** |
-| Tip features on live | **Not yet** — `/pricing`, `/library`, `/topics`, `/authors`, `/today`, `/verify-email` → 404 |
+| Tip features on live | **200** — `/pricing`, `/library`, `/topics`, `/authors`, `/today`, `/verify-email` |
 | Cron: `cron-arxiv` | Scheduled daily **06:00 UTC** → `/api/cron-fetch` |
 | Cron: `cron-pubmed` | Scheduled daily **06:30 UTC** → `/api/cron-fetch-pubmed` |
 | Cron: `cron-process-queue` | Every **10 min** → `/api/process-queue` |
@@ -52,7 +52,7 @@ This engagement took a working local codebase through production hardening, Rail
 
 ## Overall assessment
 
-**Approve code tip for production use with operational caveats; live must catch up.**
+**Approve the live tip for production use, with Milestone 2 operational caveats (email, DNS, secret rotation).**
 
 Tip `bc80e36` is product-complete for free reading + optional Pro. Remaining risk is operational: **Railway redeploy of tip**, Resend + verified from-domain, DNS for `papertrailresearch.co.uk`, secret rotation, and optional Stripe keys — not structural code failure. Details: `STATUS.md`.
 
