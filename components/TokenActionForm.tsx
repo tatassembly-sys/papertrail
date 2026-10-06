@@ -68,6 +68,11 @@ function TokenActionInner({
       <p className="font-mono text-xs uppercase tracking-widest text-stamp">{kicker}</p>
       <h1 className="mt-2 font-display text-2xl font-semibold text-ink">{title}</h1>
       <p className="mt-2 text-sm text-ink-soft">{blurb}</p>
+      {!tokenFromUrl && (
+        <p className="mt-3 text-sm text-ink-soft">
+          Open the link in your email. If it is missing, paste the token from that message.
+        </p>
+      )}
 
       <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
         {tokenFromUrl ? (

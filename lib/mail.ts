@@ -5,6 +5,8 @@ export interface SendEmailInput {
   subject: string;
   html: string;
   text?: string;
+  /** HTTPS URL for one-click unsubscribe. Omitted on transactional mail. */
+  listUnsubscribe?: string;
 }
 
 /**
@@ -46,6 +48,14 @@ export async function sendEmail(
         subject: input.subject,
         html: input.html,
         text: input.text,
+        ...(input.listUnsubscribe
+          ? {
+              headers: {
+                "List-Unsubscribe": `<${input.listUnsubscribe}>`,
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+              },
+            }
+          : {}),
       }),
     });
 

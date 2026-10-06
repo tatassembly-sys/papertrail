@@ -34,18 +34,26 @@ export async function POST(req: NextRequest) {
   }
 
   const verifyUrl = `${getSiteUrl()}/verify-email?token=${token}`;
-  await sendEmail({
+  const mail = await sendEmail({
     to,
     subject: "Verify your Paper Trail account",
-    html: `<p>Confirm your Paper Trail email:</p><p><a href="${verifyUrl}">Verify email</a></p>`,
+    html: `<p>Confirm your Paper Trail email:</p><p><a href="${verifyUrl}">Verify email</a></p><p>Or open: ${verifyUrl}</p>`,
     text: `Verify your email: ${verifyUrl}`,
   });
+  if (!mail.ok) {
+    return NextResponse.json(
+      { error: "Could not send the verification email. Try again later." },
+      { status: 503 }
+    );
+  }
 
   return NextResponse.json({
     success: true,
-    note: isEmailConfigured()
-      ? "Check your inbox for a verification link."
-      : "A verification link was generated.",
+    emailSent: mail.mode === "resend",
+    note:
+      mail.mode === "resend"
+        ? "Check your inbox for a verification link."
+        : "A verification link was generated.",
     ...(process.env.NODE_ENV !== "production" ? { verifyUrl } : {}),
   });
 }

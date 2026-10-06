@@ -6,6 +6,10 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/api/")) {
+    // One-click unsubscribe is a cross-site POST. The unguessable token is the capability.
+    if (request.method === "POST" && pathname === "/api/newsletter/unsubscribe") {
+      return NextResponse.next();
+    }
     const denied = assertSameOrigin(request);
     if (denied) return denied;
     return NextResponse.next();

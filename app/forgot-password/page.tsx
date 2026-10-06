@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
 
       {done ? (
         <div className="mt-6 space-y-3 text-sm text-ink-soft">
-          <p>If that email is registered, a reset link was generated.</p>
+          <p>If that email is registered, a reset link was sent. It expires in one hour.</p>
           {devUrl && (
             <a href={devUrl} className="block break-all text-redpen underline">
               Open reset link

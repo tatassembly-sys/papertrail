@@ -2,7 +2,7 @@
 
 **Date:** 6 October 2026  
 **Verified runtime:** `a953950` on deployment `8c52b989-8219-4a01-b90d-cfcfe543a9d5` (GitHub `tatassembly-sys/papertrail` `main`, SUCCESS).  
-**Verdict:** **Milestone 1 closed.** That deployment is current `main` application code. Free reading is up. Email, DNS, and secret rotation stay open for Milestone 2. Stripe Pro checkout stays **off**.
+**Verdict:** **Milestone 1 closed.** Live production matches `main`. **Milestone 2 is not closed.** Real email still needs a Resend key and a registered sending domain. Stripe Pro checkout stays **off**.
 
 Live app: [https://papertrail-production-71d6.up.railway.app](https://papertrail-production-71d6.up.railway.app)
 
@@ -83,11 +83,27 @@ Missing-post requests stream a shell and then a `NEXT_HTTP_ERROR_FALLBACK;404` p
 
 ---
 
+## Milestone 2 — email, domain, secrets (open)
+
+Checked 6 October 2026.
+
+| Item | State |
+|------|--------|
+| `RESEND_API_KEY`, `NEWSLETTER_FROM` | Absent on the papertrail service. Health stays `email: "log"`. |
+| `papertrailresearch.co.uk` | NXDOMAIN at 1.1.1.1 and `dns1.nic.uk`. No zone exists for Railway CNAMEs or Resend DKIM. |
+| `NEXT_PUBLIC_SITE_URL` | Set to the working `*.up.railway.app` host. Do not point it at the custom domain until that name resolves. |
+| Digest cron | `cron-newsletter` is scheduled `0 15 * * 0` and calls `/api/newsletter/digest`. It cannot deliver until Resend is set. |
+| Confirm / reset / verify | Pages are POST-confirm. Failed Resend sends no longer claim success. Confirm mail includes an unsubscribe link. Deleting an account unsubscribes that email. |
+| Secrets in git | None in history. |
+| OpenRouter key | Still the previously exposed key. Rotation needs a new key from the OpenRouter dashboard. |
+
+Railway still expects these records once a zone exists: apex CNAME `6mp7haey.up.railway.app`, `www` CNAME `su8i7gl4.up.railway.app`, plus the `_railway-verify` TXT records shown by `railway domain status`.
+
 ## Remaining launch blockers
 
-1. **Resend** — set `RESEND_API_KEY` + `NEWSLETTER_FROM` on a verified sending domain. Until then, auth verify / newsletter stay log-mode (`email: "log"` on health). Milestone 2.
-2. **DNS** — `papertrailresearch.co.uk` does **not** resolve. Keep using the Railway domain, or finish DNS + set `NEXT_PUBLIC_SITE_URL` and redeploy. Milestone 2.
-3. **Secret rotation** — rotate any secrets exposed in prior ops history (OpenRouter API key, `CRON_SECRET`, admin password / `ADMIN_PASSWORD_HASH`) and update Railway. Milestone 2.
+1. **Resend** — set `RESEND_API_KEY` + `NEWSLETTER_FROM` on a verified sending domain. Until then, auth verify / newsletter stay log-mode (`email: "log"` on health).
+2. **DNS** — register or restore `papertrailresearch.co.uk`, then add the Railway records above. Keep `NEXT_PUBLIC_SITE_URL` on the Railway host until then.
+3. **OpenRouter** — rotate the exposed API key in the OpenRouter dashboard and update Railway.
 4. **Stripe keys (optional)** — Pro checkout stays off without `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, and webhook secret on `POST /api/billing/webhook`. Comp Pro via `BILLING_GRANT_EMAILS` or admin grant without Stripe. Milestone 8.
 
 ## Stripe (explicitly optional)

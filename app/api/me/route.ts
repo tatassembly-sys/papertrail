@@ -17,6 +17,7 @@ import { getPublishedArticlesBySlugs } from "@/lib/articles";
 import { deleteThreadsForUser } from "@/lib/article-chat";
 import { deleteCollectionsForUser } from "@/lib/collections";
 import { deleteHighlightsForUser } from "@/lib/highlights";
+import { unsubscribeByEmail } from "@/lib/newsletter";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
 import {
   DAY_MS,
@@ -149,6 +150,8 @@ export async function DELETE() {
       );
     }
   }
+
+  if (existing?.email) await unsubscribeByEmail(existing.email);
 
   await deleteThreadsForUser(session.userId);
   await deleteCollectionsForUser(session.userId);

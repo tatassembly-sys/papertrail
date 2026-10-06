@@ -71,7 +71,7 @@ export async function subscribeEmail(
 
   const verifyToken = token();
   const rawUnsubscribe = token();
-  const unsubscribeToken = existing?.unsubscribe_token || hashToken(rawUnsubscribe);
+  const unsubscribeToken = hashToken(rawUnsubscribe);
   const emailReady = isEmailConfigured();
   if (!emailReady && process.env.NODE_ENV === "production") {
     return { ok: false, error: "Email delivery is not configured. Try again later." };
@@ -85,6 +85,7 @@ export async function subscribeEmail(
         $set: {
           status,
           verify_token: emailReady ? hashToken(verifyToken) : null,
+          unsubscribe_token: unsubscribeToken,
           verified_at: emailReady ? existing.verified_at || null : new Date(),
           unsubscribed_at: null,
         },
@@ -104,6 +105,8 @@ export async function subscribeEmail(
 
   const site = getSiteUrl();
   const verifyUrl = `${site}/newsletter/confirm?token=${verifyToken}`;
+  const unsubUrl = `${site}/newsletter/unsubscribe?token=${rawUnsubscribe}`;
+  const oneClickUrl = `${site}/api/newsletter/unsubscribe?token=${rawUnsubscribe}`;
 
   if (!emailReady) {
     return {
@@ -117,8 +120,9 @@ export async function subscribeEmail(
   const mail = await sendEmail({
     to: normalized,
     subject: "Confirm your Paper Trail newsletter subscription",
-    html: verificationEmailHtml(verifyUrl),
-    text: `Confirm your Paper Trail subscription:\n${verifyUrl}\n\nIf you didn't request this, ignore this email.`,
+    html: verificationEmailHtml(verifyUrl, unsubUrl),
+    text: `Confirm your Paper Trail subscription:\n${verifyUrl}\n\nUnsubscribe: ${unsubUrl}\n\nIf you didn't request this, ignore this email.`,
+    listUnsubscribe: oneClickUrl,
   });
 
   return {
@@ -145,6 +149,22 @@ export async function confirmSubscription(verifyToken: string): Promise<boolean>
     }
   );
   return result.modifiedCount > 0;
+}
+
+export async function unsubscribeByEmail(email: string): Promise<void> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return;
+  const col = await subs();
+  await col.updateOne(
+    { email: normalized, status: { $ne: "unsubscribed" } },
+    {
+      $set: {
+        status: "unsubscribed",
+        unsubscribed_at: new Date(),
+        verify_token: null,
+      },
+    }
+  );
 }
 
 export async function unsubscribeByToken(tokenStr: string): Promise<boolean> {
@@ -362,9 +382,10 @@ export async function sendWeeklyDigest(): Promise<{
       subject: digest.subject,
       html,
       text,
+      listUnsubscribe: `${site}/api/newsletter/unsubscribe?token=${rawUnsub}`,
     });
 
-    if (result.ok) {
+    if (result.ok && result.mode === "resend") {
       await col.updateOne(
         { _id: sub._id },
         { $set: { unsubscribe_token: hashToken(rawUnsub) } }
@@ -412,7 +433,7 @@ export async function sendWeeklyDigest(): Promise<{
   };
 }
 
-function verificationEmailHtml(verifyUrl: string): string {
+function verificationEmailHtml(verifyUrl: string, unsubUrl: string): string {
   return `<!DOCTYPE html>
 <html><body style="font-family:system-ui,sans-serif;color:#16213D;padding:24px;background:#EEF0F2">
   <table width="100%" style="max-width:480px;margin:0 auto;background:#fff;border:1px solid #C7CCD1;padding:24px">
@@ -423,6 +444,7 @@ function verificationEmailHtml(verifyUrl: string): string {
       <p style="margin:24px 0"><a href="${verifyUrl}" style="background:#16213D;color:#EEF0F2;padding:12px 18px;text-decoration:none;border-radius:2px;display:inline-block">Confirm email</a></p>
       <p style="font-size:12px;color:#5B6B73;line-height:1.4">Or paste this link into your browser:<br/>${escapeHtml(verifyUrl)}</p>
       <p style="font-size:12px;color:#5B6B73">If you didn’t request this, you can ignore this message.</p>
+      <p style="font-size:12px;color:#5B6B73">Paper Trail is an independent editorial project. <a href="${escapeHtml(unsubUrl)}" style="color:#C63D2F">Unsubscribe</a>.</p>
     </td></tr>
   </table>
 </body></html>`;

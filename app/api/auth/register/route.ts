@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { registerUser } from "@/lib/users";
 import { signUserToken, USER_SESSION_COOKIE, userSessionCookieOptions } from "@/lib/user-auth";
 import { getSiteUrl } from "@/lib/site-url";
-import { sendEmail, isEmailConfigured } from "@/lib/mail";
+import { sendEmail } from "@/lib/mail";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
@@ -37,21 +37,25 @@ export async function POST(req: NextRequest) {
 
     const verifyUrl = `${getSiteUrl()}/verify-email?token=${result.verifyToken}`;
 
-    await sendEmail({
+    const mail = await sendEmail({
       to: result.user.email,
       subject: "Verify your Paper Trail account",
       html: `<p>Welcome to Paper Trail.</p><p><a href="${verifyUrl}">Verify your email</a></p><p>Or open: ${verifyUrl}</p>`,
       text: `Verify your email: ${verifyUrl}`,
     });
+    const emailSent = mail.ok && mail.mode === "resend";
 
     const token = await signUserToken(result.user.id, result.user.email, 1);
     const res = NextResponse.json({
       success: true,
       user: result.user,
-      ...(process.env.NODE_ENV !== "production" ? { verifyUrl } : {}),
-      note: isEmailConfigured()
+      emailSent,
+      ...(process.env.NODE_ENV !== "production" && !emailSent ? { verifyUrl } : {}),
+      note: emailSent
         ? "Check your inbox to verify your email."
-        : "Account created. Check your email if delivery is configured.",
+        : mail.mode === "log"
+          ? "Account created. Email delivery is not configured yet."
+          : "Account created, but the verification email could not be sent. Use Resend verification from your account.",
     });
     res.cookies.set(USER_SESSION_COOKIE, token, userSessionCookieOptions());
     return res;

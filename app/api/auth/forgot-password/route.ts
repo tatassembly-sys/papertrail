@@ -39,12 +39,18 @@ export async function POST(req: NextRequest) {
 
     if (token) {
       resetUrl = `${getSiteUrl()}/reset-password?token=${token}`;
-      await sendEmail({
+      const mail = await sendEmail({
         to: email.trim().toLowerCase(),
         subject: "Reset your Paper Trail password",
-        html: `<p>Reset your password:</p><p><a href="${resetUrl}">Choose a new password</a></p><p>This link expires in 1 hour.</p>`,
-        text: `Reset your password: ${resetUrl}`,
+        html: `<p>Reset your Paper Trail password:</p><p><a href="${resetUrl}">Choose a new password</a></p><p>This link expires in 1 hour. If you did not ask for this, you can ignore the message.</p>`,
+        text: `Reset your Paper Trail password (expires in 1 hour): ${resetUrl}`,
       });
+      if (!mail.ok) {
+        return NextResponse.json(
+          { error: "Could not send the reset email. Try again later." },
+          { status: 503 }
+        );
+      }
     }
 
     return NextResponse.json({

@@ -93,6 +93,11 @@ function AccountInner() {
           Sign in to save papers, bookmark favorites, follow topics, keep a
           reading history, and upgrade to Pro.
         </p>
+        {verified === "1" && (
+          <p className="mt-3 text-sm font-medium text-redpen">
+            Email verified. Sign in to use this account.
+          </p>
+        )}
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/user-login"

@@ -18,16 +18,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const contentType = req.headers.get("content-type") || "";
-    let token = "";
+    let token = (req.nextUrl.searchParams.get("token") || "").slice(0, 128);
     if (contentType.includes("application/json")) {
       const parsed = await readJsonBody(req, JSON_LIMIT_AUTH);
       if (!parsed.ok) return parsed.response;
       const body = asRecord(parsed.value);
-      token = typeof body?.token === "string" ? body.token.slice(0, 128) : "";
+      const fromBody = typeof body?.token === "string" ? body.token.slice(0, 128) : "";
+      if (fromBody) token = fromBody;
     } else {
       const form = await req.formData();
       const t = form.get("token");
-      token = typeof t === "string" ? t.slice(0, 128) : "";
+      token = typeof t === "string" && t ? t.slice(0, 128) : token;
     }
     const ok = await unsubscribeByToken(token);
     if (!ok) {

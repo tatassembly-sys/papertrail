@@ -45,7 +45,8 @@ export default function RegisterPage() {
         new URLSearchParams(window.location.search).get("next"),
         "/account"
       );
-      router.push(next === "/account" ? "/welcome" : next);
+      const verify = body.emailSent ? "sent" : "pending";
+      router.push(next === "/account" ? `/welcome?verify=${verify}` : next);
       router.refresh();
     } catch {
       setLoading(false);
