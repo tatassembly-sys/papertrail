@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { test } from "node:test";
 import { postPageMetadata } from "../lib/post-metadata";
+import { MISSING_POST_HTML, postProbeStatus } from "../lib/post-probe";
 import { runningCommitSha } from "../lib/running-commit";
 
 test("missing post metadata is not indexable", () => {
@@ -17,6 +18,12 @@ test("published post metadata uses the site URL", () => {
   );
   assert.equal(meta.title, "Alpha");
   assert.equal(meta.alternates?.canonical, "https://example.test/posts/alpha");
+});
+
+test("a missing published note probes as 404", () => {
+  assert.equal(postProbeStatus(false), 404);
+  assert.equal(postProbeStatus(true), 204);
+  assert.match(MISSING_POST_HTML, /not on file/);
 });
 
 test("post route has no loading shell that would lock HTTP 200", () => {

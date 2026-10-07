@@ -10,7 +10,7 @@ Live app: [https://papertrail-production-71d6.up.railway.app](https://papertrail
 
 Agent tasks in this commit: missing-post metadata no longer calls `notFound()` during streaming, `app/posts/[slug]/loading.tsx` is removed so a missing note can return HTTP 404, `/api/health` includes `commit` from `RAILWAY_GIT_COMMIT_SHA`, and `.github/workflows/ci.yml` runs typecheck, test, and build.
 
-The HTTP 404 and the health `commit` field are not production-verified until the next Railway deploy of this commit.
+Health `commit` was verified on deployment `e5841eef` as `d338436`. A missing article on that deploy still returned HTTP 200 because the page streams before `notFound()`. A middleware probe (`GET /api/posts/published`) now returns the not-on-file page with HTTP 404 before that stream. It is production-verified only after the next deploy.
 
 ## Waiting on owner
 
