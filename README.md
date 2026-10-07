@@ -5,6 +5,8 @@ audience — without losing scientific accuracy. Every article is AI-translated
 from a real paper, always links back to its source, and always discloses the
 study's limitations. Nothing publishes without a human editor's review.
 
+> **Milestones / roadmap:** see [`MILESTONES.md`](MILESTONES.md) for the latest audit and the milestones to market-ready (agent-ready prompts included).
+
 ## Stack
 
 | Layer | Choice |
