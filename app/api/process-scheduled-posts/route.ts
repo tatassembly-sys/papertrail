@@ -7,6 +7,7 @@ import {
 } from "@/lib/scheduledPosts";
 import { POSTERS, isSocialPlatform } from "@/lib/social";
 import { assertCronAuthorized } from "@/lib/cron-auth";
+import { runCronJob } from "@/lib/cron-run";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -17,6 +18,7 @@ export async function GET(req: NextRequest) {
   const denied = assertCronAuthorized(req);
   if (denied) return denied;
 
+  return runCronJob("process-scheduled-posts", async () => {
   const batch = await claimDueScheduledPosts(BATCH_SIZE);
 
   if (batch.length === 0) {
@@ -92,4 +94,5 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ success: true, processed: batch.length, results });
+  });
 }

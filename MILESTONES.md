@@ -86,7 +86,7 @@ Exit criteria
 **Goal:** daily ingest → draft → human publish runs for a week without firefighting, and data is recoverable.
 
 Tasks
-- [ ] [AGENT] Add a cron health view or log line per cron run (job name, status, duration); make failures visible in `/admin/status`.
+- [x] [AGENT] Add a cron health view or log line per cron run (job name, status, duration); make failures visible in `/admin/status`.
 - [ ] [AGENT] Add Playwright smoke tests (home, article, pricing, login, 404) and run them in CI against a local build.
 - [x] [AGENT] Write `docs/RUNBOOK.md`: redeploy, rollback, rotate secrets, restore Mongo, re-run a cron safely.
 - [ ] [HUMAN] Turn on MongoDB backups (Atlas or Railway volume snapshots) and do one restore into a scratch database.

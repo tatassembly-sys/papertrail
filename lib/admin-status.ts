@@ -6,6 +6,7 @@ import { isBillingConfigured } from "@/lib/entitlements";
 import { countProUsers } from "@/lib/users";
 import { countBillingInquiries } from "@/lib/billing-inquiries";
 import { formatQueueLastError } from "@/lib/queue-last-error";
+import { latestCronByJob, type CronRunView } from "@/lib/cron-run";
 
 export interface AdminOpsStatus {
   siteUrl: string;
@@ -35,6 +36,7 @@ export interface AdminOpsStatus {
   scheduledPending: number;
   lastMix: { at?: unknown; published?: unknown; dateKey?: unknown } | null;
   billing: { configured: boolean; mode: "stripe" | "off"; proUsers: number; inquiries: number };
+  crons: CronRunView[];
   blockers: string[];
 }
 
@@ -58,6 +60,7 @@ export async function getAdminOpsStatus(): Promise<AdminOpsStatus> {
     proUsers,
     inquiries,
     lastQueueError,
+    recentCronRuns,
   ] = await Promise.all([
     db.collection("articles").countDocuments({ status: "draft" }),
     db.collection("articles").countDocuments({ status: "published" }),
@@ -83,6 +86,22 @@ export async function getAdminOpsStatus(): Promise<AdminOpsStatus> {
       .sort({ created_at: -1 })
       .limit(1)
       .next(),
+    db
+      .collection("cron_runs")
+      .aggregate([
+        { $sort: { at: -1 } },
+        {
+          $group: {
+            _id: "$job",
+            status: { $first: "$status" },
+            duration_ms: { $first: "$duration_ms" },
+            ok: { $first: "$ok" },
+            error: { $first: "$error" },
+            at: { $first: "$at" },
+          },
+        },
+      ])
+      .toArray(),
   ]);
 
   const emailConfigured = isEmailConfigured();
@@ -137,6 +156,7 @@ export async function getAdminOpsStatus(): Promise<AdminOpsStatus> {
       proUsers,
       inquiries,
     },
+    crons: latestCronByJob(recentCronRuns),
     blockers,
   };
 }

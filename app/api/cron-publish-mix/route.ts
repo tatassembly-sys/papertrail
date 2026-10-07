@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assertCronAuthorized } from "@/lib/cron-auth";
+import { runCronJob } from "@/lib/cron-run";
 import { publishDailyFieldMix } from "@/lib/publish-mix";
 
 export const runtime = "nodejs";
@@ -11,6 +12,7 @@ export async function GET(req: NextRequest) {
   const denied = assertCronAuthorized(req);
   if (denied) return denied;
 
+  return runCronJob("cron-publish-mix", async () => {
   try {
     const result = await publishDailyFieldMix();
     return NextResponse.json({ success: true, ...result });
@@ -18,4 +20,5 @@ export async function GET(req: NextRequest) {
     console.error("cron-publish-mix:", err);
     return NextResponse.json({ error: "Publish mix failed." }, { status: 500 });
   }
+  });
 }

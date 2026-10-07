@@ -65,6 +65,24 @@ export default async function AdminStatusPage() {
             </p>
           ) : null}
 
+          <ul className="mb-6 divide-y divide-rule rounded-sm border border-rule bg-surface text-sm">
+            {status.crons.map((run) => (
+              <li key={run.job} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-baseline sm:justify-between">
+                <span className="font-mono text-xs uppercase tracking-wide text-ink">{run.job}</span>
+                {run.status === null ? (
+                  <span className="text-ink-soft">No run recorded</span>
+                ) : (
+                  <span className={run.ok ? "text-ink" : "text-redpen"}>
+                    {run.ok ? "ok" : "failed"} {run.status}
+                    {run.durationMs !== null ? ` · ${run.durationMs} ms` : ""}
+                    {run.at ? ` · ${run.at}` : ""}
+                    {run.error ? ` · ${run.error}` : ""}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Published" value={status.articles.published} />
             <Stat label="Drafts" value={status.articles.drafts} />

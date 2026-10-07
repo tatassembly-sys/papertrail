@@ -54,4 +54,4 @@ Swap in the path you mean to run:
 - `/api/cron-publish-mix`
 - `/api/newsletter/digest` (this one sends mail)
 
-A missing or wrong bearer returns 401, or 503 if the secret is unset in production. A 200 means that job ran. Do not send a valid bearer just to check the route. Queue rows that already failed show on `/admin/status` as `queue.lastError`. Cron process output stays in `railway logs --service cron-process-queue` (and the other `cron-*` services). Unset `CRON_SECRET` in the shell when you finish.
+A missing or wrong bearer returns 401, or 503 if the secret is unset in production. A 200 means that job ran. Do not send a valid bearer just to check the route. Queue rows that already failed show on `/admin/status` as `queue.lastError`. Each authorized cron run also stores job, HTTP status, and duration there. A missing row means that job has not finished a run since logging was added. Cron process output stays in `railway logs --service cron-process-queue` (and the other `cron-*` services). Unset `CRON_SECRET` in the shell when you finish.

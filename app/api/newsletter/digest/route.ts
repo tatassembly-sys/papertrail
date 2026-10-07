@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assertCronAuthorized } from "@/lib/cron-auth";
+import { runCronJob } from "@/lib/cron-run";
 import { buildWeeklyDigest, sendWeeklyDigest } from "@/lib/newsletter";
 import { requireAdmin } from "@/lib/auth-server";
 
@@ -46,6 +47,7 @@ export async function GET(req: NextRequest) {
   const denied = assertCronAuthorized(req);
   if (denied) return denied;
 
+  return runCronJob("newsletter-digest", async () => {
   try {
     const result = await sendWeeklyDigest();
     return NextResponse.json({ success: true, ...result });
@@ -53,6 +55,7 @@ export async function GET(req: NextRequest) {
     console.error("digest error:", err);
     return NextResponse.json({ error: "Digest failed." }, { status: 500 });
   }
+  });
 }
 
 /** Admin can also POST to force-send. */
@@ -60,6 +63,7 @@ export async function POST(req: NextRequest) {
   if (!(await requireAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  return runCronJob("newsletter-digest", async () => {
   try {
     const result = await sendWeeklyDigest();
     return NextResponse.json({ success: true, ...result });
@@ -67,4 +71,5 @@ export async function POST(req: NextRequest) {
     console.error("digest POST error:", err);
     return NextResponse.json({ error: "Digest failed." }, { status: 500 });
   }
+  });
 }

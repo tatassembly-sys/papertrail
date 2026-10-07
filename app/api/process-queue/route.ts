@@ -11,6 +11,7 @@ import {
   releaseQueueClaim,
 } from "@/lib/queue";
 import { assertCronAuthorized } from "@/lib/cron-auth";
+import { runCronJob } from "@/lib/cron-run";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
   const denied = assertCronAuthorized(req);
   if (denied) return denied;
 
+  return runCronJob("process-queue", async () => {
   const results: {
     externalId: string;
     source: string;
@@ -152,4 +154,5 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }

@@ -4,6 +4,7 @@ import { enqueuePapers, getQueuedExternalIds } from "@/lib/queue";
 import { searchPubMedIds } from "@/lib/pubmed";
 import { PUBMED_TOPICS } from "@/lib/arxivCategories";
 import { assertCronAuthorized } from "@/lib/cron-auth";
+import { runCronJob } from "@/lib/cron-run";
 import { publicErrorMessage } from "@/lib/safe-error";
 
 export const runtime = "nodejs";
@@ -15,6 +16,7 @@ export async function GET(req: NextRequest) {
   const denied = assertCronAuthorized(req);
   if (denied) return denied;
 
+  return runCronJob("cron-fetch-pubmed", async () => {
   try {
     const perTopicResults = await Promise.allSettled(
       PUBMED_TOPICS.map(async ({ topic, category }) => {
@@ -74,4 +76,5 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }

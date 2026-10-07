@@ -3,6 +3,7 @@ import { getExistingSourceUrls } from "@/lib/articles";
 import { enqueuePapers, getQueuedExternalIds } from "@/lib/queue";
 import { arxivFeedCategoriesFromEnv } from "@/lib/arxivCategories";
 import { assertCronAuthorized } from "@/lib/cron-auth";
+import { runCronJob } from "@/lib/cron-run";
 import { publicErrorMessage } from "@/lib/safe-error";
 
 export const runtime = "nodejs"; // needs the mongo driver's Node TCP APIs
@@ -63,6 +64,7 @@ export async function GET(req: NextRequest) {
   const denied = assertCronAuthorized(req);
   if (denied) return denied;
 
+  return runCronJob("cron-fetch", async () => {
   try {
     const entries = await fetchRecentArxivLinks();
 
@@ -103,4 +105,5 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }

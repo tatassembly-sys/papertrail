@@ -135,6 +135,10 @@ async function createAll(db: Db): Promise<void> {
   const mixRuns = db.collection("publish_mix_runs");
   await safeIndex(mixRuns, { dateKey: 1 }, { unique: true, name: "publish_mix_date" });
 
+  const cronRuns = db.collection("cron_runs");
+  await safeIndex(cronRuns, { at: -1 }, { name: "cron_runs_at" });
+  await safeIndex(cronRuns, { job: 1, at: -1 }, { name: "cron_runs_job_at" });
+
   const inquiries = db.collection("billing_inquiries");
   await safeIndex(inquiries, { created_at: -1 }, { name: "billing_inquiries_created" });
   await safeIndex(inquiries, { email: 1 }, { name: "billing_inquiries_email" });
