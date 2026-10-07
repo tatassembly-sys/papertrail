@@ -11,9 +11,9 @@ NO-GO until email delivery and the sending domain work in production. Milestone 
 | Item | Status |
 |------|--------|
 | Decision | **NO-GO** |
-| Production SHA | `453ce63d13a6f5816a9917f3ab3a52a988c046eb` |
+| Production SHA | `e8fe318a702720ce084e55f964a83f9a2b44f1f3` |
 | Production URL | https://papertrail-production-71d6.up.railway.app |
-| Deployment | SUCCESS `164aa857-7a3d-4c29-9508-d6f551111e15` |
+| Deployment | SUCCESS `b8a507a0-0bd9-46e6-9f96-b08993ae65bb` |
 | Monitoring | Health `ok`, database connected. No separate uptime monitor. |
 | Payment | Stripe intentionally off. Checkout is 503 without keys. Must stay off. |
 | Email | Log mode. `RESEND_API_KEY`, `NEWSLETTER_FROM`, and `EMAIL_FROM` are absent. Not delivering. |
@@ -22,7 +22,7 @@ NO-GO until email delivery and the sending domain work in production. Milestone 
 
 ## Production
 
-Latest verified deploy is SUCCESS deployment `164aa857-7a3d-4c29-9508-d6f551111e15` on commit `453ce63d13a6f5816a9917f3ab3a52a988c046eb`. Health `commit` on that deploy is the same SHA.
+Latest verified deploy is SUCCESS deployment `b8a507a0-0bd9-46e6-9f96-b08993ae65bb` on commit `e8fe318a702720ce084e55f964a83f9a2b44f1f3`. Health `commit` on that deploy is the same SHA.
 
 Live URL: https://papertrail-production-71d6.up.railway.app
 
@@ -30,7 +30,7 @@ Latest verified health: `ok`, database connected, email `log`, billing `off`, Op
 
 ## Monitoring status
 
-Railway healthcheck path is `/api/health` (`railway.toml`). The latest verified result on deployment `164aa857` is `ok` with the database connected and `commit` equal to `453ce63d13a6f5816a9917f3ab3a52a988c046eb`. There is no separate uptime monitor. This health result does not prove inbox delivery, DNS, or a live OpenRouter translation. GitHub Actions run `37684587745` succeeded for that commit.
+Railway healthcheck path is `/api/health` (`railway.toml`). The latest verified result on deployment `b8a507a0` is `ok` with the database connected and `commit` equal to `e8fe318a702720ce084e55f964a83f9a2b44f1f3`. There is no separate uptime monitor. This health result does not prove inbox delivery, DNS, or a live OpenRouter translation. GitHub Actions run `37691157508` succeeded for commit `e8fe318`.
 
 ## Payment status
 
@@ -56,7 +56,7 @@ Email is log mode. `RESEND_API_KEY`, `NEWSLETTER_FROM`, and `EMAIL_FROM` are abs
 
 ## Missing article
 
-On deployment `164aa857`, `GET /posts/does-not-exist-mr1` returned HTTP 404 with “not on file” and `noindex`. A published article returned HTTP 200. An earlier deploy (`01aa7ed`) sent public articles to `/login`; that matcher is gone. Email and the domain stay the market blockers.
+On deployment `b8a507a0`, `GET /posts/does-not-exist-mr1` returned HTTP 404. A published article returned HTTP 200. Email and the domain stay the market blockers.
 
 ## What would change the decision
 

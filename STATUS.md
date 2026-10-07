@@ -1,24 +1,24 @@
 # Paper Trail — current project status
 
 **Date:** 7 October 2026  
-**Verified runtime:** `453ce63d13a6f5816a9917f3ab3a52a988c046eb` on deployment `164aa857-7a3d-4c29-9508-d6f551111e15` (SUCCESS). Health on that deploy is `ok`, database `connected`, email `log`, billing `off`, and `commit` is that full SHA. GitHub Actions run `37684587745` is success. A later docs commit does not by itself replace that deploy.  
+**Verified runtime:** `e8fe318a702720ce084e55f964a83f9a2b44f1f3` on deployment `b8a507a0-0bd9-46e6-9f96-b08993ae65bb` (SUCCESS). Health on that deploy is `ok`, database `connected`, email `log`, billing `off`, and `commit` is that full SHA. A later docs commit does not by itself replace that deploy.  
 **Verdict:** **Milestone 1 closed. MR1 agent tasks pass on that deploy.** **Milestone 2 / MR2 is not closed.** Inbox delivery and the custom domain are **BLOCKED**. Stripe Pro checkout stays **off**. Market decision stays **NO-GO**.
 
 Live app: [https://papertrail-production-71d6.up.railway.app](https://papertrail-production-71d6.up.railway.app)
 
 ## MR1–MR5 (7 October 2026)
 
-Checked live on deployment `164aa857` (`453ce63`). PASS means the running site did it.
+Checked live on deployment `b8a507a0` (`e8fe318`). PASS means the running site did it. The 404 and health checks below were repeated on this deploy.
 
 | Result | Check |
 |--------|--------|
-| PASS | `GET /api/health` is `ok`, database `connected`, email `log`, billing `off`, `commit` `453ce63d13a6f5816a9917f3ab3a52a988c046eb`. |
+| PASS | `GET /api/health` is `ok`, database `connected`, email `log`, billing `off`, `commit` `e8fe318a702720ce084e55f964a83f9a2b44f1f3`. |
 | PASS | `GET /posts/does-not-exist-mr1` is HTTP 404, HTML, contains “not on file” and “Not on file”, and `noindex`. It does not redirect to login. |
 | PASS | `GET /posts/duck-hunting-with-quantum-mechanics` is HTTP 200. Home, pricing, login, and library are HTTP 200. |
 | PASS | Unsigned `GET /api/process-queue` is 401. `POST /api/billing/checkout` is 503. |
-| PASS | Actions on `453ce63` completed success (`37684587745`). Earlier runs on `696e424`, `01aa7ed`, and `d338436` also succeeded. |
+| PASS | Actions on `e8fe318` completed success (`37691157508`). Earlier runs on `453ce63`, `696e424`, `01aa7ed`, and `d338436` also succeeded. |
 | PASS | Anonymous `GET /` set no cookie. The repo has no analytics SDK and no consent banner. |
-| PARTIAL | `/admin/status` now includes the latest stored queue error. That page was not opened with an admin session on this deploy. |
+| PARTIAL | `/admin/status` lists the six cron jobs with status and duration after an authorized run, plus the latest stored queue error. No cron was called with a bearer on this deploy, so the new rows are empty until the next schedule. The page was not opened with an admin session. |
 | PARTIAL | `scripts/smoke-http.mjs` plans home, pricing, login, a missing article, and one local article. It refuses any non-localhost `BASE_URL`. It was not run against a local server. Playwright is not a dependency and was not added. |
 | PARTIAL | Duplicate and out-of-order Stripe webhook tests pass offline. Checkout stays 503. No test-mode purchase was made. |
 | BLOCKED | Inbox delivery. `RESEND_API_KEY`, `NEWSLETTER_FROM`, and `EMAIL_FROM` are absent. Mail links are built with `getSiteUrl()`. |
