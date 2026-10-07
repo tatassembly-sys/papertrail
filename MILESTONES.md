@@ -72,8 +72,8 @@ Tasks
 - [ ] [HUMAN] Rotate the exposed OpenRouter key in the OpenRouter dashboard and update Railway.
 - [ ] [HUMAN] After the domain resolves with TLS, switch `NEXT_PUBLIC_SITE_URL` to `https://www.papertrailresearch.co.uk` (or apex) and redeploy.
 - [ ] [AGENT] Once the owner says env is set: verify end to end with an inbox the owner provides — register → verify email, password reset, newsletter subscribe → confirm → unsubscribe link, one digest send to a test list. Record results in `STATUS.md`.
-- [ ] [AGENT] Make sure every link in mail uses `NEXT_PUBLIC_SITE_URL` (grep for hard-coded `up.railway.app`). Add a test for link building.
-- [ ] [AGENT] Update `PAPERTRAIL_MARKET_READINESS.md` blockers 1–3.
+- [x] [AGENT] Make sure every link in mail uses `NEXT_PUBLIC_SITE_URL` (grep for hard-coded `up.railway.app`). Add a test for link building.
+- [x] [AGENT] Update `PAPERTRAIL_MARKET_READINESS.md` blockers 1–3.
 
 Exit criteria
 - `/api/health` shows `email` not equal to `"log"`.
@@ -88,7 +88,7 @@ Exit criteria
 Tasks
 - [ ] [AGENT] Add a cron health view or log line per cron run (job name, status, duration); make failures visible in `/admin/status`.
 - [ ] [AGENT] Add Playwright smoke tests (home, article, pricing, login, 404) and run them in CI against a local build.
-- [ ] [AGENT] Write `docs/RUNBOOK.md`: redeploy, rollback, rotate secrets, restore Mongo, re-run a cron safely.
+- [x] [AGENT] Write `docs/RUNBOOK.md`: redeploy, rollback, rotate secrets, restore Mongo, re-run a cron safely.
 - [ ] [HUMAN] Turn on MongoDB backups (Atlas or Railway volume snapshots) and do one restore into a scratch database.
 - [ ] [HUMAN] Run the editorial loop daily for 7 days (publish at least one article a day from drafts).
 - [ ] [AGENT] Fix any ingest/publish bugs found during those 7 days; keep the publish gate (source URL + caveats) enforced with tests.
@@ -106,7 +106,7 @@ Exit criteria
 Tasks
 - [ ] [HUMAN] Review `/privacy` and `/terms` (UK GDPR, PECR for newsletter and cookies). Decide who is the data controller and add contact details.
 - [ ] [HUMAN] Register with the ICO if required (data protection fee) and add the registration number to `/privacy`.
-- [ ] [AGENT] Check cookie/analytics usage; add a consent banner only if non-essential cookies exist.
+- [x] [AGENT] Check cookie/analytics usage; add a consent banner only if non-essential cookies exist.
 - [ ] [AGENT] Accessibility pass (headings, contrast, keyboard) and SEO pass (sitemap, canonical URLs on the custom domain, correct 404s).
 - [ ] [AGENT] Update `PAPERTRAIL_MARKET_READINESS.md` with evidence for every blocker, and propose GO.
 - [ ] [HUMAN] Make the GO decision.

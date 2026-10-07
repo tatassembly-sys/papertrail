@@ -1,22 +1,42 @@
 # Paper Trail — current project status
 
 **Date:** 7 October 2026  
-**Verified runtime:** `54ab66a5980fece1da8e720be008359af5410320` on deployment `e7cfcf6a-2c76-42b6-b2a9-606ea73ea4ed` (SUCCESS). Health on that deploy was `ok`, database `connected`, email `log`, billing `off`. This matches `PAPERTRAIL_MARKET_READINESS.md`. The earlier `4f25f06` / `91f12539` note is the previous deploy.  
-**Verdict:** **Milestone 1 closed.** **MR1 is in progress.** **Milestone 2 / MR2 is not closed.** Inbox delivery and the custom domain are **BLOCKED** on credentials and DNS this repo cannot create. Stripe Pro checkout stays **off**.
+**Verified runtime:** `453ce63d13a6f5816a9917f3ab3a52a988c046eb` on deployment `164aa857-7a3d-4c29-9508-d6f551111e15` (SUCCESS). Health on that deploy is `ok`, database `connected`, email `log`, billing `off`, and `commit` is that full SHA. GitHub Actions run `37684587745` is success. A later docs commit does not by itself replace that deploy.  
+**Verdict:** **Milestone 1 closed. MR1 agent tasks pass on that deploy.** **Milestone 2 / MR2 is not closed.** Inbox delivery and the custom domain are **BLOCKED**. Stripe Pro checkout stays **off**. Market decision stays **NO-GO**.
 
 Live app: [https://papertrail-production-71d6.up.railway.app](https://papertrail-production-71d6.up.railway.app)
 
-## MR1 (7 October 2026)
+## MR1–MR5 (7 October 2026)
 
-Agent tasks in this commit: missing-post metadata no longer calls `notFound()` during streaming, `app/posts/[slug]/loading.tsx` is removed so a missing note can return HTTP 404, `/api/health` includes `commit` from `RAILWAY_GIT_COMMIT_SHA`, and `.github/workflows/ci.yml` runs typecheck, test, and build.
+Checked live on deployment `164aa857` (`453ce63`). PASS means the running site did it.
 
-Health `commit` was verified on deployment `e5841eef` as `d338436`. A missing article on that deploy still returned HTTP 200 because the page streams before `notFound()`. A middleware probe (`GET /api/posts/published`) now returns the not-on-file page with HTTP 404 before that stream. It is production-verified only after the next deploy.
+| Result | Check |
+|--------|--------|
+| PASS | `GET /api/health` is `ok`, database `connected`, email `log`, billing `off`, `commit` `453ce63d13a6f5816a9917f3ab3a52a988c046eb`. |
+| PASS | `GET /posts/does-not-exist-mr1` is HTTP 404, HTML, contains “not on file” and “Not on file”, and `noindex`. It does not redirect to login. |
+| PASS | `GET /posts/duck-hunting-with-quantum-mechanics` is HTTP 200. Home, pricing, login, and library are HTTP 200. |
+| PASS | Unsigned `GET /api/process-queue` is 401. `POST /api/billing/checkout` is 503. |
+| PASS | Actions on `453ce63` completed success (`37684587745`). Earlier runs on `696e424`, `01aa7ed`, and `d338436` also succeeded. |
+| PASS | Anonymous `GET /` set no cookie. The repo has no analytics SDK and no consent banner. |
+| PARTIAL | `/admin/status` now includes the latest stored queue error. That page was not opened with an admin session on this deploy. |
+| PARTIAL | `scripts/smoke-http.mjs` plans home, pricing, login, a missing article, and one local article. It refuses any non-localhost `BASE_URL`. It was not run against a local server. Playwright is not a dependency and was not added. |
+| PARTIAL | Duplicate and out-of-order Stripe webhook tests pass offline. Checkout stays 503. No test-mode purchase was made. |
+| BLOCKED | Inbox delivery. `RESEND_API_KEY`, `NEWSLETTER_FROM`, and `EMAIL_FROM` are absent. Mail links are built with `getSiteUrl()`. |
+| BLOCKED | `papertrailresearch.co.uk` has no public DNS zone. `NEXT_PUBLIC_SITE_URL` stays on the Railway host. |
+| BLOCKED | OpenRouter key rotation. Health only shows that a key is present. |
+| BLOCKED | Mongo backup restore, a 7-day editorial run, an uptime monitor, privacy/terms review, ICO registration, and the GO decision. |
+
+Deploy `01aa7ed` put `/posts` on the admin session matcher. Public articles then returned HTTP 307 to `/login`. Deploy `696e424` removed that matcher. Deploy `453ce63` is the one verified above.
+
+`docs/RUNBOOK.md` covers redeploy, rollback, secret rotation, a scratch Mongo restore, and cron reruns. A 200 on a cron route runs the job. An authorized cron call was not sent.
 
 ## Waiting on owner
 
-- Confirm Railway deploys GitHub `main` (or redeploy this commit), then check `GET /posts/does-not-exist` is 404 and `GET /api/health` `commit` matches that deploy.
 - Add an external uptime monitor on `/api/health` and send one test alert. This repo cannot create that account.
-- MR2 still needs a Resend key, `NEWSLETTER_FROM`, DNS for `papertrailresearch.co.uk`, and an OpenRouter key rotation.
+- Confirm whether Railway should auto-deploy GitHub `main`. This pass shipped with `railway redeploy --from-source --service papertrail`.
+- MR2 needs a Resend key, `NEWSLETTER_FROM`, `EMAIL_FROM`, DNS for `papertrailresearch.co.uk`, and an OpenRouter key rotation. After that, say which inbox to use for register, reset, confirm, and unsubscribe.
+- MR5 starts only if you want to charge and Stripe test keys are set on Railway. Checkout must stay 503 until then.
+- Privacy, terms, ICO registration, and the GO decision stay with you. This file does not say GO.
 
 ## Production verification on `91f12539`
 

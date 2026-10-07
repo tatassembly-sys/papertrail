@@ -1,19 +1,19 @@
 # PaperTrail market readiness
 
-**Date:** 6 October 2026  
+**Date:** 7 October 2026  
 **Milestone:** 9 — market readiness  
 **Decision: NO-GO**
 
-NO-GO until email delivery and the sending domain work in production. Milestone 1 is closed. Milestone 2 is not closed.
+NO-GO until email delivery and the sending domain work in production. Milestone 1 is closed. Milestone 2 is not closed. Stripe stays off.
 
 ## Final status
 
 | Item | Status |
 |------|--------|
 | Decision | **NO-GO** |
-| Production SHA | `54ab66a5980fece1da8e720be008359af5410320` |
+| Production SHA | `453ce63d13a6f5816a9917f3ab3a52a988c046eb` |
 | Production URL | https://papertrail-production-71d6.up.railway.app |
-| Deployment | SUCCESS `e7cfcf6a-2c76-42b6-b2a9-606ea73ea4ed` |
+| Deployment | SUCCESS `164aa857-7a3d-4c29-9508-d6f551111e15` |
 | Monitoring | Health `ok`, database connected. No separate uptime monitor. |
 | Payment | Stripe intentionally off. Checkout is 503 without keys. Must stay off. |
 | Email | Log mode. `RESEND_API_KEY`, `NEWSLETTER_FROM`, and `EMAIL_FROM` are absent. Not delivering. |
@@ -22,7 +22,7 @@ NO-GO until email delivery and the sending domain work in production. Milestone 
 
 ## Production
 
-Latest verified deploy is SUCCESS deployment `e7cfcf6a-2c76-42b6-b2a9-606ea73ea4ed` on commit `54ab66a5980fece1da8e720be008359af5410320`.
+Latest verified deploy is SUCCESS deployment `164aa857-7a3d-4c29-9508-d6f551111e15` on commit `453ce63d13a6f5816a9917f3ab3a52a988c046eb`. Health `commit` on that deploy is the same SHA.
 
 Live URL: https://papertrail-production-71d6.up.railway.app
 
@@ -30,7 +30,7 @@ Latest verified health: `ok`, database connected, email `log`, billing `off`, Op
 
 ## Monitoring status
 
-Railway healthcheck path is `/api/health` (`railway.toml`). The latest verified result on deployment `e7cfcf6a` is `ok` with the database connected. There is no separate uptime monitor. This health result does not prove inbox delivery, DNS, or a live OpenRouter translation.
+Railway healthcheck path is `/api/health` (`railway.toml`). The latest verified result on deployment `164aa857` is `ok` with the database connected and `commit` equal to `453ce63d13a6f5816a9917f3ab3a52a988c046eb`. There is no separate uptime monitor. This health result does not prove inbox delivery, DNS, or a live OpenRouter translation. GitHub Actions run `37684587745` succeeded for that commit.
 
 ## Payment status
 
@@ -54,9 +54,9 @@ Email is log mode. `RESEND_API_KEY`, `NEWSLETTER_FROM`, and `EMAIL_FROM` are abs
 3. **Milestone 1.** Closed. The latest verified production deploy is the SUCCESS deployment named above.
 4. **OpenRouter flag `true`.** Key presence only. Not treated as proof that translation works, and not a clearance of the rotation blocker.
 
-## Known open FAIL (not claimed fixed)
+## Missing article
 
-A missing article returned HTTP 200 with a not-on-file page on deployment `e7cfcf6a`. That remains a production FAIL until a later deploy returns HTTP 404. `STATUS.md` and this file now both name that same verified deployment. The 404 route change is not claimed fixed here. Email and the domain stay the market blockers.
+On deployment `164aa857`, `GET /posts/does-not-exist-mr1` returned HTTP 404 with “not on file” and `noindex`. A published article returned HTTP 200. An earlier deploy (`01aa7ed`) sent public articles to `/login`; that matcher is gone. Email and the domain stay the market blockers.
 
 ## What would change the decision
 
