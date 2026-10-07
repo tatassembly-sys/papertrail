@@ -56,6 +56,15 @@ export default async function AdminStatusPage() {
               : ""}
           </p>
 
+          {status.queue.lastError ? (
+            <p className="mb-4 break-words text-sm text-ink">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-redpen">
+                Last queue error
+              </span>
+              <span className="mt-1 block">{status.queue.lastError}</span>
+            </p>
+          ) : null}
+
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Published" value={status.articles.published} />
             <Stat label="Drafts" value={status.articles.drafts} />

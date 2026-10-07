@@ -1,6 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
+import { NextRequest } from "next/server";
+import { POST as postWebhook } from "../app/api/billing/webhook/route";
+import { isBillingConfigured } from "../lib/entitlements";
 import {
   invoiceSubscriptionId,
   normalizeSubscription,
@@ -79,4 +82,120 @@ test("verifyStripeSignature rejects wrong secret, tampered body, stale timestamp
   const stale = Math.floor(Date.now() / 1000) - 3600;
   assert.equal(verifyStripeSignature(payload, sign(payload, "whsec_x", stale), "whsec_x"), false);
   assert.equal(verifyStripeSignature(payload, null, "whsec_x"), false);
+});
+
+// Not a stored user, so the handler returns before Mongo or the Stripe API.
+const UNKNOWN_USER = "not-a-user";
+const WEBHOOK_SECRET = "whsec_x";
+
+function subscriptionEvent(opts: {
+  id: string;
+  type: string;
+  created: number;
+  subscriptionId: string;
+  status: string;
+}) {
+  return JSON.stringify({
+    id: opts.id,
+    object: "event",
+    type: opts.type,
+    created: opts.created,
+    data: {
+      object: {
+        id: opts.subscriptionId,
+        object: "subscription",
+        status: opts.status,
+        cancel_at_period_end: false,
+        metadata: { userId: UNKNOWN_USER },
+        items: { data: [{ price: { recurring: { interval: "month" } } }] },
+      },
+    },
+  });
+}
+
+function leadingBogusV1(header: string) {
+  const comma = header.indexOf(",");
+  const sig = header.slice(header.indexOf("v1=") + 3);
+  return `${header.slice(0, comma)},v1=${"0".repeat(sig.length)},v1=${sig}`;
+}
+
+function duplicateV1(header: string) {
+  return `${header},${header.slice(header.indexOf("v1="))}`;
+}
+
+async function postSigned(payload: string, header: string) {
+  const res = await postWebhook(
+    new NextRequest("https://example.test/api/billing/webhook", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "stripe-signature": header,
+      },
+      body: payload,
+    })
+  );
+  return { status: res.status, body: await res.json() };
+}
+
+test("duplicate and out-of-order webhooks verify without live Stripe keys", async () => {
+  const billingBefore = isBillingConfigured();
+  const keyBefore = process.env.STRIPE_SECRET_KEY;
+  const monthBefore = process.env.STRIPE_PRICE_MONTHLY;
+  const yearBefore = process.env.STRIPE_PRICE_YEARLY;
+  const secretBefore = process.env.STRIPE_WEBHOOK_SECRET;
+  process.env.STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET;
+  try {
+    const active = subscriptionEvent({
+      id: "evt_dup",
+      type: "customer.subscription.updated",
+      created: 1_700_000_200,
+      subscriptionId: "sub_live",
+      status: "active",
+    });
+    const header = sign(active, WEBHOOK_SECRET);
+    const replayHeader = duplicateV1(header);
+    assert.equal(verifyStripeSignature(active, header, WEBHOOK_SECRET), true);
+    assert.equal(verifyStripeSignature(active, header, WEBHOOK_SECRET), true);
+    assert.equal(verifyStripeSignature(active, replayHeader, WEBHOOK_SECRET), true);
+
+    const first = await postSigned(active, header);
+    const second = await postSigned(active, header);
+    assert.equal(first.status, 200);
+    assert.deepEqual(first.body, { received: true });
+    assert.deepEqual(second, first);
+    const replayed = await postSigned(active, replayHeader);
+    assert.deepEqual(replayed, first);
+
+    const staleCancel = subscriptionEvent({
+      id: "evt_old",
+      type: "customer.subscription.deleted",
+      created: 1_700_000_000,
+      subscriptionId: "sub_old",
+      status: "canceled",
+    });
+    const staleHeader = sign(staleCancel, WEBHOOK_SECRET);
+    assert.equal(verifyStripeSignature(staleCancel, staleHeader, WEBHOOK_SECRET), true);
+    assert.ok(JSON.parse(staleCancel).created < JSON.parse(active).created);
+
+    const newerFirst = await postSigned(active, header);
+    const olderAfter = await postSigned(staleCancel, staleHeader);
+    const olderFirst = await postSigned(staleCancel, staleHeader);
+    const newerAfter = await postSigned(active, header);
+    assert.deepEqual(newerFirst, first);
+    assert.deepEqual(olderAfter, first);
+    assert.deepEqual(olderFirst, first);
+    assert.deepEqual(newerAfter, first);
+
+    const disordered = leadingBogusV1(header);
+    assert.equal(verifyStripeSignature(active, disordered, WEBHOOK_SECRET), true);
+    const rotated = await postSigned(active, disordered);
+    assert.deepEqual(rotated, first);
+  } finally {
+    if (secretBefore === undefined) delete process.env.STRIPE_WEBHOOK_SECRET;
+    else process.env.STRIPE_WEBHOOK_SECRET = secretBefore;
+  }
+  assert.equal(process.env.STRIPE_SECRET_KEY, keyBefore);
+  assert.equal(process.env.STRIPE_PRICE_MONTHLY, monthBefore);
+  assert.equal(process.env.STRIPE_PRICE_YEARLY, yearBefore);
+  assert.equal(isBillingConfigured(), billingBefore);
 });

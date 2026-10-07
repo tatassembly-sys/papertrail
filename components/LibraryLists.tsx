@@ -88,6 +88,7 @@ export default function LibraryLists({
           onChange={(e) => setName(e.target.value)}
           className="pt-input flex-1"
           placeholder="e.g. Climate week"
+          aria-label="New list name"
           required
         />
         <button type="submit" className="pt-btn">

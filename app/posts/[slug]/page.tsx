@@ -37,7 +37,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "Paper Trail is temporarily unavailable" };
   }
 
-  return postPageMetadata(article ?? null, getSiteUrl());
+  if (!article) notFound();
+  return postPageMetadata(article, getSiteUrl());
 }
 
 export default async function PostPage({ params }: PageProps) {

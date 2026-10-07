@@ -5,6 +5,7 @@ import { probeOpenRouterKey } from "@/lib/openrouter-health";
 import { isBillingConfigured } from "@/lib/entitlements";
 import { countProUsers } from "@/lib/users";
 import { countBillingInquiries } from "@/lib/billing-inquiries";
+import { formatQueueLastError } from "@/lib/queue-last-error";
 
 export interface AdminOpsStatus {
   siteUrl: string;
@@ -16,6 +17,8 @@ export interface AdminOpsStatus {
     processing: number;
     error: number;
     done: number;
+    /** Latest stored fetch_queue error_message, or null. */
+    lastError: string | null;
   };
   newsletter: {
     active: number;
@@ -54,6 +57,7 @@ export async function getAdminOpsStatus(): Promise<AdminOpsStatus> {
     openrouter,
     proUsers,
     inquiries,
+    lastQueueError,
   ] = await Promise.all([
     db.collection("articles").countDocuments({ status: "draft" }),
     db.collection("articles").countDocuments({ status: "published" }),
@@ -70,6 +74,15 @@ export async function getAdminOpsStatus(): Promise<AdminOpsStatus> {
     probeOpenRouterKey(),
     countProUsers(),
     countBillingInquiries(),
+    db
+      .collection("fetch_queue")
+      .find(
+        { status: "error", error_message: { $type: "string", $gt: "" } },
+        { projection: { error_message: 1, source: 1, external_id: 1, attempts: 1, status: 1 } }
+      )
+      .sort({ created_at: -1 })
+      .limit(1)
+      .next(),
   ]);
 
   const emailConfigured = isEmailConfigured();
@@ -98,6 +111,7 @@ export async function getAdminOpsStatus(): Promise<AdminOpsStatus> {
       processing: queueProcessing,
       error: queueError,
       done: queueDone,
+      lastError: formatQueueLastError(lastQueueError),
     },
     newsletter: {
       active: subsActive,

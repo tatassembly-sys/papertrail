@@ -5,7 +5,7 @@ import { getAdminOpsStatus } from "@/lib/admin-status";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Admin ops snapshot: queue, articles, newsletter, mail mode. */
+/** Admin ops snapshot: queue (counts plus last stored error), articles, newsletter, mail mode. */
 export async function GET() {
   if (!(await requireAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

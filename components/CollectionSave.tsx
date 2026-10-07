@@ -115,6 +115,7 @@ export default function CollectionSave({ slug }: { slug: string }) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="New list name"
+                  aria-label="New list name"
                   className="pt-input min-h-9 flex-1 py-1 text-sm"
                 />
                 <button type="button" onClick={create} className="pt-btn min-h-9 px-3 py-1 text-sm">

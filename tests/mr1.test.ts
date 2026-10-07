@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { postPageMetadata } from "../lib/post-metadata";
 import { MISSING_POST_HTML, postProbeStatus } from "../lib/post-probe";
@@ -28,6 +28,14 @@ test("a missing published note probes as 404", () => {
 
 test("post route has no loading shell that would lock HTTP 200", () => {
   assert.equal(existsSync("app/posts/[slug]/loading.tsx"), false);
+  assert.equal(existsSync("app/loading.tsx"), false);
+  assert.equal(existsSync("app/(home)/loading.tsx"), true);
+  assert.equal(existsSync("app/(home)/page.tsx"), true);
+});
+
+test("public article routes stay outside the admin session matcher", () => {
+  const src = readFileSync("middleware.ts", "utf8");
+  assert.equal(src.includes("/posts/"), false);
 });
 
 test("running commit is null when Railway did not set it", () => {
