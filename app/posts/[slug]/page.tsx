@@ -17,6 +17,7 @@ import { categoryLabel } from "@/lib/arxivCategories";
 import { sanitizeHttpUrl } from "@/lib/http-url";
 import { jsonLdScript } from "@/lib/json-ld";
 import { slugifyLabel } from "@/lib/name-slug";
+import { postPageMetadata } from "@/lib/post-metadata";
 import { readingMinutes, readingTimeLabel } from "@/lib/reading-time";
 
 export const dynamic = "force-dynamic";
@@ -36,25 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "Paper Trail is temporarily unavailable" };
   }
 
-  if (!article) notFound();
-
-  const url = `${getSiteUrl()}/posts/${article.slug}`;
-  return {
-    title: article.title,
-    description: article.headline,
-    alternates: { canonical: url },
-    openGraph: {
-      title: article.title,
-      description: article.headline,
-      type: "article",
-      url,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: article.title,
-      description: article.headline,
-    },
-  };
+  return postPageMetadata(article ?? null, getSiteUrl());
 }
 
 export default async function PostPage({ params }: PageProps) {

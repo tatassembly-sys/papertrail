@@ -1,10 +1,22 @@
 # Paper Trail — current project status
 
-**Date:** 6 October 2026  
-**Verified runtime:** `4f25f06d8685fc6b1f99df18733475a2456fb86c` on deployment `91f12539-35af-4842-8cac-152e6fe3639f` (GitHub `tatassembly-sys/papertrail` `main`, SUCCESS). Container start logged `Ready in 502ms` on Next.js 15.5.22. An earlier note that named `a953950` / `8c52b989` is stale.  
-**Verdict:** **Milestone 1 closed.** Deployment `91f12539` was checked while it served `4f25f06`, which was `main` at check time. **Milestone 2 is not closed.** Inbox delivery and the custom domain are **BLOCKED** on credentials and DNS this repo cannot create. Stripe Pro checkout stays **off**.
+**Date:** 7 October 2026  
+**Verified runtime:** `54ab66a5980fece1da8e720be008359af5410320` on deployment `e7cfcf6a-2c76-42b6-b2a9-606ea73ea4ed` (SUCCESS). Health on that deploy was `ok`, database `connected`, email `log`, billing `off`. This matches `PAPERTRAIL_MARKET_READINESS.md`. The earlier `4f25f06` / `91f12539` note is the previous deploy.  
+**Verdict:** **Milestone 1 closed.** **MR1 is in progress.** **Milestone 2 / MR2 is not closed.** Inbox delivery and the custom domain are **BLOCKED** on credentials and DNS this repo cannot create. Stripe Pro checkout stays **off**.
 
 Live app: [https://papertrail-production-71d6.up.railway.app](https://papertrail-production-71d6.up.railway.app)
+
+## MR1 (7 October 2026)
+
+Agent tasks in this commit: missing-post metadata no longer calls `notFound()` during streaming, `app/posts/[slug]/loading.tsx` is removed so a missing note can return HTTP 404, `/api/health` includes `commit` from `RAILWAY_GIT_COMMIT_SHA`, and `.github/workflows/ci.yml` runs typecheck, test, and build.
+
+The HTTP 404 and the health `commit` field are not production-verified until the next Railway deploy of this commit.
+
+## Waiting on owner
+
+- Confirm Railway deploys GitHub `main` (or redeploy this commit), then check `GET /posts/does-not-exist` is 404 and `GET /api/health` `commit` matches that deploy.
+- Add an external uptime monitor on `/api/health` and send one test alert. This repo cannot create that account.
+- MR2 still needs a Resend key, `NEWSLETTER_FROM`, DNS for `papertrailresearch.co.uk`, and an OpenRouter key rotation.
 
 ## Production verification on `91f12539`
 

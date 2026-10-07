@@ -56,7 +56,7 @@ Email is log mode. `RESEND_API_KEY`, `NEWSLETTER_FROM`, and `EMAIL_FROM` are abs
 
 ## Known open FAIL (not claimed fixed)
 
-A missing article returned HTTP 200 with a not-on-file page. That is a FAIL. Other milestones may be fixing it. This document does not claim it is fixed, and it does not replace the email and domain blockers above.
+A missing article returned HTTP 200 with a not-on-file page on deployment `e7cfcf6a`. That remains a production FAIL until a later deploy returns HTTP 404. `STATUS.md` and this file now both name that same verified deployment. The 404 route change is not claimed fixed here. Email and the domain stay the market blockers.
 
 ## What would change the decision
 

@@ -47,10 +47,10 @@ Tags: **[AGENT]** = a coding agent can do it. **[HUMAN]** = needs the owner (sec
 **Goal:** every push is tested, production reports which commit it runs, and the known 404 FAIL is fixed.
 
 Tasks
-- [ ] [AGENT] Fix missing-post status: `/posts/<missing>` must return HTTP 404. Start with `app/posts/[slug]/loading.tsx` (remove it or move the lookup so `notFound()` runs before streaming). Add a unit/sandbox test for the lookup path.
-- [ ] [AGENT] Add the running commit to `GET /api/health` (e.g. `commit: process.env.RAILWAY_GIT_COMMIT_SHA ?? null`). No secrets in the response.
-- [ ] [AGENT] Add `.github/workflows/ci.yml`: `npm ci`, `npm run typecheck`, `npm test`, `npm run build` on push/PR to `main`. If the push is rejected because the token lacks the `workflow` scope, leave the file committed on a branch and note it for the owner.
-- [ ] [AGENT] Reconcile deploy ids in `STATUS.md` and `PAPERTRAIL_MARKET_READINESS.md` so both name the same verified deployment.
+- [x] [AGENT] Fix missing-post status: `/posts/<missing>` must return HTTP 404. Start with `app/posts/[slug]/loading.tsx` (remove it or move the lookup so `notFound()` runs before streaming). Add a unit/sandbox test for the lookup path.
+- [x] [AGENT] Add the running commit to `GET /api/health` (e.g. `commit: process.env.RAILWAY_GIT_COMMIT_SHA ?? null`). No secrets in the response.
+- [x] [AGENT] Add `.github/workflows/ci.yml`: `npm ci`, `npm run typecheck`, `npm test`, `npm run build` on push/PR to `main`. If the push is rejected because the token lacks the `workflow` scope, leave the file committed on a branch and note it for the owner.
+- [x] [AGENT] Reconcile deploy ids in `STATUS.md` and `PAPERTRAIL_MARKET_READINESS.md` so both name the same verified deployment.
 - [ ] [HUMAN] Confirm Railway deploys from GitHub `main` automatically (or redeploy after the agent pushes).
 - [ ] [HUMAN] Add an external uptime monitor on `/api/health` (UptimeRobot, Better Stack, etc.) with alerts to your email/phone.
 

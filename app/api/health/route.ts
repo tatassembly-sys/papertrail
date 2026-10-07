@@ -3,6 +3,7 @@ import { getDb } from "@/lib/mongodb";
 import { publicErrorMessage } from "@/lib/safe-error";
 import { isEmailConfigured } from "@/lib/mail";
 import { isBillingConfigured } from "@/lib/entitlements";
+import { runningCommitSha } from "@/lib/running-commit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ export async function GET() {
       translator: hasOpenRouterKey ? "openrouter" : hasXaiKey ? "xai" : "extract",
       email: isEmailConfigured() ? "resend" : "log",
       billing: isBillingConfigured() ? "stripe" : "off",
+      commit: runningCommitSha(),
     });
   } catch (err) {
     // Never expose raw driver/TLS messages publicly in production.
