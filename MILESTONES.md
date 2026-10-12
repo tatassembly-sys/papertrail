@@ -42,6 +42,34 @@ Tags: **[AGENT]** = a coding agent can do it. **[HUMAN]** = needs the owner (sec
 
 ---
 
+## MR0 — Pre-launch hosting: move off Railway to Vercel (+ MongoDB Atlas) — TOP PRIORITY
+
+**Why:** Railway spend is capped, so production is down. Paper Trail is a plain Next.js 15 app on the `mongodb` driver, so it fits Vercel Hobby and an Atlas M0 (free) cluster with no code rewrite.
+
+**Fit assessment (12 Oct 2026):** Next.js App Router, no custom server, no websockets, no workers. DB = MongoDB (`MONGODB_URI`/`MONGODB_DB`), so **Atlas M0** is the right DB. Background work is HTTP cron routes (`/api/cron-fetch`, `/api/cron-fetch-pubmed`, `/api/process-queue`, `/api/process-scheduled-posts`, `/api/cron-publish-mix`) protected by `CRON_SECRET` bearer. Longest route `maxDuration = 120` (process-queue), within Vercel limits. Vercel Hobby crons run **at most once a day**, so frequent ticks need an external free scheduler (cron-job.org or similar) sending `Authorization: Bearer $CRON_SECRET`. Railway-only file: `railway.toml` / `.railwayignore` (keep until cut-over is verified, then delete). No file storage on disk (PDFs fetched and parsed in memory with `unpdf`). Stripe is off; webhook route is `/api/billing/webhook`.
+
+### Tasks
+- [ ] **[HUMAN]** Create a MongoDB Atlas M0 cluster (region near Vercel `lhr1`/`fra1`), a DB user, and Network Access `0.0.0.0/0` (Vercel has no fixed IPs). Copy the SRV string into `MONGODB_URI`. If the Railway Mongo data is needed, export it with `mongodump` from a local machine before Railway credit lapses and `mongorestore` into Atlas.
+- [ ] **[HUMAN]** Vercel → Add New Project → import `tatassembly-sys/papertrail`, framework Next.js, defaults (build `npm run build`). Set env vars below for Production (and Preview if wanted).
+- [ ] **[AGENT]** Re-create MongoDB indexes on Atlas using the documented index script/steps in `SETUP.md` (run only against the new, empty Atlas DB with the owner's go-ahead).
+- [ ] **[AGENT]** Replace Railway wording in `SETUP.md`, `README.md`, `STATUS.md` and comments (e.g. `cron-fetch` "Railway cron budget") with Vercel. Do not delete `railway.toml` until the Vercel deploy is verified.
+- [ ] **[AGENT]** Optional: add `vercel.json` with `"regions": ["lhr1"]` and one daily cron (e.g. `/api/cron-fetch-pubmed`) only if it does not clash with the external scheduler.
+- [ ] **[HUMAN]** Set up the external scheduler (cron-job.org free): `GET https://<vercel-domain>/api/cron-fetch`, `/api/cron-fetch-pubmed`, `/api/process-queue`, `/api/process-scheduled-posts`, `/api/cron-publish-mix` with header `Authorization: Bearer <CRON_SECRET>`, same cadence as on Railway (see `SETUP.md` "Cron").
+- [ ] **[HUMAN]** Update `NEXT_PUBLIC_SITE_URL` to the Vercel URL (or the custom domain once DNS exists: add the domain in Vercel → set `A 76.76.21.21` / `CNAME cname.vercel-dns.com`). Update X/Twitter app callback URLs if OAuth is used, and Resend domain links when MR2 lands.
+- [ ] **[HUMAN]** Stripe (only when MR5 starts): webhook endpoint `https://<domain>/api/billing/webhook`.
+- [ ] **[HUMAN]** After verification, remove the Railway service so it cannot bill again.
+
+### Env vars (names only)
+`MONGODB_URI`, `MONGODB_DB`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`, `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `OPENROUTER_API_KEY`, plus any Twitter/X, Resend and Stripe keys already used on Railway (copy the full Railway variable list; never commit values).
+
+### Verification / exit criteria
+- `GET https://<vercel-domain>/api/health` → `status ok`, `db connected`.
+- Unsigned `GET /api/process-queue` → 401; signed (bearer) → 200.
+- Home page, a post page, admin login work. One scheduled tick from cron-job.org shows in logs.
+- `npm run typecheck`, `npm test`, `npm run build` pass locally.
+
+---
+
 ## MR1 — Engineering hygiene and observable deploys
 
 **Goal:** every push is tested, production reports which commit it runs, and the known 404 FAIL is fixed.
@@ -144,6 +172,11 @@ Exit criteria
 ---
 
 ## Copy-paste prompts
+
+**MR0**
+```
+Paper Trail MR0 (move hosting off Railway to Vercel + MongoDB Atlas). Pull main first. Read MILESTONES.md (MR0) and STATUS.md. The app is Next.js + mongodb driver, so no rewrite. Do the [AGENT] tasks: update docs/comments from Railway to Vercel, document the external cron schedule (cron-job.org, Authorization: Bearer CRON_SECRET) for every cron route, optionally add vercel.json (regions lhr1, at most daily crons on Hobby). Do not delete railway.toml until the owner confirms the Vercel deploy is healthy. Never edit .github/workflows. Never commit secrets and never write to any remote database without the owner's go-ahead. Run npm run typecheck, npm test and npm run build after each change, fix failures. For [HUMAN] steps (Atlas cluster, Vercel import, env vars, scheduler, domain) write exact owner steps under "Waiting on owner" in STATUS.md. When the owner says it is live, verify /api/health, cron 401/200 and key pages, tick boxes, commit and push.
+```
 
 **MR1**
 ```
