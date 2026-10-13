@@ -7,7 +7,7 @@ import { runCronJob } from "@/lib/cron-run";
 import { publicErrorMessage } from "@/lib/safe-error";
 
 export const runtime = "nodejs"; // needs the mongo driver's Node TCP APIs
-export const maxDuration = 60; // many field feeds; keep under Railway cron budget
+export const maxDuration = 60; // many field feeds; keep under host maxDuration
 
 const ARXIV_CATEGORIES = arxivFeedCategoriesFromEnv();
 

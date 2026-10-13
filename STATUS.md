@@ -1,10 +1,11 @@
 # Paper Trail — current project status
 
-**Date:** 7 October 2026  
-**Verified runtime:** `e8fe318a702720ce084e55f964a83f9a2b44f1f3` on deployment `b8a507a0-0bd9-46e6-9f96-b08993ae65bb` (SUCCESS). Health on that deploy is `ok`, database `connected`, email `log`, billing `off`, and `commit` is that full SHA. A later docs commit does not by itself replace that deploy.  
-**Verdict:** **Milestone 1 closed. MR1 agent tasks pass on that deploy.** **Milestone 2 / MR2 is not closed.** Inbox delivery and the custom domain are **BLOCKED**. Stripe Pro checkout stays **off**. Market decision stays **NO-GO**.
+**Date:** 13 October 2026  
+**Verified runtime (last known):** `e8fe318a702720ce084e55f964a83f9a2b44f1f3` on Railway deployment `b8a507a0-0bd9-46e6-9f96-b08993ae65bb` (SUCCESS when last checked on 7 Oct).  
+**Live check 13 Oct 2026 ~11:25 BST:** `https://papertrail-production-71d6.up.railway.app/api/health` → HTTP 404 `Application not found` (Railway spend capped; production is down).  
+**Verdict:** **MR0 (move to Vercel + Atlas) is TOP PRIORITY.** Milestone 1 / MR1 agent work was previously verified on Railway. **MR2 is not closed.** Inbox delivery and the custom domain are **BLOCKED**. Stripe Pro checkout stays **off**. Market decision stays **NO-GO**.
 
-Live app: [https://papertrail-production-71d6.up.railway.app](https://papertrail-production-71d6.up.railway.app)
+Previous Railway URL (down): [https://papertrail-production-71d6.up.railway.app](https://papertrail-production-71d6.up.railway.app)
 
 ## MR1–MR5 (7 October 2026)
 
@@ -32,10 +33,18 @@ Deploy `01aa7ed` put `/posts` on the admin session matcher. Public articles then
 
 ## Waiting on owner
 
+### MR0 — bring the site back on Vercel + Atlas (do these first)
+1. Create a MongoDB Atlas M0 cluster (near `lhr1`/`fra1`), DB user, Network Access `0.0.0.0/0`. Set `MONGODB_URI` / `MONGODB_DB`. If Railway Mongo data still matters, `mongodump` / `mongorestore` from a local machine before any Railway credit fully lapses.
+2. Vercel → Add New Project → import `tatassembly-sys/papertrail` (Next.js, `npm run build`). Copy Production env vars from `.env.example` / the old Railway variable list (names only in docs; never commit values).
+3. After the first deploy: set `NEXT_PUBLIC_SITE_URL` to the Vercel URL, then set up cron-job.org (or similar) `GET`s with `Authorization: Bearer <CRON_SECRET>` for `/api/cron-fetch`, `/api/cron-fetch-pubmed`, `/api/process-queue`, `/api/process-scheduled-posts`, `/api/cron-publish-mix` (cadence in `SETUP.md`).
+4. Tell an agent when it is live so they can verify `/api/health`, cron 401/200, and key pages, then remove the Railway service.
+
+Agent MR0 prep already done in-repo: `vercel.json` (`lhr1`), SETUP/README/STATUS wording updated for Vercel; `railway.toml` kept until you confirm the cut-over.
+
+### Still open after MR0
 - Add an external uptime monitor on `/api/health` and send one test alert. This repo cannot create that account.
-- Confirm whether Railway should auto-deploy GitHub `main`. This pass shipped with `railway redeploy --from-source --service papertrail`.
 - MR2 needs a Resend key, `NEWSLETTER_FROM`, `EMAIL_FROM`, DNS for `papertrailresearch.co.uk`, and an OpenRouter key rotation. After that, say which inbox to use for register, reset, confirm, and unsubscribe.
-- MR5 starts only if you want to charge and Stripe test keys are set on Railway. Checkout must stay 503 until then.
+- MR5 starts only if you want to charge and Stripe test keys are set. Checkout must stay 503 until then.
 - Privacy, terms, ICO registration, and the GO decision stay with you. This file does not say GO.
 
 ## Production verification on `91f12539`

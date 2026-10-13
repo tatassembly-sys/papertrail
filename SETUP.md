@@ -3,33 +3,39 @@
 ## Deployment checklist
 Follow in order — later steps depend on earlier ones.
 
+**Pre-launch target: Vercel + MongoDB Atlas** (Railway spend is capped; keep
+`railway.toml` until the new deploy is verified, then delete the Railway service).
+
 1. **Push to GitHub.** `.gitignore` is already set up to exclude `node_modules`
    and any `.env*` files, so secrets never get committed.
-2. **Create a Railway project** from that repo.
-3. **Add a MongoDB plugin** to the project (Railway → New → Database → MongoDB).
-   It'll expose a connection string, commonly as `MONGO_URL`.
-4. **Set env vars** in Railway's dashboard — copy `.env.example`, fill in every
+2. **Create a MongoDB Atlas M0 cluster** (region near Vercel `lhr1` / `fra1`),
+   a DB user, and Network Access `0.0.0.0/0` (Vercel has no fixed IPs). Copy
+   the SRV string into `MONGODB_URI` and set `MONGODB_DB`.
+3. **Import the repo in Vercel** (Add New Project → `tatassembly-sys/papertrail`,
+   framework Next.js, build `npm run build`). `vercel.json` pins region `lhr1`.
+4. **Set env vars** in the Vercel dashboard — copy `.env.example`, fill in every
    value (generation instructions for the tricky ones — `AUTH_SECRET`,
    `ADMIN_PASSWORD_HASH` — are in the "Env vars" section below). Social
    posting vars are optional; leave them blank to skip a platform for now.
 5. **Create the required MongoDB text index** (search will error without it —
    see "Database" below for the exact command). Connect via `mongosh` using
-   the same connection string from step 3.
-6. **Deploy.** Railway builds with `npm run build` and runs `npm run start`
-   automatically — no extra config needed.
-7. **Set `NEXT_PUBLIC_SITE_URL`** to your actual Railway URL once you have one
-   (Settings → Networking → Generate Domain), then redeploy — this env var
-   feeds the sitemap, RSS feed, and OG image URLs, so it needs to be correct
-   before those are meaningful.
-8. **Set up the three (or four, if using PubMed) cron schedules** — see "Cron
-   jobs on Railway" below for both the in-Railway and external-scheduler options.
+   the Atlas URI from step 2.
+6. **Deploy.** Vercel builds with `npm run build`. Confirm
+   `GET /api/health` returns `status ok` and `db connected`.
+7. **Set `NEXT_PUBLIC_SITE_URL`** to the Vercel URL (or custom domain once DNS
+   exists), then redeploy — this env var feeds the sitemap, RSS feed, and OG
+   image URLs.
+8. **Set up cron schedules with an external free scheduler** (cron-job.org) —
+   see "Cron jobs on Vercel" below. Vercel Hobby declarative crons run at most
+   once a day; Paper Trail needs more frequent queue ticks.
 9. **Log in at `/login`** with `ADMIN_EMAIL` and the plaintext password you
    hashed into `ADMIN_PASSWORD_HASH`, then process one paper manually via
    `/admin/manual-input` to confirm the whole pipeline works end to end
    before relying on the cron sweeps.
-10. **Check `/api/health`** returns `{"status":"ok"}` — confirms both the
-    app and its MongoDB connection are actually working, not just that the
-    server responds. Worth pointing Railway's own health check at this route.
+10. **After verification**, remove the Railway service so it cannot bill again.
+    Keep `railway.toml` in the repo until that cut-over is confirmed.
+
+Legacy Railway deploy steps remain under "Deploying to Railway" for rollback only.
 
 Everything below this point is reference material for the steps above, not
 additional steps — the same information the checklist points to.
@@ -183,13 +189,33 @@ getting it wrong silently breaks things rather than failing loudly, and that's
 not something to ship unverified. Worth adding once you can test it against a
 real running deploy.
 
-## Deploying to Railway
-The sequence is in the checklist at the top of this doc. One detail worth
-elaborating: Railway builds with `npm run build` and runs `npm run start` by
-default, no extra config needed — this is a normal long-lived Node server
-(not serverless), so none of Vercel's edge/serverless constraints apply here.
+## Deploying to Vercel
+The sequence is in the checklist at the top of this doc. This app is a normal
+Next.js App Router project (no custom server). Longest cron route
+`maxDuration` is 120s (`/api/process-queue`), within Vercel limits.
+`vercel.json` sets `"regions": ["lhr1"]`. Do not put frequent jobs in
+`vercel.json` crons on Hobby (daily only); use the external scheduler below.
 
-### Cron jobs on Railway
+### Cron jobs on Vercel
+Use a free external scheduler such as cron-job.org. Each job is a `GET` to
+the production host with header `Authorization: Bearer <CRON_SECRET>`:
+
+| Route | Suggested cadence |
+|-------|-------------------|
+| `/api/cron-fetch` | once daily (arXiv sweep) |
+| `/api/cron-fetch-pubmed` | once daily (PubMed sweep) |
+| `/api/process-queue` | every 10 minutes |
+| `/api/process-scheduled-posts` | every 5 minutes |
+| `/api/cron-publish-mix` | same cadence as on the previous host (see admin status) |
+
+Unsigned calls must return 401; signed calls 200. One successful tick should
+show in Vercel logs / `/admin/status`.
+
+## Deploying to Railway (legacy)
+Kept until the Vercel cut-over is verified. Railway builds with `npm run build`
+and runs `npm run start` via `railway.toml`.
+
+### Cron jobs on Railway (legacy)
 Railway doesn't have Vercel-style declarative cron for hitting an HTTP route
 on your main service (a cron schedule on a service replaces its normal start
 command, which doesn't work for an always-on web server). Two options:

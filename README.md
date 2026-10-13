@@ -13,7 +13,7 @@ study's limitations. Nothing publishes without a human editor's review.
 |---|---|
 | Framework | Next.js 15 (App Router) |
 | Database | MongoDB |
-| Hosting | Railway |
+| Hosting | Vercel (Hobby) + MongoDB Atlas (pre-launch; Railway kept until cut-over is verified) |
 | AI translation | OpenRouter (Claude Sonnet by default) |
 | Paper sources | arXiv (AI, space, physics, biology, economics) + PubMed (clinical/medical topics arXiv doesn't cover) |
 | Auth | JWT-based single admin account, no third-party auth dependency |
@@ -58,7 +58,8 @@ components/       Shared React components
 lib/              Data access (Mongo), auth, AI translation, social posting,
                   paper extraction (arXiv/PubMed) — business logic
 middleware.ts     Route protection for /admin/*
-railway.toml      Railway build/start + healthcheck
+vercel.json       Vercel region (lhr1); keep railway.toml until cut-over is verified
+railway.toml      Legacy Railway build/start + healthcheck (do not delete yet)
 .env.example      All environment variables with generation notes
 ```
 
@@ -73,14 +74,15 @@ railway.toml      Railway build/start + healthcheck
 - Cron HTTP endpoints require `CRON_SECRET` in production
 - Admin routes are middleware-protected and re-checked on sensitive APIs
 
-## Railway
+## Deploy (Vercel + Atlas)
 
-1. Connect the GitHub repo to Railway
-2. Attach MongoDB (plugin `MONGO_URL` or your own `MONGODB_URI`)
-3. Copy vars from `.env.example` into the Railway dashboard
-4. Deploy (`npm run build` / `npm run start` via `railway.toml`)
-5. Set `NEXT_PUBLIC_SITE_URL` to your public domain and redeploy
-6. Point health checks at `/api/health`
-7. Schedule crons (arXiv, PubMed, process-queue, process-scheduled-posts)
+Pre-launch target while Railway spend is capped. Full checklist: [`SETUP.md`](./SETUP.md) and **MR0** in [`MILESTONES.md`](./MILESTONES.md).
 
-Full detail: [`SETUP.md`](./SETUP.md).
+1. Create a MongoDB Atlas M0 cluster; set `MONGODB_URI` / `MONGODB_DB`
+2. Import this repo in Vercel (framework Next.js, `npm run build`)
+3. Copy vars from `.env.example` into Vercel Production env
+4. Set `NEXT_PUBLIC_SITE_URL` to the Vercel URL (or custom domain later)
+5. Schedule crons with an external free scheduler (cron-job.org) using `Authorization: Bearer $CRON_SECRET` — Vercel Hobby only runs declarative crons once a day
+6. Keep `railway.toml` until the Vercel deploy is verified healthy, then remove the Railway service
+
+Legacy Railway steps remain in `SETUP.md` for rollback only.
