@@ -3,6 +3,7 @@ import { getCurrentUserSession } from "@/lib/user-auth";
 import { findUserById } from "@/lib/users";
 import { createHighlight, listHighlights } from "@/lib/highlights";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
+import { tooManyPublicWrites } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = await tooManyPublicWrites(req, "highlights_post", 60, 60 * 60 * 1000);
+  if (limited) return limited;
   const session = await getCurrentUserSession();
   if (!session) {
     return NextResponse.json(

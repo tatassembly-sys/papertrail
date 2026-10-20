@@ -1,4 +1,6 @@
+import { NextResponse, type NextRequest } from "next/server";
 import { getDb } from "./mongodb";
+import { getClientIp, hashIp } from "./request-ip";
 
 type RateDoc = {
   bucket: string;
@@ -77,6 +79,20 @@ export async function getRateCount(
   const col = await collection();
   const doc = await col.findOne({ bucket, key: safeKey, window: windowId });
   return doc?.count ?? 0;
+}
+
+/** IP rate limit for a public write. Returns a 429 response, or null when allowed. */
+export async function tooManyPublicWrites(
+  req: NextRequest,
+  bucket: string,
+  max: number,
+  windowMs: number
+): Promise<NextResponse | null> {
+  const ipKey = hashIp(getClientIp(req));
+  if (await hitRateLimit(bucket, ipKey, max, windowMs)) {
+    return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
+  }
+  return null;
 }
 
 async function collection() {

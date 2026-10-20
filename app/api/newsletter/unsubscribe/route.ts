@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { unsubscribeByToken } from "@/lib/newsletter";
 import { getSiteUrl } from "@/lib/site-url";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
+import { tooManyPublicWrites } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,8 @@ export async function GET(req: NextRequest) {
 
 /** POST supports form-style unsubscribe from the page. */
 export async function POST(req: NextRequest) {
+  const limited = await tooManyPublicWrites(req, "newsletter_unsubscribe", 30, 60 * 60 * 1000);
+  if (limited) return limited;
   try {
     const contentType = req.headers.get("content-type") || "";
     let token = (req.nextUrl.searchParams.get("token") || "").slice(0, 128);

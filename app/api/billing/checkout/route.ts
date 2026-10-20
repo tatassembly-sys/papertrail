@@ -4,11 +4,14 @@ import { findUserById } from "@/lib/users";
 import { LIVE_STATUSES, isBillingConfigured } from "@/lib/entitlements";
 import { createCheckoutSession, StripeConfigError } from "@/lib/stripe";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
+import { tooManyPublicWrites } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const limited = await tooManyPublicWrites(req, "billing_checkout", 10, 60 * 60 * 1000);
+  if (limited) return limited;
   if (!isBillingConfigured()) {
     return NextResponse.json(
       { error: "Checkout is not live yet. Stripe keys and price IDs are required." },

@@ -3,6 +3,7 @@ import { getCurrentUserSession } from "@/lib/user-auth";
 import { findUserById } from "@/lib/users";
 import { deleteCollection, getCollection, updateCollection } from "@/lib/collections";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
+import { tooManyPublicWrites } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,6 +38,8 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
+  const limited = await tooManyPublicWrites(req, "collections_patch", 60, 60 * 60 * 1000);
+  if (limited) return limited;
   const session = await getCurrentUserSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
@@ -58,7 +61,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   return NextResponse.json({ collection: result });
 }
 
-export async function DELETE(_req: NextRequest, { params }: RouteParams) {
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  const limited = await tooManyPublicWrites(req, "collections_delete", 30, 60 * 60 * 1000);
+  if (limited) return limited;
   const session = await getCurrentUserSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;

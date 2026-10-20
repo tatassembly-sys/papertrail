@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { tooManyPublicWrites } from "@/lib/rate-limit";
 import { getCurrentUserSession } from "@/lib/user-auth";
 import { findUserById } from "@/lib/users";
 import { isBillingConfigured } from "@/lib/entitlements";
@@ -7,7 +8,9 @@ import { createPortalSession, StripeConfigError } from "@/lib/stripe";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const limited = await tooManyPublicWrites(req, "billing_portal", 10, 60 * 60 * 1000);
+  if (limited) return limited;
   if (!isBillingConfigured()) {
     return NextResponse.json(
       { error: "Billing portal is not configured." },

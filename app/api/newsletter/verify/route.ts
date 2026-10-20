@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { confirmSubscription } from "@/lib/newsletter";
 import { getSiteUrl } from "@/lib/site-url";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
+import { tooManyPublicWrites } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = await tooManyPublicWrites(req, "newsletter_verify", 20, 60 * 60 * 1000);
+  if (limited) return limited;
   try {
     const contentType = req.headers.get("content-type") || "";
     let token = "";

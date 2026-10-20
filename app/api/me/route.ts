@@ -25,7 +25,7 @@ import {
   billingPublicConfig,
   entitlementsFor,
 } from "@/lib/entitlements";
-import { getRateCount } from "@/lib/rate-limit";
+import { getRateCount, tooManyPublicWrites } from "@/lib/rate-limit";
 import { cancelSubscriptionNow } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -79,6 +79,8 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  const limited = await tooManyPublicWrites(req, "me_patch", 60, 60 * 60 * 1000);
+  if (limited) return limited;
   const session = await getCurrentUserSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -134,7 +136,9 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ user });
 }
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
+  const limited = await tooManyPublicWrites(req, "me_delete", 5, 60 * 60 * 1000);
+  if (limited) return limited;
   const session = await getCurrentUserSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
