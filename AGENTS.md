@@ -20,7 +20,7 @@ Paper Trail turns research papers (arXiv RSS, PubMed, manual PDF/URL submissions
 | `components/` | React UI components. |
 | `middleware.ts` | Edge middleware (admin gate / headers). |
 | `next.config.ts` | Security headers incl. CSP; `X-Robots-Tag: noindex` on private routes. |
-| `sandbox/run.mjs` | 523-scenario offline sandbox suite (`npm run test:sandbox`). |
+| `sandbox/run.mjs` | 532-scenario offline sandbox suite (`npm run test:sandbox`). |
 | `tests/*.test.ts` | `node:test` unit tests via `tsx` (`npm run test:unit`). |
 | `scripts/` | Ops scripts (index creation etc.). |
 | `vercel.json` | `regions: ["lhr1"]`, no crons (external scheduler instead). |
@@ -34,7 +34,7 @@ Paper Trail turns research papers (arXiv RSS, PubMed, manual PDF/URL submissions
 | Typecheck | `npm run typecheck` | `tsc --noEmit`. |
 | Lint | `npm run lint` | `next lint` with `eslint-config-next` (`next/core-web-vitals`). |
 | Release notes | `npm run release:notes` | `git log` since the latest tag. |
-| All tests | `npm test` | sandbox (523 scenarios) + unit (42 tests). No DB needed. |
+| All tests | `npm test` | sandbox (532 scenarios) + unit (53 tests). No DB needed. |
 | Unit only | `npm run test:unit` | `node --import tsx --test tests/*.test.ts` |
 | Build | `npm run build` | `next build`; works without a live DB. |
 
