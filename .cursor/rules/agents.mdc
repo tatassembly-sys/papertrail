@@ -1,0 +1,9 @@
+---
+description: Operating rules for coding agents in Paper Trail
+alwaysApply: true
+---
+Read `AGENTS.md` at the repo root before any change; it is authoritative.
+Work queue is `MILESTONES.md` (first unchecked [AGENT] task, lowest milestone). Log in `PROGRESS.md`.
+Gate before every commit: `npm ci && npm run typecheck && npm test && npm run build`
+Never: secrets in git, force-push, edit .github/workflows, destructive DB ops, production/dashboard changes, live payments.
+Blocked → `PROGRESS.md` BLOCKERS section, then next task.

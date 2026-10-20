@@ -1,4 +1,32 @@
-# Paper Trail — current project status
+# Paper Trail — status
+
+> **Current as of 20 October 2026.** Plan: [`MILESTONES.md`](MILESTONES.md) · Agent manual: [`AGENTS.md`](AGENTS.md) · Log & baseline: [`PROGRESS.md`](PROGRESS.md).
+> Production: **down / being moved off Railway** (spending cap). Target: Vercel Hobby (Next.js, region `lhr1`) + MongoDB Atlas M0 (EU region) + cron-job.org for frequent cron ticks.
+> Market decision: **NO-GO until M10 launch checklist passes.**
+> Older sections below are history; where they mention Railway URLs or MR0–MR5, the new M0–M10 plan supersedes them.
+
+## Milestones (update this table when a milestone closes)
+| Id | Milestone | State |
+|---|---|---|
+| M0 | Hosting cut-over: Railway → Vercel + MongoDB Atlas | open |
+| M1 | Release truth and CI hardening | open |
+| M2 | Security hardening | open |
+| M3 | Correctness and known bugs | open |
+| M4 | Tests and CI depth | open |
+| M5 | Legal and compliance (UK GDPR, PECR) | open |
+| M6 | Payments readiness (Stripe, Paper Trail Pro — optional) | open |
+| M7 | Observability and operations | open |
+| M8 | Performance, accessibility and SEO | open |
+| M9 | UX polish and content operations | open |
+| M10 | Launch checklist and go-live | open |
+
+## Baseline (20 October 2026)
+Install ✅ · typecheck ✅ · tests ✅ (520 sandbox + 34 unit) · build ✅ · lint = typecheck alias (no ESLint).
+
+---
+
+## History (previous status, kept for reference)
+
 
 **Date:** 13 October 2026  
 **Verified runtime (last known):** `e8fe318a702720ce084e55f964a83f9a2b44f1f3` on Railway deployment `b8a507a0-0bd9-46e6-9f96-b08993ae65bb` (SUCCESS when last checked on 7 Oct).  

@@ -1,48 +1,464 @@
-# Paper Trail — milestones to market-ready
+# Paper Trail — milestones to market launch
 
-This is the working plan for coding agents (VS Code / Cursor) and the human owner. Do one milestone at a time, top to bottom.
-Milestones here are numbered **MR1–MR5** ("market-ready track"). They restart from today. The older "Milestone 1/2/9" names in `STATUS.md` and `PAPERTRAIL_MARKET_READINESS.md` map like this: old Milestone 1 = closed, old Milestone 2 (email/domain) = **MR2** below, old Milestone 9 (market decision) = **MR4** below.
+Rewritten 20 October 2026 after a fresh code audit (see `PROGRESS.md` → Baseline audit). This replaces the MR0–MR5 plan; MR0 hosting detail is kept in M0 and in the appendix.
 
-Tags: **[AGENT]** = a coding agent can do it. **[HUMAN]** = needs the owner (secrets, DNS, legal, vendor accounts, payments, production dashboards).
+**How to use this file (agents):** follow the loop in [`AGENTS.md`](AGENTS.md) §7. Work top-down. Take the first unchecked `[AGENT]` task in the lowest open milestone. Tick `[x]` with the short commit hash when Definition of Done is met. Never tick an `[OWNER]` task yourself — record in `PROGRESS.md` what you prepared for it.
 
----
+**Tags:** `[AGENT]` = a coding agent can do it fully in the repo. `[OWNER]` = Henry only (accounts, dashboards, secrets, DNS, legal sign-off, money, production data, workflow files). `[AGENT→OWNER]` = agent prepares (code/runbook/YAML in `docs/`), owner applies.
 
-## Audit snapshot
+**Gate** (must pass for every task): `npm ci && npm run typecheck && npm test && npm run build`
 
-| | |
-|---|---|
-| Audit date | 7 October 2026, ~14:00 BST (Europe/London) |
-| Default branch | `main` |
-| Tip audited | `bc83db9ab84dbd8c20586d6a004c2e067c6bb252` ("Record Milestone 9 market readiness as NO-GO.") |
-| Commits since 5 Oct | 6 (all 6 Oct): M1 record, stale-note cleanup, unsubscribe links + honest email failures (`e9a15bf`), cron/admin secret rotation record, production check of `91f12539`, market-readiness NO-GO |
-| CI on tip | **None.** There is no `.github/workflows` directory. No check runs or statuses exist on the tip. |
-| Production | https://papertrail-production-71d6.up.railway.app |
-| Market decision in repo | **NO-GO** (`PAPERTRAIL_MARKET_READINESS.md`) |
+**Hosting target:** Vercel Hobby (Next.js, region `lhr1`) + MongoDB Atlas M0 (EU region) + cron-job.org for frequent cron ticks.  No custom domain yet — use the `*.vercel.app` / `*.onrender.com` URLs everywhere and keep the domain configurable via env.
 
-### Verified by this audit
-- Local on the tip: `npm test` passed (520 sandbox scenarios + 13 unit tests). `npm run typecheck` passed.
-- Live `GET /api/health`: `status ok`, `db connected`, `email "log"`, `billing "off"`, OpenRouter key present (presence only, not a translation proof).
-- Live unsigned `GET /api/process-queue` → 401. `POST /api/billing/checkout` → 503 (Stripe off, as intended).
-- `papertrailresearch.co.uk` and `www.` → **NXDOMAIN** (no zone at `.uk` registry). Matches the docs.
-- **Open FAIL confirmed:** `GET /posts/<missing-slug>` returns **HTTP 200** with the not-found page. Likely cause (spot check): `app/posts/[slug]/loading.tsx` makes the route stream, so the 200 status is sent before `notFound()` runs in `page.tsx`.
-- Quick history grep for live-looking keys (`sk_live_`, `sk-or-v1-`, `re_`, `whsec_`) found only commented placeholders.
+## Milestone index
 
-### Claimed in docs but not confirmed by this audit
-- Which commit production runs. `/api/health` does not report a commit, and there are no GitHub deployment records. `STATUS.md` says runtime `4f25f06` on deployment `91f12539`; `PAPERTRAIL_MARKET_READINESS.md` says `54ab66a` on deployment `e7cfcf6a`. The two docs disagree (both are docs-only differences from the code, but the deploy ids should be reconciled).
-- `CRON_SECRET` and admin password rotation (Railway-side; not visible from the repo). Cron with a valid bearer was not re-run.
-- OpenRouter key is **still the previously exposed key** (docs say so). Needs rotation by the owner.
-- Email flows in an inbox — cannot be confirmed; Resend is not configured.
-
-### Problems found
-1. No CI at all on GitHub. Nothing stops a broken push reaching `main`.
-2. Missing article returns 200 instead of 404 (SEO + correctness).
-3. Production commit is not observable from outside (no SHA in health).
-4. Email delivery and the custom domain are blocked on the owner (Resend + DNS).
-5. Exposed OpenRouter key not yet rotated.
+- **M0** — Hosting cut-over: Railway → Vercel + MongoDB Atlas
+- **M1** — Release truth and CI hardening
+- **M2** — Security hardening
+- **M3** — Correctness and known bugs
+- **M4** — Tests and CI depth
+- **M5** — Legal and compliance (UK GDPR, PECR)
+- **M6** — Payments readiness (Stripe, Paper Trail Pro — optional)
+- **M7** — Observability and operations
+- **M8** — Performance, accessibility and SEO
+- **M9** — UX polish and content operations
+- **M10** — Launch checklist and go-live
 
 ---
 
-## MR0 — Pre-launch hosting: move off Railway to Vercel (+ MongoDB Atlas) — TOP PRIORITY
+## M0 — Hosting cut-over: Railway → Vercel + MongoDB Atlas
+
+**Goal:** The site runs on `https://<project>.vercel.app` backed by Atlas M0, cron ticks arrive from an external scheduler, Railway is gone.
+
+**Why:** Railway hit its spending cap; production is down. Nothing else matters until users can load the site.
+
+### Tasks
+- [ ] **M0.1** `[OWNER]` Create Atlas M0 cluster (EU region, e.g. `eu-west-2`/`eu-west-1`), DB user, Network Access `0.0.0.0/0`; put SRV string in Vercel `MONGODB_URI`, set `MONGODB_DB`. If old data matters: `mongodump` from Railway Mongo before it is deleted, `mongorestore` into Atlas.
+- [ ] **M0.2** `[OWNER]` Vercel → import `tatassembly-sys/papertrail` (Next.js preset). Set all env vars from AGENTS.md §4 for Production. Set `NEXT_PUBLIC_SITE_URL=https://<project>.vercel.app`.
+- [ ] **M0.3** `[AGENT]` Add `scripts/ensure-indexes.mjs` (or extend existing) that calls the index definitions in `lib/indexes.ts` idempotently; document `node scripts/ensure-indexes.mjs` in `SETUP.md`. Must refuse to run unless `CONFIRM_INDEXES=yes` is set.
+- [ ] **M0.4** `[AGENT]` Replace Railway fallbacks: in `lib/` site-URL helpers, prefer `NEXT_PUBLIC_SITE_URL`, then `https://${VERCEL_PROJECT_PRODUCTION_URL}`, then `VERCEL_URL`; keep `RAILWAY_*` only as last fallback. Unit test in `tests/site-url.test.ts`.
+- [ ] **M0.5** `[AGENT]` Write `docs/runbooks/cron-job-org.md`: each cron URL, cadence, header `Authorization: Bearer <CRON_SECRET>`, expected 200 body, and how to see the last run on `/admin/status`.
+- [ ] **M0.6** `[OWNER]` Create the cron-job.org jobs from `docs/runbooks/cron-job-org.md`.
+- [ ] **M0.7** `[AGENT]` Add `scripts/smoke-prod.mjs <baseUrl>`: GET `/`, `/api/health` (expects `status: ok`), a missing post slug (expects 404), unsigned `/api/process-queue` (expects 401), `/sitemap.xml`, `/robots.txt`. Exit non-zero on any mismatch. npm script `smoke:prod`.
+- [ ] **M0.8** `[OWNER]` Run `npm run smoke:prod -- https://<project>.vercel.app`; paste output into PROGRESS.md. Then delete the Railway service.
+- [ ] **M0.9** `[AGENT]` After M0.8 is logged: delete `railway.toml`/`.railwayignore`, remove Railway wording from README/SETUP/STATUS.
+
+### Acceptance criteria (all verifiable)
+- `node scripts/smoke-prod.mjs http://localhost:3000` passes against `npm run build && npm start` with a local Mongo (or is documented as skipped).
+- `npm run test:unit` includes `tests/site-url.test.ts` and passes.
+- `rg -n RAILWAY lib app` shows only the documented last-resort fallback (after M0.9: no matches).
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M0
+1. Every `[AGENT]` box in M0 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M0 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M0 ("Hosting cut-over: Railway → Vercel + MongoDB Atlas") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M0 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M0.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M0 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## M1 — Release truth and CI hardening
+
+**Goal:** Anyone can tell which commit is live, and CI blocks bad code.
+
+**Why:** Earlier audits could not prove what production ran. A launch needs traceable releases.
+
+### Tasks
+- [ ] **M1.1** `[AGENT]` `lib/running-commit.ts`: read `VERCEL_GIT_COMMIT_SHA` first, then `RAILWAY_GIT_COMMIT_SHA`; also expose `VERCEL_ENV`. Extend `tests/mr1.test.ts`.
+- [ ] **M1.2** `[AGENT]` Add ESLint (`next lint` / flat config with `eslint-config-next`), make `npm run lint` run ESLint (keep `typecheck` separate). Fix or explicitly disable (with comment) existing violations.
+- [ ] **M1.3** `[AGENT→OWNER]` Write `docs/ci/proposed-ci.yml` adding: `npm run lint`, `npm audit --omit=dev --audit-level=high`, gitleaks secret scan, Node 22 matrix. Owner copies into `.github/workflows/ci.yml`.
+- [ ] **M1.4** `[OWNER]` Enable branch protection on `main`: require the `check` job.
+- [ ] **M1.5** `[AGENT]` Remove committed noise: `git rm --cached tsconfig.tsbuildinfo tree.txt`, add to `.gitignore`.
+- [ ] **M1.6** `[AGENT]` Add `CHANGELOG.md` entry convention and a `npm run release:notes` script that prints commits since last tag.
+
+### Acceptance criteria (all verifiable)
+- `curl -s localhost:3000/api/health | jq .commit` is non-null when `VERCEL_GIT_COMMIT_SHA=abc npm start`.
+- `npm run lint` runs ESLint and exits 0.
+- `git ls-files | rg 'tsbuildinfo|tree.txt'` returns nothing.
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M1
+1. Every `[AGENT]` box in M1 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M1 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M1 ("Release truth and CI hardening") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M1 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M1.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M1 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## M2 — Security hardening
+
+**Goal:** No known exploitable weakness in auth, admin, cron, uploads or headers.
+
+**Why:** Public launch exposes admin, LLM spend and user accounts to the internet.
+
+### Tasks
+- [ ] **M2.1** `[OWNER]` Rotate the previously exposed `OPENROUTER_API_KEY`, `CRON_SECRET`, `AUTH_SECRET`, admin password hash; set only in Vercel.
+- [ ] **M2.2** `[AGENT]` Audit every `app/api/**/route.ts`: list method, auth requirement, rate limit, input validation in `docs/security/route-matrix.md`. Any public POST without rate limit or schema validation gets fixed + test.
+- [ ] **M2.3** `[AGENT]` CSP in `next.config.ts`: remove `unsafe-eval`; move inline scripts to nonces/hashes where feasible; add `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'`. Test headers in `tests/headers.test.ts` (import config and assert).
+- [ ] **M2.4** `[AGENT]` Cookies: assert `HttpOnly`, `Secure` (prod), `SameSite=Lax` on all session cookies; constant-time compare for `CRON_SECRET` (`crypto.timingSafeEqual`). Tests.
+- [ ] **M2.5** `[AGENT]` SSRF: `lib/url-safety` must block private IPs, `localhost`, link-local and non-http(s) for submitted URLs/PDF fetches, including after redirects. Extend `tests/url-safety.test.ts`.
+- [ ] **M2.6** `[AGENT]` Password policy: min 10 chars, reject top common passwords list (small bundled list), lockout already in `lib/loginAttempts.ts` — add test for user accounts too.
+- [ ] **M2.7** `[AGENT]` LLM abuse: per-user and per-IP daily caps on `articles/[id]/chat` and `process-paper`; prompt-injection guard text in `lib/prompts.ts`; tests.
+- [ ] **M2.8** `[AGENT]` Add `SECURITY.md` (contact, scope, disclosure).
+
+### Acceptance criteria (all verifiable)
+- `npm test` includes headers, cookie, url-safety, rate-limit tests, all pass.
+- `docs/security/route-matrix.md` lists every file from `ls app/api/**/route.ts`.
+- `rg -n "unsafe-eval" next.config.ts` returns nothing.
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M2
+1. Every `[AGENT]` box in M2 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M2 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M2 ("Security hardening") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M2 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M2.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M2 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## M3 — Correctness and known bugs
+
+**Goal:** Public pages return correct HTTP status and content; pipelines are idempotent.
+
+**Why:** SEO and trust depend on correct 404s, canonical URLs and no duplicate posts.
+
+### Tasks
+- [ ] **M3.1** `[AGENT]` Status codes: missing post/topic/author/list → 404 (all four), add tests mirroring `tests/mr1.test.ts`. Verify `notFound()` is called before any streaming boundary.
+- [ ] **M3.2** `[AGENT]` Cron idempotency: running `cron-fetch`/`process-queue` twice concurrently must not create duplicate articles (unique index on source id + lock doc). Test in sandbox.
+- [ ] **M3.3** `[AGENT]` Scheduled posts: timezone handling in Europe/London incl. DST change dates; test with fixed clock.
+- [ ] **M3.4** `[AGENT]` Canonical URLs + `sitemap.ts` only list published posts; exclude unpublished/missing; test.
+- [ ] **M3.5** `[AGENT]` Unsubscribe/verify links: tokens expire, single-use; test in `tests/email-links.test.ts`.
+- [ ] **M3.6** `[AGENT]` Grep for TODO/FIXME; turn each into a task here or fix it.
+
+### Acceptance criteria (all verifiable)
+- `npm test` passes with new 404/idempotency/DST tests.
+- `curl -s -o /dev/null -w '%{http_code}' localhost:3000/topics/does-not-exist` → 404 (local run).
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M3
+1. Every `[AGENT]` box in M3 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M3 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M3 ("Correctness and known bugs") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M3 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M3.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M3 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## M4 — Tests and CI depth
+
+**Goal:** Critical user journeys are covered by automated tests that CI runs.
+
+**Why:** Agents will change a lot of code; only tests stop regressions.
+
+### Tasks
+- [ ] **M4.1** `[AGENT]` Add Playwright (`@playwright/test`) with `e2e/` smoke: home loads, post page, register form validation, admin login rejects bad password. `npm run test:e2e` (not in gate until stable).
+- [ ] **M4.2** `[AGENT]` Integration tests against `mongodb-memory-server` for `lib/users.ts`, `lib/submissions.ts`, rate-limit; `npm run test:integration`.
+- [ ] **M4.3** `[AGENT]` Coverage report (`c8`) for unit tests; record baseline % in PROGRESS.md; target ≥60% of `lib/`.
+- [ ] **M4.4** `[AGENT→OWNER]` Add the new suites to `docs/ci/proposed-ci.yml` (services: none needed with memory server).
+
+### Acceptance criteria (all verifiable)
+- `npm run test:integration` passes offline.
+- `npx playwright test` passes against `npm run build && npm start` (local Mongo) or is logged as skipped with reason.
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M4
+1. Every `[AGENT]` box in M4 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M4 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M4 ("Tests and CI depth") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M4 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M4.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M4 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## M5 — Legal and compliance (UK GDPR, PECR)
+
+**Goal:** Privacy notice, terms, cookie policy and consent are accurate for what the code actually does.
+
+**Why:** UK GDPR/PECR apply from the first UK visitor; newsletter needs lawful consent; ICO fee may be due.
+
+### Tasks
+- [ ] **M5.1** `[AGENT]` Data inventory `docs/legal/data-inventory.md`: every Mongo collection, fields with personal data, purpose, lawful basis, retention, processor (Atlas, Vercel, Resend, OpenRouter, Stripe).
+- [ ] **M5.2** `[AGENT]` Update `app/privacy/page.tsx` from the inventory (controller identity placeholder, rights, retention, processors, international transfers — Vercel/Atlas US/EU, OpenRouter).
+- [ ] **M5.3** `[AGENT]` Add `app/cookies/page.tsx`; list each cookie set by the app. If only strictly-necessary cookies, say so and do not add a banner; if any analytics is added later, add consent first.
+- [ ] **M5.4** `[AGENT]` Account deletion + data export: `DELETE /api/me` and `GET /api/me/export` (auth, rate-limited), with tests; link from `/account`.
+- [ ] **M5.5** `[AGENT]` Newsletter: double opt-in already — verify, log consent timestamp + source; unsubscribe in one click (List-Unsubscribe header).
+- [ ] **M5.6** `[AGENT]` Copyright: article pages credit source paper, authors, licence and link; refuse to publish full text of non-open-licence papers. Test in sandbox.
+- [ ] **M5.7** `[OWNER]` Legal review of privacy/terms/cookies; ICO registration decision; business name/address in footer.
+
+### Acceptance criteria (all verifiable)
+- `ls app/privacy app/terms app/cookies` all exist and are linked from the footer.
+- Tests for `/api/me` delete/export pass.
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M5
+1. Every `[AGENT]` box in M5 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M5 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M5 ("Legal and compliance (UK GDPR, PECR)") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M5 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M5.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M5 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## M6 — Payments readiness (Stripe, Paper Trail Pro — optional)
+
+**Goal:** Pro can be switched on in test mode end to end; live switch is one owner action.
+
+**Why:** Revenue path; must not charge anyone wrongly.
+
+### Tasks
+- [ ] **M6.1** `[AGENT]` Review `app/api/billing/*` + `lib/entitlements.ts`: webhook signature verify, idempotency on `event.id`, handles `checkout.session.completed`, `customer.subscription.updated/deleted`, `invoice.payment_failed`. Extend `tests/stripe.test.ts`.
+- [ ] **M6.2** `[AGENT]` Write `docs/runbooks/stripe-go-live.md` (products/prices, tax, webhook URL `https://<vercel>/api/billing/webhook`, portal config, test cards, rollback = unset keys).
+- [ ] **M6.3** `[AGENT]` Pricing page shows VAT-inclusive prices and links terms; checkout disabled cleanly (503 + friendly UI) when billing off.
+- [ ] **M6.4** `[OWNER]` Stripe account activation, test-mode keys in Vercel Preview, live keys only at launch.
+
+### Acceptance criteria (all verifiable)
+- `npm run test:unit` stripe tests cover all 4 event types + bad signature + duplicate event.
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M6
+1. Every `[AGENT]` box in M6 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M6 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M6 ("Payments readiness (Stripe, Paper Trail Pro — optional)") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M6 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M6.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M6 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## M7 — Observability and operations
+
+**Goal:** Failures are visible within minutes and there is a runbook for each.
+
+**Why:** Free tiers fail silently (Atlas pauses, cron misses, LLM quota).
+
+### Tasks
+- [ ] **M7.1** `[AGENT]` Add Sentry (`@sentry/nextjs`) gated on `SENTRY_DSN` (no-op if unset); scrub PII; document env.
+- [ ] **M7.2** `[AGENT]` Structured JSON logger `lib/log.ts` (level, route, requestId, no PII); replace `console.*` in API routes.
+- [ ] **M7.3** `[AGENT]` `/api/health` adds `cron_last_run` per job and `queue_depth`; `/admin/status` shows stale cron (>2× cadence) in red.
+- [ ] **M7.4** `[AGENT]` `docs/runbooks/incidents.md`: DB down, LLM quota, cron missed, email bounce, how to roll back on Vercel (Promote previous deployment).
+- [ ] **M7.5** `[OWNER]` UptimeRobot (free) on `/api/health`; Sentry project; Atlas alerting email.
+
+### Acceptance criteria (all verifiable)
+- With `SENTRY_DSN` unset the build and tests pass and no network calls happen (test).
+- `curl localhost:3000/api/health | jq 'has("cron_last_run")'` → true.
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M7
+1. Every `[AGENT]` box in M7 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M7 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M7 ("Observability and operations") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M7 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M7.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M7 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## M8 — Performance, accessibility and SEO
+
+**Goal:** Lighthouse ≥90 performance/accessibility/SEO on home and a post page.
+
+**Why:** Organic search is the main acquisition channel for a research explainer site.
+
+### Tasks
+- [ ] **M8.1** `[AGENT]` Add `npm run lighthouse` (lighthouse-ci with `lighthouserc.json`, assertions ≥0.9) against a local prod build; record scores in PROGRESS.md.
+- [ ] **M8.2** `[AGENT]` Structured data: `Article`/`ScholarlyArticle` JSON-LD on posts, `BreadcrumbList`; validate with a unit test of the generated object.
+- [ ] **M8.3** `[AGENT]` Accessibility: run `@axe-core/playwright` in e2e on home/post/register; fix all serious/critical.
+- [ ] **M8.4** `[AGENT]` Caching: ISR/`revalidate` for public pages, `Cache-Control` on `posts/published` API; Mongo projection to avoid sending full text in lists.
+- [ ] **M8.5** `[AGENT]` Images/fonts: `next/font`, OG images cached; no layout shift.
+
+### Acceptance criteria (all verifiable)
+- `npm run lighthouse` passes assertions locally.
+- axe e2e reports 0 serious/critical.
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M8
+1. Every `[AGENT]` box in M8 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M8 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M8 ("Performance, accessibility and SEO") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M8 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M8.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M8 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## M9 — UX polish and content operations
+
+**Goal:** A first-time visitor understands the product in 10 seconds; the owner can run content daily in 15 minutes.
+
+**Why:** Retention and owner time are the scaling limits.
+
+### Tasks
+- [ ] **M9.1** `[AGENT]` Empty/error/loading states for every public page (except `posts/[slug]` loading, see AGENTS.md).
+- [ ] **M9.2** `[AGENT]` Onboarding: `/welcome` topic picks → personalised `/today`; newsletter CTA after 2nd article.
+- [ ] **M9.3** `[AGENT]` Admin: bulk approve/reject queue, show LLM model used + cost estimate, retry failed items.
+- [ ] **M9.4** `[AGENT]` Mobile layout pass at 360px; dark mode contrast check.
+- [ ] **M9.5** `[AGENT]` Search: `search/suggest` debounced, keyboard accessible, empty-state suggestions.
+
+### Acceptance criteria (all verifiable)
+- Playwright mobile viewport smoke passes.
+- Admin queue actions covered by sandbox scenarios.
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M9
+1. Every `[AGENT]` box in M9 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M9 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M9 ("UX polish and content operations") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M9 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M9.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M9 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## M10 — Launch checklist and go-live
+
+**Goal:** A signed-off, reversible public launch.
+
+**Why:** Turns NO-GO into GO with evidence.
+
+### Tasks
+- [ ] **M10.1** `[AGENT]` Write `docs/launch-checklist.md` with every item below as a checkbox + the command that proves it.
+- [ ] **M10.2** `[AGENT]` Run `npm run smoke:prod -- <url>`, lighthouse, e2e against production (read-only); paste results.
+- [ ] **M10.3** `[OWNER]` Custom domain + Resend domain verified (SPF/DKIM/DMARC); update `NEXT_PUBLIC_SITE_URL`.
+- [ ] **M10.4** `[OWNER]` Google Search Console + submit sitemap; X/Reddit app callback URLs updated.
+- [ ] **M10.5** `[OWNER]` Final legal sign-off; flip `PAPERTRAIL_MARKET_READINESS.md` to GO with date.
+- [ ] **M10.6** `[AGENT]` Tag release `v1.0.0` notes in `CHANGELOG.md` (tag push by owner).
+
+### Acceptance criteria (all verifiable)
+- Every box in `docs/launch-checklist.md` is ticked with evidence.
+- `smoke:prod` against the production URL passes.
+- The gate passes: `npm ci && npm run typecheck && npm test && npm run build`
+
+### Self-check before closing M10
+1. Every `[AGENT]` box in M10 is `[x]` with a commit hash, or marked `— BLOCKED` with a `PROGRESS.md` entry.
+2. Re-run every acceptance command above from a clean shell; paste results into the M10 summary in `PROGRESS.md`.
+3. `git log --oneline origin/main -20` shows your commits; `git status` is clean.
+4. Re-read the diff of the whole milestone (`git diff <first-commit>^..HEAD`) for leftovers, secrets and unrelated changes.
+5. Update the milestone line in `STATUS.md`.
+
+### Agent prompt (copy-paste)
+```text
+You are working in tatassembly-sys/papertrail. Read AGENTS.md fully, then MILESTONES.md section M10 ("Launch checklist and go-live") and PROGRESS.md (BLOCKERS).
+Sync with `git pull --rebase origin main`. Work through the unchecked [AGENT] tasks of M10 in order using the loop in AGENTS.md §7:
+reproduce -> smallest fix -> add/extend a test -> run the task's acceptance commands -> run the gate `npm ci && npm run typecheck && npm test && npm run build` ->
+self-review `git diff` -> tick the box with the commit hash -> add a PROGRESS.md entry -> Conventional Commit tagged [M10.N] -> push (never force).
+Skip [OWNER] tasks but prepare everything reversible for them (runbooks in docs/, proposed CI YAML in docs/ci/). Do not edit .github/workflows.
+If blocked, log it under BLOCKERS in PROGRESS.md and continue. When all tasks are done, run the M10 self-check and write the milestone summary.
+Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
+```
+
+---
+
+## Appendix A — previous MR0 hosting plan (kept verbatim; still valid detail for M0)
+
+### (old) MR0 — Pre-launch hosting: move off Railway to Vercel (+ MongoDB Atlas) — TOP PRIORITY
 
 **Why:** Railway spend is capped, so production is down. Paper Trail is a plain Next.js 15 app on the `mongodb` driver, so it fits Vercel Hobby and an Atlas M0 (free) cluster with no code rewrite.
 
@@ -67,138 +483,3 @@ Tags: **[AGENT]** = a coding agent can do it. **[HUMAN]** = needs the owner (sec
 - Unsigned `GET /api/process-queue` → 401; signed (bearer) → 200.
 - Home page, a post page, admin login work. One scheduled tick from cron-job.org shows in logs.
 - `npm run typecheck`, `npm test`, `npm run build` pass locally.
-
----
-
-## MR1 — Engineering hygiene and observable deploys
-
-**Goal:** every push is tested, production reports which commit it runs, and the known 404 FAIL is fixed.
-
-Tasks
-- [x] [AGENT] Fix missing-post status: `/posts/<missing>` must return HTTP 404. Start with `app/posts/[slug]/loading.tsx` (remove it or move the lookup so `notFound()` runs before streaming). Add a unit/sandbox test for the lookup path.
-- [x] [AGENT] Add the running commit to `GET /api/health` (e.g. `commit: process.env.RAILWAY_GIT_COMMIT_SHA ?? null`). No secrets in the response.
-- [x] [AGENT] Add `.github/workflows/ci.yml`: `npm ci`, `npm run typecheck`, `npm test`, `npm run build` on push/PR to `main`. If the push is rejected because the token lacks the `workflow` scope, leave the file committed on a branch and note it for the owner.
-- [x] [AGENT] Reconcile deploy ids in `STATUS.md` and `PAPERTRAIL_MARKET_READINESS.md` so both name the same verified deployment.
-- [ ] [HUMAN] Confirm Railway deploys from GitHub `main` automatically (or redeploy after the agent pushes).
-- [ ] [HUMAN] Add an external uptime monitor on `/api/health` (UptimeRobot, Better Stack, etc.) with alerts to your email/phone.
-
-Exit criteria (checkable)
-- `curl -s -o /dev/null -w '%{http_code}' $APP/posts/does-not-exist` → `404` on production.
-- `curl -s $APP/api/health` includes `commit` equal to `git rev-parse origin/main` (or the last code commit if the tip is docs-only).
-- GitHub Actions run on the tip of `main` is green.
-- Uptime monitor exists and has sent one test alert.
-
-## MR2 — Email delivery, custom domain, key rotation
-
-**Goal:** account and newsletter mail reach real inboxes from the real domain.
-
-Tasks
-- [ ] [HUMAN] Register or restore `papertrailresearch.co.uk`; create the DNS zone.
-- [ ] [HUMAN] Add Railway records: apex CNAME `6mp7haey.up.railway.app`, `www` CNAME `su8i7gl4.up.railway.app`, plus the `_railway-verify` TXT records from `railway domain status`.
-- [ ] [HUMAN] Create a Resend account, add the domain, publish SPF/DKIM (and a DMARC record), wait for "verified".
-- [ ] [HUMAN] Set `RESEND_API_KEY`, `NEWSLETTER_FROM`, `EMAIL_FROM` on the Railway service. Never paste them into the repo or chat logs.
-- [ ] [HUMAN] Rotate the exposed OpenRouter key in the OpenRouter dashboard and update Railway.
-- [ ] [HUMAN] After the domain resolves with TLS, switch `NEXT_PUBLIC_SITE_URL` to `https://www.papertrailresearch.co.uk` (or apex) and redeploy.
-- [ ] [AGENT] Once the owner says env is set: verify end to end with an inbox the owner provides — register → verify email, password reset, newsletter subscribe → confirm → unsubscribe link, one digest send to a test list. Record results in `STATUS.md`.
-- [x] [AGENT] Make sure every link in mail uses `NEXT_PUBLIC_SITE_URL` (grep for hard-coded `up.railway.app`). Add a test for link building.
-- [x] [AGENT] Update `PAPERTRAIL_MARKET_READINESS.md` blockers 1–3.
-
-Exit criteria
-- `/api/health` shows `email` not equal to `"log"`.
-- Public DNS resolves both apex and `www`; HTTPS works on both.
-- A confirmation, a reset, and a digest email arrive in a real inbox; the unsubscribe link works.
-- OpenRouter key rotated (owner confirms in `STATUS.md`, no key value written).
-
-## MR3 — Content operations steady state
-
-**Goal:** daily ingest → draft → human publish runs for a week without firefighting, and data is recoverable.
-
-Tasks
-- [x] [AGENT] Add a cron health view or log line per cron run (job name, status, duration); make failures visible in `/admin/status`.
-- [ ] [AGENT] Add Playwright smoke tests (home, article, pricing, login, 404) and run them in CI against a local build.
-- [x] [AGENT] Write `docs/RUNBOOK.md`: redeploy, rollback, rotate secrets, restore Mongo, re-run a cron safely.
-- [ ] [HUMAN] Turn on MongoDB backups (Atlas or Railway volume snapshots) and do one restore into a scratch database.
-- [ ] [HUMAN] Run the editorial loop daily for 7 days (publish at least one article a day from drafts).
-- [ ] [AGENT] Fix any ingest/publish bugs found during those 7 days; keep the publish gate (source URL + caveats) enforced with tests.
-
-Exit criteria
-- 7 consecutive days: every scheduled cron returned 200 and no HTTP 5xx in Railway logs.
-- At least 7 articles published through the human gate.
-- Restore drill documented with date and outcome.
-- Playwright smoke green in CI.
-
-## MR4 — Legal and public launch (free product)
-
-**Goal:** launch the free reading product publicly on the custom domain.
-
-Tasks
-- [ ] [HUMAN] Review `/privacy` and `/terms` (UK GDPR, PECR for newsletter and cookies). Decide who is the data controller and add contact details.
-- [ ] [HUMAN] Register with the ICO if required (data protection fee) and add the registration number to `/privacy`.
-- [x] [AGENT] Check cookie/analytics usage; add a consent banner only if non-essential cookies exist.
-- [ ] [AGENT] Accessibility pass (headings, contrast, keyboard) and SEO pass (sitemap, canonical URLs on the custom domain, correct 404s).
-- [ ] [AGENT] Update `PAPERTRAIL_MARKET_READINESS.md` with evidence for every blocker, and propose GO.
-- [ ] [HUMAN] Make the GO decision.
-
-Exit criteria
-- `PAPERTRAIL_MARKET_READINESS.md` says **GO** for the free product, signed by the owner.
-- No open FAIL rows in `STATUS.md`.
-
-## MR5 — Paper Trail Pro (optional, Stripe)
-
-**Goal:** paid Pro tier works safely. Only start if the owner decides to charge.
-
-Tasks
-- [ ] [HUMAN] Create Stripe account, products and prices (monthly/yearly), webhook endpoint `POST /api/billing/webhook`; set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, webhook secret on Railway (test mode first).
-- [ ] [AGENT] Test-mode end to end: checkout → webhook → Pro entitlements → portal cancel → entitlements removed. Add tests for duplicate and out-of-order webhooks.
-- [ ] [HUMAN] Review pricing page, refund policy, VAT handling.
-- [ ] [HUMAN] Switch to live keys; do one real purchase and refund.
-
-Exit criteria
-- `/api/health` `billing` is not `"off"`; one live purchase and refund completed; duplicate webhook replay does not double-grant.
-
----
-
-## Agent instructions (VS Code / Cursor)
-
-1. Work on **one milestone at a time**, in order. Start with the first milestone that has unticked **[AGENT]** boxes.
-2. **Pull first:** `git pull --rebase origin main`. Read `STATUS.md` and this file before changing anything.
-3. After **each task**: run `npm run typecheck` and `npm test` (and `npm run build` when you touched pages/config). Re-read your diff and re-check your own work. If anything fails, fix it before moving on.
-4. Tick the box in `MILESTONES.md` and add a short dated line to `STATUS.md` (what changed, commit, how verified). Commit small, push to `main` with a clear message. If someone pushed meanwhile, rebase; never force-push.
-5. **Never commit secrets** (API keys, passwords, tokens, `.env` files). Use Railway variables. Do not print secret values in logs or docs.
-6. When a task is **[HUMAN]** or you hit something that needs the owner (DNS, Resend, Stripe, OpenRouter, Railway dashboard, legal), stop that task and add a note under "Waiting on owner" in `STATUS.md`: what is needed, exact steps, and how you will verify it afterwards. Then continue with the other [AGENT] tasks.
-7. Do not run tests or scripts against the production database. Do not turn on Stripe.
-8. Keep going until every [AGENT] task in the current milestone passes its exit criteria (or is blocked on the owner and noted), then move to the next milestone.
-
----
-
-## Copy-paste prompts
-
-**MR0**
-```
-Paper Trail MR0 (move hosting off Railway to Vercel + MongoDB Atlas). Pull main first. Read MILESTONES.md (MR0) and STATUS.md. The app is Next.js + mongodb driver, so no rewrite. Do the [AGENT] tasks: update docs/comments from Railway to Vercel, document the external cron schedule (cron-job.org, Authorization: Bearer CRON_SECRET) for every cron route, optionally add vercel.json (regions lhr1, at most daily crons on Hobby). Do not delete railway.toml until the owner confirms the Vercel deploy is healthy. Never edit .github/workflows. Never commit secrets and never write to any remote database without the owner's go-ahead. Run npm run typecheck, npm test and npm run build after each change, fix failures. For [HUMAN] steps (Atlas cluster, Vercel import, env vars, scheduler, domain) write exact owner steps under "Waiting on owner" in STATUS.md. When the owner says it is live, verify /api/health, cron 401/200 and key pages, tick boxes, commit and push.
-```
-
-**MR1**
-```
-Paper Trail MR1 (engineering hygiene). Pull main first. Read MILESTONES.md and STATUS.md. Do every [AGENT] task in MR1: make /posts/<missing> return HTTP 404 (check app/posts/[slug]/loading.tsx), add the running commit SHA to /api/health, add a GitHub Actions CI workflow (typecheck, test, build), and reconcile deploy ids between STATUS.md and PAPERTRAIL_MARKET_READINESS.md. After each task run npm run typecheck and npm test, re-check your diff, fix failures. Tick boxes in MILESTONES.md, update STATUS.md, commit and push small commits. Never commit secrets. If something needs the owner (Railway redeploy, uptime monitor, workflow token scope), stop that task and write a clear note in STATUS.md. Keep going until MR1 exit criteria pass.
-```
-
-**MR2**
-```
-Paper Trail MR2 (email, domain, key rotation). Pull main first. Read MILESTONES.md and STATUS.md. The DNS, Resend, OpenRouter and Railway variable tasks are [HUMAN]; check whether the owner has marked them done. If not, write precise owner steps in STATUS.md and do the [AGENT] tasks you can: make every email link use NEXT_PUBLIC_SITE_URL, add tests for link building, prepare the verification checklist. When env is set, verify register/verify, reset, subscribe/confirm/unsubscribe and a digest against a test inbox the owner gives you. Run typecheck and tests after each change, fix failures, tick boxes, update STATUS.md and PAPERTRAIL_MARKET_READINESS.md. Never commit secrets. Keep going until MR2 exit criteria pass or only owner tasks remain.
-```
-
-**MR3**
-```
-Paper Trail MR3 (content ops). Pull main first. Read MILESTONES.md and STATUS.md. Add per-cron run logging and failures in /admin/status, add Playwright smoke tests to CI, write docs/RUNBOOK.md, and fix ingest/publish bugs while keeping the publish gate tested. Backups/restore drill and the 7-day editorial run are [HUMAN]; note what you need. Run typecheck and tests after every task, fix failures, tick boxes, update STATUS.md. Never commit secrets or touch the production database from tests. Keep going until MR3 exit criteria pass.
-```
-
-**MR4**
-```
-Paper Trail MR4 (legal and public launch). Pull main first. Read MILESTONES.md and STATUS.md. Do the accessibility and SEO passes, check cookies/analytics and add consent only if needed, then update PAPERTRAIL_MARKET_READINESS.md with evidence for every blocker and propose GO. Legal review, ICO registration and the GO decision are [HUMAN]; leave a clear note. Run typecheck and tests after every change, fix failures, tick boxes, update STATUS.md. Never commit secrets.
-```
-
-**MR5**
-```
-Paper Trail MR5 (optional Stripe Pro). Only start if the owner has confirmed they want to charge and has set Stripe TEST keys on Railway. Pull main first. Read MILESTONES.md and STATUS.md. Test checkout -> webhook -> Pro entitlements -> portal cancel in Stripe test mode, add tests for duplicate and out-of-order webhooks, fix failures. Live keys, pricing, VAT and refunds are [HUMAN]. Tick boxes, update STATUS.md. Never commit secrets.
-```
