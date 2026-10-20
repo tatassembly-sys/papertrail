@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { getDb } from "./mongodb";
 import { isValidObjectId } from "./object-id";
 import { hashToken, tokenLookupValues } from "./token-hash";
+import { emailLinkExpiry, VERIFY_LINK_TTL_MS } from "./email-link";
 import { entitlementsFor, isProUser, type Entitlements, type PlanName } from "./entitlements";
 import { passwordPolicyError } from "./passwords";
 
@@ -19,6 +20,7 @@ export interface UserDoc {
   name: string;
   email_verified: boolean;
   verify_token?: string | null;
+  verify_token_expires?: Date | null;
   reset_token?: string | null;
   reset_token_expires?: Date | null;
   saved_slugs: string[];
@@ -124,6 +126,7 @@ export async function registerUser(
     name: (name.trim() || normalized.split("@")[0]).slice(0, 80),
     email_verified: false,
     verify_token: hashToken(verifyToken),
+    verify_token_expires: emailLinkExpiry(new Date(), VERIFY_LINK_TTL_MS),
     reset_token: null,
     reset_token_expires: null,
     saved_slugs: [],
@@ -171,7 +174,12 @@ export async function issueEmailVerifyToken(userId: string): Promise<string | nu
   const col = await users();
   await col.updateOne(
     { _id: user._id },
-    { $set: { verify_token: hashToken(token) } }
+    {
+      $set: {
+        verify_token: hashToken(token),
+        verify_token_expires: emailLinkExpiry(new Date(), VERIFY_LINK_TTL_MS),
+      },
+    }
   );
   return token;
 }
@@ -180,11 +188,13 @@ export async function verifyEmailToken(token: string): Promise<boolean> {
   const candidates = tokenLookupValues(token);
   if (candidates.length === 0) return false;
   const col = await users();
-  const result = await col.updateOne(
-    { verify_token: { $in: candidates } },
-    { $set: { email_verified: true, verify_token: null } }
+  const now = new Date();
+  const result = await col.findOneAndUpdate(
+    { verify_token: { $in: candidates }, verify_token_expires: { $gt: now } },
+    { $set: { email_verified: true, verify_token: null, verify_token_expires: null } },
+    { returnDocument: "before" }
   );
-  return result.modifiedCount > 0;
+  return Boolean(result);
 }
 
 export async function createPasswordResetToken(

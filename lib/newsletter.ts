@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { randomBytes } from "crypto";
 import { getDb } from "./mongodb";
 import { hashToken, tokenLookupValues, tokenLookupValuesAllowStored } from "./token-hash";
+import { emailLinkExpiry, UNSUBSCRIBE_LINK_TTL_MS, VERIFY_LINK_TTL_MS } from "./email-link";
 import {
   getAllPublishedArticles,
   getEditorPicks,
@@ -19,7 +20,9 @@ export interface SubscriberDoc {
   email: string;
   status: "pending" | "active" | "unsubscribed";
   verify_token?: string | null;
-  unsubscribe_token: string;
+  verify_token_expires?: Date | null;
+  unsubscribe_token?: string | null;
+  unsubscribe_token_expires?: Date | null;
   created_at: Date;
   verified_at?: Date | null;
   /** When the reader confirmed. Same instant as verified_at. */
@@ -76,6 +79,9 @@ export async function subscribeEmail(
   const verifyToken = token();
   const rawUnsubscribe = token();
   const unsubscribeToken = hashToken(rawUnsubscribe);
+  const now = new Date();
+  const verifyExpires = emailLinkExpiry(now, VERIFY_LINK_TTL_MS);
+  const unsubscribeExpires = emailLinkExpiry(now, UNSUBSCRIBE_LINK_TTL_MS);
   const emailReady = isEmailConfigured();
   if (!emailReady && process.env.NODE_ENV === "production") {
     return { ok: false, error: "Email delivery is not configured. Try again later." };
@@ -89,7 +95,9 @@ export async function subscribeEmail(
         $set: {
           status,
           verify_token: emailReady ? hashToken(verifyToken) : null,
+          verify_token_expires: emailReady ? verifyExpires : null,
           unsubscribe_token: unsubscribeToken,
+          unsubscribe_token_expires: unsubscribeExpires,
           verified_at: emailReady ? existing.verified_at || null : new Date(),
           unsubscribed_at: null,
         },
@@ -100,7 +108,9 @@ export async function subscribeEmail(
       email: normalized,
       status,
       verify_token: emailReady ? hashToken(verifyToken) : null,
+      verify_token_expires: emailReady ? verifyExpires : null,
       unsubscribe_token: unsubscribeToken,
+      unsubscribe_token_expires: unsubscribeExpires,
       created_at: new Date(),
       verified_at: emailReady ? null : new Date(),
       unsubscribed_at: null,
@@ -158,11 +168,18 @@ export async function confirmSubscription(
   const candidates = tokenLookupValues(verifyToken);
   if (candidates.length === 0) return false;
   const col = await subs();
-  const result = await col.updateOne(
-    { verify_token: { $in: candidates } },
-    { $set: subscriptionConsentUpdate(source) }
+  const now = new Date();
+  const result = await col.findOneAndUpdate(
+    { verify_token: { $in: candidates }, verify_token_expires: { $gt: now } },
+    {
+      $set: {
+        ...subscriptionConsentUpdate(source, now),
+        verify_token_expires: null,
+      },
+    },
+    { returnDocument: "before" }
   );
-  return result.modifiedCount > 0;
+  return Boolean(result);
 }
 
 export async function unsubscribeByEmail(email: string): Promise<void> {
@@ -185,16 +202,25 @@ export async function unsubscribeByToken(tokenStr: string): Promise<boolean> {
   const candidates = tokenLookupValuesAllowStored(tokenStr);
   if (candidates.length === 0) return false;
   const col = await subs();
-  const result = await col.updateOne(
-    { unsubscribe_token: { $in: candidates } },
+  const now = new Date();
+  const result = await col.findOneAndUpdate(
+    {
+      unsubscribe_token: { $in: candidates },
+      unsubscribe_token_expires: { $gt: now },
+    },
     {
       $set: {
         status: "unsubscribed",
-        unsubscribed_at: new Date(),
+        unsubscribed_at: now,
+        unsubscribe_token: null,
+        unsubscribe_token_expires: null,
+        verify_token: null,
+        verify_token_expires: null,
       },
-    }
+    },
+    { returnDocument: "before" }
   );
-  return result.modifiedCount > 0;
+  return Boolean(result);
 }
 
 export async function listActiveSubscribers(limit = 500): Promise<SubscriberDoc[]> {
@@ -402,7 +428,12 @@ export async function sendWeeklyDigest(): Promise<{
     if (result.ok && result.mode === "resend") {
       await col.updateOne(
         { _id: sub._id },
-        { $set: { unsubscribe_token: hashToken(rawUnsub) } }
+        {
+          $set: {
+            unsubscribe_token: hashToken(rawUnsub),
+            unsubscribe_token_expires: emailLinkExpiry(new Date(), UNSUBSCRIBE_LINK_TTL_MS),
+          },
+        }
       );
     }
     if (result.mode === "log") {
