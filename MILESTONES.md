@@ -158,12 +158,12 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 **Why:** SEO and trust depend on correct 404s, canonical URLs and no duplicate posts.
 
 ### Tasks
-- [ ] **M3.1** `[AGENT]` Status codes: missing post/topic/author/list → 404 (all four), add tests mirroring `tests/mr1.test.ts`. Verify `notFound()` is called before any streaming boundary.
-- [ ] **M3.2** `[AGENT]` Cron idempotency: running `cron-fetch`/`process-queue` twice concurrently must not create duplicate articles (unique index on source id + lock doc). Test in sandbox.
-- [ ] **M3.3** `[AGENT]` Scheduled posts: timezone handling in Europe/London incl. DST change dates; test with fixed clock.
-- [ ] **M3.4** `[AGENT]` Canonical URLs + `sitemap.ts` only list published posts; exclude unpublished/missing; test.
-- [ ] **M3.5** `[AGENT]` Unsubscribe/verify links: tokens expire, single-use; test in `tests/email-links.test.ts`.
-- [ ] **M3.6** `[AGENT]` Grep for TODO/FIXME; turn each into a task here or fix it.
+- [x] **M3.1** `[AGENT]` Status codes: missing post/topic/author/list → 404 (all four), add tests mirroring `tests/mr1.test.ts`. Verify `notFound()` is called before any streaming boundary. `(c6ea15d)`
+- [x] **M3.2** `[AGENT]` Cron idempotency: running `cron-fetch`/`process-queue` twice concurrently must not create duplicate articles (unique index on source id + lock doc). Test in sandbox. `(50777cb)`
+- [x] **M3.3** `[AGENT]` Scheduled posts: timezone handling in Europe/London incl. DST change dates; test with fixed clock. `(e145538)`
+- [x] **M3.4** `[AGENT]` Canonical URLs + `sitemap.ts` only list published posts; exclude unpublished/missing; test. `(3441671)`
+- [x] **M3.5** `[AGENT]` Unsubscribe/verify links: tokens expire, single-use; test in `tests/email-links.test.ts`. `(8d67770)`
+- [x] **M3.6** `[AGENT]` Grep for TODO/FIXME; turn each into a task here or fix it. No `TODO` or `FIXME` in `*.ts`, `*.tsx`, `*.js`, `*.mjs`, `*.cjs`, `*.jsx`, or `*.css`. Remaining hits are owner notes in milestone docs.
 
 ### Acceptance criteria (all verifiable)
 - `npm test` passes with new 404/idempotency/DST tests.
@@ -234,12 +234,12 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 **Why:** UK GDPR/PECR apply from the first UK visitor; newsletter needs lawful consent; ICO fee may be due.
 
 ### Tasks
-- [ ] **M5.1** `[AGENT]` Data inventory `docs/legal/data-inventory.md`: every Mongo collection, fields with personal data, purpose, lawful basis, retention, processor (Atlas, Vercel, Resend, OpenRouter, Stripe).
-- [ ] **M5.2** `[AGENT]` Update `app/privacy/page.tsx` from the inventory (controller identity placeholder, rights, retention, processors, international transfers — Vercel/Atlas US/EU, OpenRouter).
-- [ ] **M5.3** `[AGENT]` Add `app/cookies/page.tsx`; list each cookie set by the app. If only strictly-necessary cookies, say so and do not add a banner; if any analytics is added later, add consent first.
-- [ ] **M5.4** `[AGENT]` Account deletion + data export: `DELETE /api/me` and `GET /api/me/export` (auth, rate-limited), with tests; link from `/account`.
-- [ ] **M5.5** `[AGENT]` Newsletter: double opt-in already — verify, log consent timestamp + source; unsubscribe in one click (List-Unsubscribe header).
-- [ ] **M5.6** `[AGENT]` Copyright: article pages credit source paper, authors, licence and link; refuse to publish full text of non-open-licence papers. Test in sandbox.
+- [x] **M5.1** `[AGENT]` Data inventory `docs/legal/data-inventory.md`: every Mongo collection, fields with personal data, purpose, lawful basis, retention, processor (Atlas, Vercel, Resend, OpenRouter, Stripe). `(65f9a59)`
+- [x] **M5.2** `[AGENT]` Update `app/privacy/page.tsx` from the inventory (controller identity placeholder, rights, retention, processors, international transfers — Vercel/Atlas US/EU, OpenRouter). `(bf94ccc)`
+- [x] **M5.3** `[AGENT]` Add `app/cookies/page.tsx`; list each cookie set by the app. If only strictly-necessary cookies, say so and do not add a banner; if any analytics is added later, add consent first. `(5e6925d)`
+- [x] **M5.4** `[AGENT]` Account deletion + data export: `DELETE /api/me` and `GET /api/me/export` (auth, rate-limited), with tests; link from `/account`. `(6c58ab4)`
+- [x] **M5.5** `[AGENT]` Newsletter: double opt-in already — verify, log consent timestamp + source; unsubscribe in one click (List-Unsubscribe header). `(cddc03a)`
+- [x] **M5.6** `[AGENT]` Copyright: article pages credit source paper, authors, licence and link; refuse to publish full text of non-open-licence papers. Test in sandbox. `(526867d)`
 - [ ] **M5.7** `[OWNER]` Legal review of privacy/terms/cookies; ICO registration decision; business name/address in footer.
 
 ### Acceptance criteria (all verifiable)
@@ -274,9 +274,9 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 **Why:** Revenue path; must not charge anyone wrongly.
 
 ### Tasks
-- [ ] **M6.1** `[AGENT]` Review `app/api/billing/*` + `lib/entitlements.ts`: webhook signature verify, idempotency on `event.id`, handles `checkout.session.completed`, `customer.subscription.updated/deleted`, `invoice.payment_failed`. Extend `tests/stripe.test.ts`.
-- [ ] **M6.2** `[AGENT]` Write `docs/runbooks/stripe-go-live.md` (products/prices, tax, webhook URL `https://<vercel>/api/billing/webhook`, portal config, test cards, rollback = unset keys).
-- [ ] **M6.3** `[AGENT]` Pricing page shows VAT-inclusive prices and links terms; checkout disabled cleanly (503 + friendly UI) when billing off.
+- [x] **M6.1** `[AGENT]` Review `app/api/billing/*` + `lib/entitlements.ts`: webhook signature verify, idempotency on `event.id`, handles `checkout.session.completed`, `customer.subscription.updated/deleted`, `invoice.payment_failed`. Extend `tests/stripe.test.ts`. `(73bbaa7)`
+- [x] **M6.2** `[AGENT]` Write `docs/runbooks/stripe-go-live.md` (products/prices, tax, webhook URL `https://<vercel>/api/billing/webhook`, portal config, test cards, rollback = unset keys). `(2d3c8f5)`
+- [x] **M6.3** `[AGENT]` Pricing page shows VAT-inclusive prices and links terms; checkout disabled cleanly (503 + friendly UI) when billing off. `(af40405)`
 - [ ] **M6.4** `[OWNER]` Stripe account activation, test-mode keys in Vercel Preview, live keys only at launch.
 
 ### Acceptance criteria (all verifiable)
@@ -349,7 +349,7 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 
 ### Tasks
 - [ ] **M8.1** `[AGENT]` Add `npm run lighthouse` (lighthouse-ci with `lighthouserc.json`, assertions ≥0.9) against a local prod build; record scores in PROGRESS.md.
-- [ ] **M8.2** `[AGENT]` Structured data: `Article`/`ScholarlyArticle` JSON-LD on posts, `BreadcrumbList`; validate with a unit test of the generated object.
+- [x] **M8.2** `[AGENT]` Structured data: `Article`/`ScholarlyArticle` JSON-LD on posts, `BreadcrumbList`; validate with a unit test of the generated object. `(17c69dd`, `f357d0a)`
 - [ ] **M8.3** `[AGENT]` Accessibility: run `@axe-core/playwright` in e2e on home/post/register; fix all serious/critical.
 - [ ] **M8.4** `[AGENT]` Caching: ISR/`revalidate` for public pages, `Cache-Control` on `posts/published` API; Mongo projection to avoid sending full text in lists.
 - [ ] **M8.5** `[AGENT]` Images/fonts: `next/font`, OG images cached; no layout shift.

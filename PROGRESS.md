@@ -16,7 +16,7 @@ Append-only log written by coding agents and the owner. Newest entries at the to
 ## BLOCKERS
 Format: `- [open|resolved] YYYY-MM-DD <task id> — <what is blocked> — needs: <who/what> — tried: <...>`
 
-- [open] 2026-10-20 M0 — Atlas cluster, Vercel project, cron-job.org schedules — needs: OWNER.
+- [open] 2026-10-20 M0 — Atlas was reachable on the read-only smoke below (`db connected`). Vercel cron-job.org schedules and Railway deletion are still owner work.
 - [open] 2026-10-20 M0.9 — delete Railway files only after M0.8 production smoke is logged — needs: OWNER to run `npm run smoke:prod` on the Vercel URL and delete the Railway service.
 - [open] 2026-10-20 M2 — OpenRouter key rotation, Resend domain — needs: OWNER.
 - [open] 2026-10-19 M1.4 — branch protection on `main` requiring the `check` job — needs: OWNER (GitHub settings). Agent cannot change branch protection.
@@ -54,6 +54,166 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 3. **Release truth on Vercel** — `/api/health` cannot report the running commit (Railway-only env), so nobody can prove which code is live; plus no error tracking to see failures.
 
 ## Log
+
+### 2026-10-20 — production smoke (read-only)
+- Agent: Grok
+- Commit(s): none (observation of the deployment already on origin, `9731a04`)
+- Change: none.
+- Checks run: `npm run smoke:prod -- https://papertrail-six-rho.vercel.app` → exit 0. `OK home 200`, `OK health 200`, `OK missing-post 404`, `OK unsigned-queue 401`, `OK sitemap 200`, `OK robots 200`.
+- Evidence: `GET /api/health` body was `status ok`, `db connected`, `email log`, `billing off`, `env production`, `commit 9731a0420ad9b923cbb32bd9fd9faf0e8c795e30`. No bearer was sent. M0.8 stays owner work because it also includes deleting Railway. M0.9 stays blocked until that deletion is logged. Lighthouse and e2e were not run against production.
+- Follow-ups: owner deletes Railway before M0.9. Repeat smoke after the next push, because production is still `9731a04`.
+
+### 2026-10-19 — M8.2 — post structured data
+- Agent: Grok
+- Commit(s): `17c69dd`, `f357d0a`
+- Change: A published note's JSON-LD is a ScholarlyArticle plus a BreadcrumbList (home, topic when the note has one, then the note).
+- Checks run: `tests/json-ld.test.ts`, `tests/copyright.test.ts`, `tests/sitemap.test.ts`. Full `npm test` after `17c69dd` was 543/543 sandbox and 91/91 unit. `npm run typecheck` after `f357d0a` exited 0. `npm run build` is still outstanding on this tip.
+- Evidence: A non-URL licence is omitted. `<` in a title is escaped for the script tag.
+- Follow-ups: M8.1, M8.3, M8.4, M8.5.
+
+### 2026-10-19 — M3 summary
+- Agent: Grok
+- Commit(s): `c6ea15d`, `50777cb`, `e145538`, `3441671`, `8d67770`, `a12942a`
+- Change: Missing post, topic, author, and list pages call `notFound()` and there is still no `app/posts/[slug]/loading.tsx`. Concurrent cron-fetch and process-queue take a lock and file articles under a unique source id. Schedule input without a zone is Europe/London, including the March gap and the October overlap. The sitemap and canonical URL are published posts only. Verify and unsubscribe tokens expire and are single-use. Confirm still stores consent time. No `TODO` or `FIXME` in application source.
+- Checks run: `npm run typecheck` exit 0. `npm test` → 543/543 sandbox (`cron-idempotency` 7) and 89/89 unit. `npm run build` not yet on this tip.
+- Evidence: Copyright credit on the post page stayed. Stripe event indexes stayed. Confirm uses `subscriptionConsentUpdate(source, now)` so the consent clock and the expiry clock are the same instant (`a12942a`).
+- Follow-ups: none for the agent. M3 stays open in STATUS until this tip is pushed.
+
+### 2026-10-19 — M3.1 — missing records are 404
+- Agent: Grok
+- Commit(s): `c6ea15d`
+- Change: Topic, author, list, and post routes use `notFound()` before a streaming boundary.
+- Checks run: `tests/public-404.test.ts`.
+- Evidence: No `loading.tsx` under `app/posts/[slug]/`.
+- Follow-ups: none.
+
+### 2026-10-19 — M3.2 — cron idempotency
+- Agent: Grok
+- Commit(s): `50777cb`
+- Change: A lock document plus a partial unique index on `source_id`. A duplicate source id returns the existing draft.
+- Checks run: `tests/cron-idempotency.test.ts` and sandbox `cron-idempotency` 7/7.
+- Evidence: Licence and source fingerprint from M5.6 are still passed into `insertDraftArticle` together with the source id.
+- Follow-ups: none.
+
+### 2026-10-19 — M3.3 — Europe/London schedules
+- Agent: Grok
+- Commit(s): `e145538`
+- Change: Wall-clock schedule strings are Europe/London. A zoned instant is kept. The spring gap is rejected. The autumn overlap keeps the earlier instant.
+- Checks run: `tests/london-time.test.ts` with a fixed clock.
+- Evidence: Unit tests cover GMT, BST, the March gap, and the October overlap.
+- Follow-ups: none.
+
+### 2026-10-19 — M3.4 — published sitemap
+- Agent: Grok
+- Commit(s): `3441671`
+- Change: `sitemap.ts` and canonical metadata include published posts only.
+- Checks run: `tests/sitemap.test.ts`.
+- Evidence: Unpublished and missing posts are dropped.
+- Follow-ups: none.
+
+### 2026-10-19 — M3.5 — expiring email links
+- Agent: Grok
+- Commit(s): `8d67770`, `a12942a`
+- Change: Verify and unsubscribe tokens have an expiry and are cleared on use. Account reset links follow the same pattern. Consent fields are written on confirm.
+- Checks run: `tests/email-links.test.ts` and `tests/newsletter-consent.test.ts`.
+- Evidence: GET confirm still does not subscribe the reader.
+- Follow-ups: none.
+
+### 2026-10-19 — M3.6 — TODO and FIXME grep
+- Agent: Grok
+- Commit(s): none (search only)
+- Change: No code change. Search of `*.ts`, `*.tsx`, `*.js`, `*.mjs`, `*.cjs`, `*.jsx`, and `*.css` found no `TODO` or `FIXME`.
+- Checks run: repository search on this tip.
+- Evidence: Remaining wording is in `MILESTONES.md`, `PROGRESS.md`, `STATUS.md`, and `AGENTS.md`, and those lines are owner instructions rather than unfinished code.
+- Follow-ups: none.
+
+### 2026-10-19 — M5 summary
+- Agent: Grok
+- Commit(s): `65f9a59`, `bf94ccc`, `5e6925d`, `6c58ab4`, `cddc03a`, `526867d`
+- Change: Draft data inventory and privacy notice. Cookie page lists strictly necessary cookies and adds no banner. Signed-in readers can export their own rows (`me_export` 10/hour) without password hashes. Newsletter confirm stores `consent_at` and `consent_source`. Digest mail sends `List-Unsubscribe`. Closed-licence papers are credited and stored as a short excerpt, not the full text. CC BY, CC BY-SA, CC0, and public domain count as open. CC BY-NC and the arXiv non-exclusive licence do not.
+- Checks run: After M3 was rebased on top, `npm run typecheck` exited 0 and `npm test` was 543/543 sandbox and 89/89 unit. `npm run build` is still outstanding on this tip.
+- Evidence: Privacy page still says `[controller name and address — owner]`. This is not a legal sign-off. Market decision stays NO-GO.
+- Follow-ups: M5.7 owner legal review, ICO decision, and the business name and address.
+
+### 2026-10-19 — M5.1 — data inventory
+- Agent: Grok
+- Commit(s): `65f9a59`
+- Change: `docs/legal/data-inventory.md` lists collections, personal fields, purpose, draft lawful basis, retention, and processors.
+- Checks run: file review.
+- Evidence: Lawful bases are draft labels for the owner.
+- Follow-ups: M5.7.
+
+### 2026-10-19 — M5.2 — privacy notice
+- Agent: Grok
+- Commit(s): `bf94ccc`
+- Change: `/privacy` follows the inventory. Controller identity is a placeholder. Transfers name Vercel, Atlas, OpenRouter, Resend, and Stripe without claiming SCCs are signed.
+- Checks run: page source.
+- Evidence: placeholder `[controller name and address — owner]`.
+- Follow-ups: M5.7.
+
+### 2026-10-19 — M5.3 — cookie page
+- Agent: Grok
+- Commit(s): `5e6925d`
+- Change: `/cookies` lists the session cookies the app sets. No consent banner.
+- Checks run: `tests/cookies.test.ts`.
+- Evidence: Footer links the page.
+- Follow-ups: none.
+
+### 2026-10-19 — M5.4 — account export
+- Agent: Grok
+- Commit(s): `6c58ab4`
+- Change: `GET /api/me/export` requires a user session and `me_export` 10/hour. `DELETE /api/me` was already present. `/account` links to the export.
+- Checks run: `tests/account-export.test.ts`.
+- Evidence: Export omits `password_hash` and other people's rows.
+- Follow-ups: none.
+
+### 2026-10-19 — M5.5 — newsletter consent
+- Agent: Grok
+- Commit(s): `cddc03a`
+- Change: Confirm writes `consent_at` and `consent_source`. GET does not confirm. Log-mode mail records that `List-Unsubscribe` is set and does not print the URL.
+- Checks run: `tests/newsletter-consent.test.ts`.
+- Evidence: sandbox confirm-get-safe still passes.
+- Follow-ups: none.
+
+### 2026-10-19 — M5.6 — source credit
+- Agent: Grok
+- Commit(s): `526867d`
+- Change: Article pages show the source title, authors, licence, and link. Raw PDF text of a non-open paper is clipped to an excerpt. A model paste of that text is replaced with the excerpt before publish.
+- Checks run: `tests/copyright.test.ts` and sandbox 536/536.
+- Evidence: Open licences stay publishable up to the existing clip.
+- Follow-ups: none.
+
+### 2026-10-19 — M6 summary
+- Agent: Grok
+- Commit(s): `73bbaa7`, `2d3c8f5`, `af40405`
+- Change: Stripe webhooks claim `event.id` in `stripe_events` before applying a plan change. Duplicate ids return 200 and do not sync again. Bad signatures are not stored. Handler failures release the claim. Pricing says prices include VAT and links to terms. Checkout and the portal return 503 before any database call when Stripe keys are unset.
+- Checks run: `npm run typecheck` exit 0. `tests/stripe.test.ts` and `tests/pricing.test.ts` passed. Full `npm test` after M5 also passed (69/69 unit). Idempotency used a fake collection that throws Mongo duplicate-key 11000, not a live database.
+- Evidence: No `stripe` npm package. No live keys. `docs/runbooks/stripe-go-live.md` is the owner checklist.
+- Follow-ups: M6.4 owner. If a worker dies after the plan update and before the row is marked done, retries stay 500 until that row is deleted. The runbook says when that is safe.
+
+### 2026-10-19 — M6.1 — webhook idempotency
+- Agent: Grok
+- Commit(s): `73bbaa7`
+- Change: Signature check stays first. `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, and `invoice.payment_failed` are applied once per event id.
+- Checks run: `tests/stripe.test.ts`.
+- Evidence: A bad signature leaves the event store empty. A failed handler can be retried once.
+- Follow-ups: none.
+
+### 2026-10-19 — M6.2 — Stripe go-live runbook
+- Agent: Grok
+- Commit(s): `2d3c8f5`
+- Change: `docs/runbooks/stripe-go-live.md` covers inclusive GBP prices, tax, webhook `https://<vercel>/api/billing/webhook`, portal, test cards, and rollback by unsetting keys.
+- Checks run: file review.
+- Evidence: Placeholders only. No live key.
+- Follow-ups: M6.4.
+
+### 2026-10-19 — M6.3 — VAT-inclusive pricing
+- Agent: Grok
+- Commit(s): `af40405`
+- Change: `/pricing` says “Prices include VAT” and still links to `/terms`. Unconfigured checkout and portal return HTTP 503 with the existing explanation.
+- Checks run: `tests/pricing.test.ts`.
+- Evidence: The 10/hour write limit still runs once billing is configured.
+- Follow-ups: none.
 
 ### 2026-10-19 — M2 summary
 - Agent: Grok

@@ -11,10 +11,10 @@
 | M0 | Hosting cut-over: Railway → Vercel + MongoDB Atlas | open — agent prep M0.3, M0.4, M0.5, M0.7 done; Atlas, Vercel, scheduler, and Railway deletion are owner work |
 | M1 | Release truth and CI hardening | open — agent tasks M1.1, M1.2, M1.3, M1.5, M1.6 done; M1.4 branch protection and copying proposed CI are owner work |
 | M2 | Security hardening | open — agent tasks M2.2–M2.8 done; M2.1 secret rotation is owner work |
-| M3 | Correctness and known bugs | open |
+| M3 | Correctness and known bugs | open — agent tasks M3.1–M3.6 done. Milestone stays open until the self-check build is on origin. |
 | M4 | Tests and CI depth | open |
-| M5 | Legal and compliance (UK GDPR, PECR) | open |
-| M6 | Payments readiness (Stripe, Paper Trail Pro — optional) | open |
+| M5 | Legal and compliance (UK GDPR, PECR) | open — agent tasks M5.1–M5.6 done; M5.7 legal review is owner work. Notice is a draft. Controller line is still `[controller name and address — owner]`. |
+| M6 | Payments readiness (Stripe, Paper Trail Pro — optional) | open — agent tasks M6.1–M6.3 done; M6.4 Stripe keys are owner work. Billing stays off. |
 | M7 | Observability and operations | open |
 | M8 | Performance, accessibility and SEO | open |
 | M9 | UX polish and content operations | open |
