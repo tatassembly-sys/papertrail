@@ -1,6 +1,8 @@
+import { isBlockedHostname } from "./url-safety";
+
 const MAX_URL_LENGTH = 500;
 
-/** http(s) URLs only — rejects javascript:, data:, and credentialed URLs. */
+/** http(s) URLs only — rejects javascript:, data:, credentials, and private hosts. */
 export function sanitizeHttpUrl(
   value: string | null | undefined,
   maxLen = MAX_URL_LENGTH
@@ -12,6 +14,7 @@ export function sanitizeHttpUrl(
     const parsed = new URL(trimmed);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
     if (parsed.username || parsed.password) return null;
+    if (isBlockedHostname(parsed.hostname)) return null;
     return parsed.toString();
   } catch {
     return null;

@@ -1,6 +1,7 @@
 import { extractText, getDocumentProxy } from "unpdf";
 import { normalizeCategory } from "./arxivCategories";
 import { sanitizeHttpUrl } from "./http-url";
+import { fetchPublicHttp } from "./url-safety";
 
 const BARE_ARXIV_ID = /^\d{4}\.\d{4,5}(v\d+)?$/;
 
@@ -95,7 +96,7 @@ async function fetchArxivMetadata(
  * serverless/Node runtimes without native bindings).
  */
 async function extractPdfText(pdfUrl: string): Promise<string> {
-  const res = await fetch(pdfUrl, { signal: AbortSignal.timeout(20000) });
+  const res = await fetchPublicHttp(pdfUrl, { signal: AbortSignal.timeout(20000) });
   if (!res.ok) throw new Error(`Failed to download PDF: ${res.status}`);
   const buffer = new Uint8Array(await res.arrayBuffer());
 
