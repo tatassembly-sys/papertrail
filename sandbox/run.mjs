@@ -596,6 +596,31 @@ test("railway static used if no domain", () => {
   eq(P.getSiteUrl({ RAILWAY_STATIC_URL: "https://x.up.railway.app" }), "https://x.up.railway.app");
 });
 
+test("vercel production host beats railway", () => {
+  eq(
+    P.getSiteUrl({
+      VERCEL_PROJECT_PRODUCTION_URL: "papertrail.vercel.app",
+      VERCEL_URL: "papertrail-git-preview.vercel.app",
+      RAILWAY_PUBLIC_DOMAIN: "old.up.railway.app",
+    }),
+    "https://papertrail.vercel.app"
+  );
+});
+
+test("vercel deployment url when production url is unset", () => {
+  eq(P.getSiteUrl({ VERCEL_URL: "papertrail-abc123.vercel.app" }), "https://papertrail-abc123.vercel.app");
+});
+
+test("explicit site url beats vercel", () => {
+  eq(
+    P.getSiteUrl({
+      NEXT_PUBLIC_SITE_URL: "https://example.test/",
+      VERCEL_PROJECT_PRODUCTION_URL: "papertrail.vercel.app",
+    }),
+    "https://example.test"
+  );
+});
+
 test("localhost fallback", () => eq(P.getSiteUrl({}), "http://localhost:3000"));
 
 /* -------------------------------------------------------------------------- */
