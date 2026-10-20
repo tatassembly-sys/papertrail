@@ -143,6 +143,13 @@ async function createAll(db: Db): Promise<void> {
   await safeIndex(inquiries, { created_at: -1 }, { name: "billing_inquiries_created" });
   await safeIndex(inquiries, { email: 1 }, { name: "billing_inquiries_email" });
 
+  // Event ids are the document _id. TTL is past Stripe's retry window (~3 days).
+  const stripeEvents = db.collection("stripe_events");
+  await safeIndex(stripeEvents, { processed_at: 1 }, {
+    expireAfterSeconds: 90 * 24 * 60 * 60,
+    name: "stripe_events_ttl",
+  });
+
   const collections = db.collection("collections");
   await safeIndex(collections, { user_id: 1, updated_at: -1 }, { name: "collections_user_updated" });
   await safeIndex(collections, { public: 1, updated_at: -1 }, { name: "collections_public" });

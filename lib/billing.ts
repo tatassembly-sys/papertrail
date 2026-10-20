@@ -57,3 +57,31 @@ export async function resolveUserIdFromStripe(opts: {
   }
   return null;
 }
+
+type BillingEffects = {
+  resolveUserIdFromStripe: typeof resolveUserIdFromStripe;
+  syncNormalizedSubscription: typeof syncNormalizedSubscription;
+  syncStripeSubscriptionId: typeof syncStripeSubscriptionId;
+  applyBillingState: typeof applyBillingState;
+  retrieveSubscription: typeof retrieveSubscription;
+};
+
+const realBillingEffects: BillingEffects = {
+  resolveUserIdFromStripe,
+  syncNormalizedSubscription,
+  syncStripeSubscriptionId,
+  applyBillingState,
+  retrieveSubscription,
+};
+
+let billingEffectsOverride: Partial<BillingEffects> | null = null;
+
+/** Unit tests replace Mongo and Stripe calls. Pass null to restore production. */
+export function setBillingEffectsForTests(next: Partial<BillingEffects> | null): void {
+  billingEffectsOverride = next;
+}
+
+export function billingEffects(): BillingEffects {
+  if (!billingEffectsOverride) return realBillingEffects;
+  return { ...realBillingEffects, ...billingEffectsOverride };
+}

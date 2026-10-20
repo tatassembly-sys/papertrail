@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { billingEffects } from "@/lib/billing";
 import { stripeWebhookConfigured } from "@/lib/entitlements";
+import { asRecord } from "@/lib/json-body";
+import { getStripeEventStore } from "@/lib/stripe-events";
 import {
   invoiceSubscriptionId,
   normalizeSubscription,
-  retrieveSubscription,
   verifyStripeSignature,
 } from "@/lib/stripe";
-import { asRecord } from "@/lib/json-body";
-import {
-  resolveUserIdFromStripe,
-  syncNormalizedSubscription,
-  syncStripeSubscriptionId,
-} from "@/lib/billing";
-import { applyBillingState } from "@/lib/users";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const MAX_EVENT_ID = 255;
 
 function stripeId(value: unknown): string | null {
   if (typeof value === "string" && value) return value;
@@ -24,6 +21,56 @@ function stripeId(value: unknown): string | null {
     if (typeof id === "string" && id) return id;
   }
   return null;
+}
+
+async function applyStripeEvent(type: string, object: Record<string, unknown>) {
+  const fx = billingEffects();
+  if (type === "checkout.session.completed") {
+    const userIdMeta =
+      (asRecord(object.metadata)?.userId as string | undefined) ||
+      (typeof object.client_reference_id === "string" ? object.client_reference_id : null);
+    const customerId = stripeId(object.customer);
+    const subscriptionId = stripeId(object.subscription);
+    const userId = await fx.resolveUserIdFromStripe({
+      userId: userIdMeta,
+      customerId,
+    });
+    if (userId && subscriptionId) {
+      await fx.syncStripeSubscriptionId(userId, subscriptionId);
+    } else if (userId && customerId) {
+      // Remember the customer, but do not grant Pro without a subscription.
+      // checkout.session.completed can fire without one (setup / abandoned).
+      await fx.applyBillingState(userId, {
+        stripe_customer_id: customerId,
+      });
+    }
+    return;
+  }
+
+  if (
+    type === "customer.subscription.created" ||
+    type === "customer.subscription.updated" ||
+    type === "customer.subscription.deleted"
+  ) {
+    const sub = normalizeSubscription(object);
+    const metaUser = (asRecord(object.metadata)?.userId as string | undefined) || null;
+    const userId = await fx.resolveUserIdFromStripe({
+      userId: metaUser,
+      customerId: sub.customerId,
+    });
+    if (userId) await fx.syncNormalizedSubscription(userId, sub);
+    return;
+  }
+
+  if (type === "invoice.paid" || type === "invoice.payment_failed") {
+    const subscriptionId = invoiceSubscriptionId(object);
+    const customerId = stripeId(object.customer);
+    const userId = await fx.resolveUserIdFromStripe({ customerId });
+    if (userId && subscriptionId) {
+      const rawSub = await fx.retrieveSubscription(subscriptionId);
+      await fx.syncNormalizedSubscription(userId, normalizeSubscription(rawSub));
+    }
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -45,61 +92,46 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
   }
 
+  const eventId = typeof event.id === "string" ? event.id.trim() : "";
+  if (!eventId || eventId.length > MAX_EVENT_ID) {
+    return NextResponse.json({ error: "Missing event id." }, { status: 400 });
+  }
+
   const type = typeof event.type === "string" ? event.type : "";
+  const store = getStripeEventStore();
+  let claim: Awaited<ReturnType<typeof store.claim>>;
+  try {
+    claim = await store.claim(eventId, type);
+  } catch (err) {
+    console.error("stripe webhook claim:", err);
+    return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
+  }
+  if (claim === "done") {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+  if (claim === "busy") {
+    return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
+  }
+
   const data = asRecord(event.data);
   const object = data ? asRecord(data.object) : null;
-  if (!object) {
-    return NextResponse.json({ received: true });
+  try {
+    if (object) await applyStripeEvent(type, object);
+  } catch (err) {
+    console.error("stripe webhook handler:", err);
+    try {
+      await store.release(eventId);
+    } catch (releaseErr) {
+      console.error("stripe webhook release:", releaseErr);
+    }
+    return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
   }
 
   try {
-    if (type === "checkout.session.completed") {
-      const userIdMeta =
-        (asRecord(object.metadata)?.userId as string | undefined) ||
-        (typeof object.client_reference_id === "string"
-          ? object.client_reference_id
-          : null);
-      const customerId = stripeId(object.customer);
-      const subscriptionId = stripeId(object.subscription);
-      const userId = await resolveUserIdFromStripe({
-        userId: userIdMeta,
-        customerId,
-      });
-      if (userId && subscriptionId) {
-        await syncStripeSubscriptionId(userId, subscriptionId);
-      } else if (userId && customerId) {
-        // Remember the customer, but do not grant Pro without a subscription.
-        // checkout.session.completed can fire without one (setup / abandoned).
-        await applyBillingState(userId, {
-          stripe_customer_id: customerId,
-        });
-      }
-    } else if (
-      type === "customer.subscription.created" ||
-      type === "customer.subscription.updated" ||
-      type === "customer.subscription.deleted"
-    ) {
-      const sub = normalizeSubscription(object);
-      const metaUser =
-        (asRecord(object.metadata)?.userId as string | undefined) || null;
-      const userId = await resolveUserIdFromStripe({
-        userId: metaUser,
-        customerId: sub.customerId,
-      });
-      if (userId) {
-        await syncNormalizedSubscription(userId, sub);
-      }
-    } else if (type === "invoice.paid" || type === "invoice.payment_failed") {
-      const subscriptionId = invoiceSubscriptionId(object);
-      const customerId = stripeId(object.customer);
-      const userId = await resolveUserIdFromStripe({ customerId });
-      if (userId && subscriptionId) {
-        const rawSub = await retrieveSubscription(subscriptionId);
-        await syncNormalizedSubscription(userId, normalizeSubscription(rawSub));
-      }
-    }
+    await store.finish(eventId);
   } catch (err) {
-    console.error("stripe webhook handler:", err);
+    // Applied already. Do not release, or a retry would apply the event twice.
+    console.error("stripe webhook finish:", err);
     return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
   }
 
