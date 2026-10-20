@@ -4,6 +4,7 @@ import { getArticleById } from "@/lib/articles";
 import { createScheduledPost, getScheduledPostsForArticle } from "@/lib/scheduledPosts";
 import { VALID_PLATFORMS } from "@/lib/social";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
+import { parseScheduledInstant } from "@/lib/london-time";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -58,16 +59,16 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     );
   }
 
-  const scheduledDate = new Date(typeof scheduledFor === "string" ? scheduledFor : "");
-  if (!scheduledFor || isNaN(scheduledDate.getTime())) {
+  if (typeof scheduledFor !== "string") {
     return NextResponse.json({ error: "scheduledFor must be a valid date/time." }, { status: 400 });
   }
-  if (scheduledDate.getTime() <= Date.now()) {
-    return NextResponse.json({ error: "scheduledFor must be in the future." }, { status: 400 });
+  const parsedWhen = parseScheduledInstant(scheduledFor, new Date());
+  if (!parsedWhen.ok) {
+    return NextResponse.json({ error: parsedWhen.error }, { status: 400 });
   }
 
   try {
-    const scheduled = await createScheduledPost(id, platform, scheduledDate);
+    const scheduled = await createScheduledPost(id, platform, parsedWhen.at);
     return NextResponse.json({ success: true, scheduled }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to schedule post.";

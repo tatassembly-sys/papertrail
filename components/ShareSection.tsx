@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ArticleRow } from "@/lib/prompts";
 import { buildShareLinks } from "@/lib/share-links";
 import type { ScheduledPostRow } from "@/lib/scheduledPosts";
+import { formatLondonDateTime } from "@/lib/london-time";
 
 interface ShareResult {
   platform: string;
@@ -19,12 +20,7 @@ const API_PLATFORMS = [
 ] as const;
 
 function formatScheduledTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return formatLondonDateTime(iso);
 }
 
 export default function ShareSection({
@@ -89,7 +85,7 @@ export default function ShareSection({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         platform: schedulePlatform,
-        scheduledFor: new Date(scheduleTime).toISOString(),
+        scheduledFor: scheduleTime,
       }),
     });
     const body = await res.json().catch(() => ({}));
@@ -199,7 +195,7 @@ export default function ShareSection({
 
           <div className="flex flex-col gap-1">
             <label htmlFor="share-when" className="text-xs text-stamp">
-              Date &amp; time
+              Date &amp; time (London)
             </label>
             <input
               id="share-when"
