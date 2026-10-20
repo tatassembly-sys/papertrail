@@ -187,7 +187,7 @@ Draft mapping for the owner. This is not a statement that every request has been
 
 | Right | What the code does |
 |---|---|
-| Access and portability | Signed-in profile is returned by `GET /api/me`. A downloadable export is a separate task (M5.4) if that route is not in the tree yet |
+| Access and portability | `GET /api/me` returns the signed-in profile. `GET /api/me/export` returns that user’s account, lists, highlights, chats, suggestions, newsletter status, and lab enquiries as JSON. Password hashes and mail tokens are omitted. Every query is filtered by that user id or that email |
 | Rectification | `PATCH /api/me` updates name and followed topics. Saves and bookmarks can be removed there |
 | Erasure | `DELETE /api/me` deletes that user’s `users` row and their `collections`, `highlights`, and `article_chats` by `user_id`, unsubscribes that email, and cancels a Stripe subscription if one is stored. It does not drop a collection |
 | Withdraw consent | Newsletter unsubscribe is one POST with the token. GET does not unsubscribe or confirm |

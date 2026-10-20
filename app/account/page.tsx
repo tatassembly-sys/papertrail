@@ -329,6 +329,12 @@ function AccountInner() {
         >
           Sign out
         </button>
+        <a
+          href="/api/me/export"
+          className="min-h-11 text-sm font-medium text-ink-soft hover:text-redpen"
+        >
+          Download your data
+        </a>
         <button
           type="button"
           onClick={async () => {

@@ -37,6 +37,7 @@ Limits are per hashed client IP unless noted. Schema means a size-capped JSON or
 | `app/api/highlights/route.ts` | GET, POST | user | POST `highlights_post` 60/hour | JSON slug, quote, note |
 | `app/api/highlights/[id]/route.ts` | DELETE | user | `highlights_delete` 60/hour | id param |
 | `app/api/me/route.ts` | GET, PATCH, DELETE | user (GET also reports admin cookie) | PATCH 60/hour, DELETE 5/hour | JSON profile fields |
+| `app/api/me/export/route.ts` | GET | user | `me_export` 10/hour | none |
 | `app/api/newsletter/digest/route.ts` | GET, POST | cron bearer or admin | constant-time bearer compare | none |
 | `app/api/newsletter/subscribe/route.ts` | POST | public | `newsletter_subscribe` 10/hour | JSON email |
 | `app/api/newsletter/unsubscribe/route.ts` | GET, POST | public token | POST `newsletter_unsubscribe` 30/hour | token from query, JSON, or form, max 128 |
