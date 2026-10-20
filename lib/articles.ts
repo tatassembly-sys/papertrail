@@ -23,6 +23,9 @@ export interface ArticleDoc {
   tags?: string[];
   authors?: string[];
   institutions?: string[];
+  licence?: string | null;
+  /** Opening of an extracted PDF, used only to refuse republishing that PDF. */
+  source_fingerprint?: string | null;
   slug: string;
   source_url: string | null;
   source?: PaperSourceKind | null;
@@ -46,6 +49,7 @@ function toArticleRow(doc: ArticleDoc & { score?: number }): ArticleRow {
     tags: doc.tags || [],
     authors: doc.authors || [],
     institutions: doc.institutions || [],
+    licence: doc.licence || null,
     slug: doc.slug,
     source_url: sanitizeHttpUrl(doc.source_url),
     source: doc.source ?? null,
@@ -491,6 +495,8 @@ export async function insertDraftArticle(
     source?: PaperSourceKind | null;
     authors?: string[];
     institutions?: string[];
+    licence?: string | null;
+    sourceFingerprint?: string | null;
   } = {}
 ): Promise<ArticleRow> {
   const col = await articlesCollection();
@@ -507,6 +513,8 @@ export async function insertDraftArticle(
     tags: article.tags || [],
     authors: meta.authors || [],
     institutions: meta.institutions || [],
+    licence: meta.licence?.trim().slice(0, 300) || null,
+    source_fingerprint: meta.sourceFingerprint?.trim().toLowerCase().slice(0, 180) || null,
     slug: baseSlug,
     source_url: cleanSource,
     source: meta.source ?? (sourceUrl?.includes("pubmed") ? "pubmed" : sourceUrl?.includes("arxiv") ? "arxiv" : "manual"),
@@ -619,6 +627,9 @@ export async function updateArticle(
   if (updates.source === "arxiv" || updates.source === "pubmed" || updates.source === "manual" || updates.source === "submission") {
     safeUpdates.source = updates.source;
   }
+  if (typeof updates.licence === "string") {
+    safeUpdates.licence = updates.licence.trim().slice(0, 300);
+  }
 
   const authors = stringArray(updates.authors);
   if (authors) safeUpdates.authors = authors;
@@ -655,7 +666,19 @@ export async function updateArticle(
         : existing.source_url;
     const nextCaveats =
       typeof safeUpdates.caveats === "string" ? safeUpdates.caveats : existing.caveats;
-    const blocked = publishBlocker({ sourceUrl: nextSource, caveats: nextCaveats });
+    const nextBody =
+      typeof safeUpdates.plain_explanation === "string"
+        ? safeUpdates.plain_explanation
+        : existing.plain_explanation;
+    const nextLicence =
+      typeof safeUpdates.licence === "string" ? safeUpdates.licence : existing.licence;
+    const blocked = publishBlocker({
+      sourceUrl: nextSource,
+      caveats: nextCaveats,
+      licence: nextLicence,
+      plainExplanation: nextBody,
+      sourceFingerprint: existing.source_fingerprint,
+    });
     if (blocked) throw new PublishGateError(blocked);
   }
 

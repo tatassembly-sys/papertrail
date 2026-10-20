@@ -69,7 +69,23 @@ async function fetchArxiv(id) {
       .trim() || `arXiv ${id}`;
   const abstract =
     xml.match(/<summary>([\s\S]*?)<\/summary>/)?.[1]?.replace(/\s+/g, " ").trim() || "";
-  return { title, abstract };
+  const licence =
+    xml.match(/<(?:[\w-]+:)?license[^>]*>\s*([^<]+?)\s*<\/(?:[\w-]+:)?license>/i)?.[1]?.trim() ||
+    "http://arxiv.org/licenses/nonexclusive-distrib/1.0/";
+  return { title, abstract, licence };
+}
+
+function closedFullText(doc) {
+  const licence = String(doc.licence || "");
+  const open =
+    /creativecommons\.org\/licenses\/by(?:-sa)?\//i.test(licence) ||
+    /creativecommons\.org\/publicdomain\/zero\//i.test(licence) ||
+    /\bcc0\b/i.test(licence);
+  if (open && !/noncommercial|by-nc/i.test(licence)) return false;
+  const body = String(doc.plain_explanation || "");
+  const finger = String(doc.source_fingerprint || "").trim().toLowerCase();
+  if (finger.length < 80 || body.length <= 900) return false;
+  return body.toLowerCase().includes(finger);
 }
 
 async function main() {
@@ -98,6 +114,9 @@ async function main() {
       source_url: 1,
       slug: 1,
       tags: 1,
+      plain_explanation: 1,
+      licence: 1,
+      source_fingerprint: 1,
     })
     .sort({ created_at: -1 })
     .limit(400)
@@ -119,6 +138,7 @@ async function main() {
       if (chosen.length >= MAX_PUBLISH) break;
       if (chosen.filter((c) => fieldOf(c.category) === name).length >= PER_FIELD) break;
       if (chosen.some((c) => String(c._id) === String(doc._id))) continue;
+      if (closedFullText(doc)) continue;
       chosen.push(doc);
     }
   }
@@ -158,6 +178,7 @@ async function main() {
           tags: ["source-text", "needs-review"],
           authors: [],
           institutions: [],
+          licence: meta.licence,
           slug: slugBase,
           source_url: row.url || `https://arxiv.org/abs/${row.external_id}`,
           source: "arxiv",

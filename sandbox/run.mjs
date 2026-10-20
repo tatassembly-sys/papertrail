@@ -2474,6 +2474,48 @@ test("chat fail then success still under cap", () => {
   eq(s.chat(null, "7.7.7.7", "q").status, 402);
 });
 
+test("closed licence pdf is stored as an excerpt and cannot publish in full", () => {
+  const raw = "The original paper reports the following methods and results. ".repeat(40);
+  const filed = P.filingBody({
+    licence: "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
+    text: raw,
+    kind: "pdf",
+  });
+  assert(filed.refusedFullText);
+  assert(filed.body.length < 900);
+  includes(filed.body, "short excerpt");
+  const s = new P.PaperTrailSandbox();
+  const r = s.insertDraft({
+    source_url: "https://arxiv.org/abs/2401.99999",
+    caveats: "limits",
+    plain_explanation: raw,
+    licence: "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
+    source_fingerprint: P.sourceFingerprint(raw),
+  });
+  eq(s.publish(r.article.id).status, 400);
+  const live = s.publish(r.article.id, { plain_explanation: filed.body });
+  eq(live.article.status, "published");
+  assert(live.article.plain_explanation.length < 900);
+});
+
+test("open licence may keep a longer source filing", () => {
+  const raw = "Open methods and results from the authors. ".repeat(40);
+  const filed = P.filingBody({
+    licence: "https://creativecommons.org/licenses/by/4.0/",
+    text: raw,
+    kind: "pdf",
+  });
+  assert(!filed.refusedFullText);
+  assert(filed.body.length > 900);
+});
+
+test("plain-english note is not the raw paper", () => {
+  const note = "A bedside sensor matched a sleep lab closely enough for screening, not diagnosis. ".repeat(12);
+  const filed = P.filingBody({ licence: "all rights reserved", text: note, kind: "plain-english" });
+  assert(!filed.refusedFullText);
+  eq(filed.body, note.trim());
+});
+
 test("null source drafts allowed twice", () => {
   const s = new P.PaperTrailSandbox();
   assert(s.insertDraft({ source_url: null, caveats: "c", slug: "n1" }).article);

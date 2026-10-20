@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractPaperText } from "@/lib/paper-extract";
 import { extractPubMedText } from "@/lib/pubmed";
+import { sourceFingerprint } from "@/lib/copyright";
 import { translatePaperToArticle } from "@/lib/openrouter";
 import { isOpenRouterConfigError } from "@/lib/openrouter-health";
 import { insertDraftArticle } from "@/lib/articles";
@@ -51,6 +52,8 @@ export async function GET(req: NextRequest) {
 
       let authors: string[] = [];
       let institutions: string[] = [];
+      let licence: string | null = null;
+      let textKind: "pdf" | "abstract" = "abstract";
 
       if (row.source === "pubmed") {
         const result = await extractPubMedText(row.external_id);
@@ -59,6 +62,8 @@ export async function GET(req: NextRequest) {
         text = result.text;
         category = row.category || null;
         authors = result.authors || [];
+        licence = "publisher (not open; abstract only)";
+        textKind = "abstract";
       } else {
         const result = await extractPaperText(row.url);
         title = result.title;
@@ -67,6 +72,8 @@ export async function GET(req: NextRequest) {
         category = row.category || result.category;
         authors = result.authors || [];
         institutions = result.institutions || [];
+        licence = result.licence;
+        textKind = result.textKind;
       }
 
       if (!text || text.length < MIN_TEXT_LENGTH) {
@@ -81,11 +88,17 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      const article = await translatePaperToArticle(text, { fallbackTitle: title });
+      const article = await translatePaperToArticle(text, {
+        fallbackTitle: title,
+        licence,
+        sourceKind: textKind,
+      });
       await insertDraftArticle(article, sourceUrl, title, category, {
         source: row.source === "pubmed" ? "pubmed" : "arxiv",
         authors,
         institutions,
+        licence,
+        sourceFingerprint: textKind === "pdf" ? sourceFingerprint(text) : null,
       });
 
       await markQueueDone(row._id);

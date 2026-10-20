@@ -840,7 +840,61 @@ export function mixFieldOf(category) {
   return raw || "other";
 }
 
-export function canPublishArticle({ sourceUrl, caveats, status }) {
+const OPEN_LICENCE =
+  /creativecommons\.org\/licenses\/by(?:-sa)?\/|creativecommons\.org\/publicdomain\/zero\/|\bcc0\b|\bpublic\s+domain\b|\bcc[\s-]?by(?:[\s-]?sa)?(?:[\s-]?(?:4\.0|3\.0|2\.0|2\.5))?\b/i;
+
+export function isOpenContentLicence(value) {
+  const text = String(value || "").trim();
+  if (!text) return false;
+  if (/by[\s-]?nc|noncommercial/i.test(text)) return false;
+  if (/nonexclusive-distrib|all rights reserved/i.test(text) && !OPEN_LICENCE.test(text)) return false;
+  return OPEN_LICENCE.test(text);
+}
+
+export const FULL_TEXT_REFUSAL =
+  "Refusing to publish the full text of a paper that is not under an open licence. Store a short excerpt or a plain-English note instead.";
+
+export function sourceFingerprint(text) {
+  return String(text || "").replace(/\s+/g, " ").trim().toLowerCase().slice(0, 180);
+}
+
+export function closedLicenceFullTextError({ licence, body, sourceText, sourceFingerprint: finger }) {
+  if (isOpenContentLicence(licence)) return null;
+  const bodyNorm = String(body || "").replace(/\s+/g, " ").trim().toLowerCase();
+  if (bodyNorm.length <= 900) return null;
+  const mark = String(finger || (sourceText ? sourceFingerprint(sourceText) : ""))
+    .trim()
+    .toLowerCase();
+  if (mark.length < 80) return null;
+  if (bodyNorm.includes(mark)) return FULL_TEXT_REFUSAL;
+  return null;
+}
+
+export function filingBody({ licence, text, kind }) {
+  const clean = String(text || "").replace(/\s+/g, " ").trim();
+  const fingerprint = kind === "pdf" ? sourceFingerprint(clean) : "";
+  if (kind === "plain-english") return { body: clean, refusedFullText: false, fingerprint: "" };
+  if (kind === "abstract" || isOpenContentLicence(licence)) {
+    const body = clean.length <= 4000 ? clean : `${clean.slice(0, 3999).trimEnd()}…`;
+    return { body, refusedFullText: false, fingerprint: kind === "pdf" ? fingerprint : "" };
+  }
+  if (clean.length <= 480) return { body: clean, refusedFullText: false, fingerprint };
+  return {
+    body: `${clean.slice(0, 479).trimEnd()}…\n\nThis is a short excerpt, not the full paper. Read the source for the complete text.`,
+    refusedFullText: true,
+    fingerprint,
+  };
+}
+
+export function canPublishArticle({
+  sourceUrl,
+  caveats,
+  status,
+  licence,
+  body,
+  sourceText,
+  sourceFingerprint: finger,
+}) {
   if (status !== "published") return { ok: true };
   if (!sourceUrl || !String(sourceUrl).trim()) {
     return { ok: false, error: "A source URL is required before publishing." };
@@ -851,6 +905,13 @@ export function canPublishArticle({ sourceUrl, caveats, status }) {
   if (!caveats || !String(caveats).trim()) {
     return { ok: false, error: "Caveats are required before publishing." };
   }
+  const copy = closedLicenceFullTextError({
+    licence,
+    body,
+    sourceText,
+    sourceFingerprint: finger,
+  });
+  if (copy) return { ok: false, error: copy };
   return { ok: true };
 }
 
@@ -1152,6 +1213,10 @@ export class PaperTrailSandbox {
       sourceUrl: next.source_url,
       caveats: next.caveats,
       status: "published",
+      licence: next.licence,
+      body: next.plain_explanation,
+      sourceText: next.source_text,
+      sourceFingerprint: next.source_fingerprint,
     });
     if (!gate.ok) return { error: gate.error, status: 400 };
     if (a.status !== "published") {
@@ -1173,6 +1238,10 @@ export class PaperTrailSandbox {
         sourceUrl: next.source_url,
         caveats: next.caveats,
         status: "published",
+        licence: next.licence,
+        body: next.plain_explanation,
+        sourceText: next.source_text,
+        sourceFingerprint: next.source_fingerprint,
       });
       if (!gate.ok) return { error: gate.error, status: 400 };
     }

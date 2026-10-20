@@ -1,5 +1,6 @@
 import { TRANSLATOR_SYSTEM_PROMPT, TranslatedArticle } from "./prompts";
 import { getSiteUrl } from "./site-url";
+import { guardModelBody } from "./copyright";
 import { draftFromExtract } from "./extract-draft";
 import { isXaiConfigured, xaiChat } from "./xai";
 
@@ -276,7 +277,11 @@ function cleanJsonResponse(raw: string): string {
 
 export async function translatePaperToArticle(
   paperText: string,
-  options?: { fallbackTitle?: string }
+  options?: {
+    fallbackTitle?: string;
+    licence?: string | null;
+    sourceKind?: "pdf" | "abstract";
+  }
 ): Promise<TranslatedArticle> {
   const maxTokens = Number(process.env.OPENROUTER_MAX_TOKENS || 2500);
 
@@ -327,8 +332,13 @@ export async function translatePaperToArticle(
     }
   }
 
+  const sourceKind = options?.sourceKind === "abstract" ? "abstract" : "pdf";
+
   if (!rawContent) {
-    return draftFromExtract(paperText, options?.fallbackTitle);
+    return draftFromExtract(paperText, options?.fallbackTitle, {
+      licence: options?.licence,
+      kind: sourceKind,
+    });
   }
 
   let parsed: unknown;
@@ -336,20 +346,33 @@ export async function translatePaperToArticle(
     parsed = JSON.parse(cleanJsonResponse(rawContent));
   } catch {
     console.warn(`[openrouter] invalid JSON from ${model}; using extract draft`);
-    return draftFromExtract(paperText, options?.fallbackTitle);
+    return draftFromExtract(paperText, options?.fallbackTitle, {
+      licence: options?.licence,
+      kind: sourceKind,
+    });
   }
 
   if (!isValidTranslatedArticle(parsed)) {
     console.warn("[openrouter] schema mismatch; using extract draft");
-    return draftFromExtract(paperText, options?.fallbackTitle);
+    return draftFromExtract(paperText, options?.fallbackTitle, {
+      licence: options?.licence,
+      kind: sourceKind,
+    });
   }
 
   const record = parsed as TranslatedArticle & {
     keywords?: unknown;
     tags?: unknown;
   };
+  const guarded = guardModelBody({
+    licence: options?.licence,
+    body: record.plain_explanation,
+    sourceText: paperText,
+    sourceIsPdf: sourceKind === "pdf",
+  });
   return {
     ...record,
+    plain_explanation: guarded.body,
     keywords: Array.isArray(record.keywords)
       ? record.keywords.filter((k): k is string => typeof k === "string")
       : [],

@@ -1,5 +1,6 @@
 import { extractText, getDocumentProxy } from "unpdf";
 import { normalizeCategory } from "./arxivCategories";
+import { ARXIV_DEFAULT_LICENCE, licenceFromArxivXml } from "./copyright";
 import { sanitizeHttpUrl } from "./http-url";
 import { fetchPublicHttp } from "./url-fetch";
 
@@ -48,6 +49,7 @@ async function fetchArxivMetadata(
   category: string | null;
   authors: string[];
   institutions: string[];
+  licence: string;
 }> {
   const res = await fetch(`https://export.arxiv.org/api/query?id_list=${id}`, {
     signal: AbortSignal.timeout(8000),
@@ -88,6 +90,7 @@ async function fetchArxivMetadata(
     category,
     authors: authors.slice(0, 40),
     institutions: [...institutions].slice(0, 20),
+    licence: licenceFromArxivXml(xml) || ARXIV_DEFAULT_LICENCE,
   };
 }
 
@@ -116,12 +119,15 @@ export async function extractPaperText(inputUrl: string): Promise<{
   title: string;
   sourceUrl: string;
   text: string;
+  /** pdf when the body is extracted full text; abstract when the PDF could not be read. */
+  textKind: "pdf" | "abstract";
   category: string | null;
   authors: string[];
   institutions: string[];
+  licence: string;
 }> {
   const { absUrl, pdfUrl, id } = resolveArxivUrls(inputUrl);
-  const { title, abstract, category, authors, institutions } = await fetchArxivMetadata(id);
+  const { title, abstract, category, authors, institutions, licence } = await fetchArxivMetadata(id);
 
   let fullText = "";
   try {
@@ -130,7 +136,8 @@ export async function extractPaperText(inputUrl: string): Promise<{
     console.warn(`PDF extraction failed for ${pdfUrl}, falling back to abstract only.`, err);
   }
 
-  const text = fullText && fullText.length > abstract.length ? fullText : abstract;
+  const usedPdf = Boolean(fullText && fullText.length > abstract.length);
+  const text = usedPdf ? fullText : abstract;
 
   // Keep the payload sane for the LLM call (~12k chars ≈ safe token budget
   // for most models while leaving room for the system prompt + output).
@@ -141,8 +148,10 @@ export async function extractPaperText(inputUrl: string): Promise<{
     title,
     sourceUrl: absUrl,
     text: trimmed,
+    textKind: usedPdf ? "pdf" : "abstract",
     category,
     authors,
     institutions,
+    licence,
   };
 }

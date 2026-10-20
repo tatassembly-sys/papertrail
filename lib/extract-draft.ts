@@ -1,3 +1,4 @@
+import { filingBody, type SourceTextKind } from "./copyright";
 import type { TranslatedArticle } from "./prompts";
 
 /**
@@ -6,7 +7,8 @@ import type { TranslatedArticle } from "./prompts";
  */
 export function draftFromExtract(
   paperText: string,
-  fallbackTitle?: string
+  fallbackTitle?: string,
+  options?: { licence?: string | null; kind?: Extract<SourceTextKind, "pdf" | "abstract"> }
 ): TranslatedArticle {
   const lines = paperText
     .split(/\n+/)
@@ -29,12 +31,17 @@ export function draftFromExtract(
   }
 
   const explanation = usable.slice(0, 14).join(" ");
+  const filed = filingBody({
+    licence: options?.licence,
+    text: explanation,
+    kind: options?.kind === "abstract" ? "abstract" : "pdf",
+  });
 
   return {
     title: clip(simplifyTitle(rawTitle), 160),
     headline,
     why_it_matters: why.slice(0, 3),
-    plain_explanation: clip(explanation, 4000),
+    plain_explanation: filed.body,
     caveats:
       "This draft was filed from the paper’s own abstract and extracted text because the AI translator was unavailable. It is not a rewritten plain-language note. Check sample size, setting (human vs model vs animal), and what the authors say they cannot claim before publishing.",
     keywords: [],

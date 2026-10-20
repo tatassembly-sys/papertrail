@@ -19,6 +19,7 @@ import { jsonLdScript } from "@/lib/json-ld";
 import { slugifyLabel } from "@/lib/name-slug";
 import { postPageMetadata } from "@/lib/post-metadata";
 import { readingMinutes, readingTimeLabel } from "@/lib/reading-time";
+import { licenceCreditLabel } from "@/lib/copyright";
 
 export const dynamic = "force-dynamic";
 
@@ -94,6 +95,8 @@ export default async function PostPage({ params }: PageProps) {
     author: (article.authors || []).map((name) => ({ "@type": "Person", name })),
     keywords: [...(article.keywords || []), ...(article.tags || [])].join(", "),
     isBasedOn: sourceHref || undefined,
+    license:
+      article.licence && /^https?:\/\//i.test(article.licence) ? article.licence : undefined,
   };
 
   return (
@@ -192,18 +195,45 @@ export default async function PostPage({ params }: PageProps) {
         </div>
       )}
 
-      {sourceHref && (
-        <p className="mt-8 font-mono text-xs uppercase tracking-wide">
-          <a
-            href={sourceHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-stamp hover:text-redpen"
-          >
-            Read the original paper →
-          </a>
+      <section className="mt-8 rounded-sm border border-rule p-4" aria-label="Source credit">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-stamp">Source credit</h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink">
+          Paper: {article.title}
         </p>
-      )}
+        <p className="mt-1 text-sm leading-relaxed text-ink">
+          Authors:{" "}
+          {article.authors?.length
+            ? article.authors.map((name, i) => (
+                <span key={name}>
+                  {i > 0 ? ", " : ""}
+                  <Link
+                    href={`/authors/${encodeURIComponent(slugifyLabel(name))}`}
+                    className="hover:text-redpen"
+                  >
+                    {name}
+                  </Link>
+                </span>
+              ))
+            : "Not recorded"}
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-ink">
+          Licence: {licenceCreditLabel(article.licence)}
+        </p>
+        {sourceHref ? (
+          <p className="mt-2 font-mono text-xs uppercase tracking-wide">
+            <a
+              href={sourceHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-stamp hover:text-redpen"
+            >
+              Read the original paper →
+            </a>
+          </p>
+        ) : (
+          <p className="mt-2 text-sm text-ink-soft">Original link not recorded.</p>
+        )}
+      </section>
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <SaveActions slug={article.slug} />

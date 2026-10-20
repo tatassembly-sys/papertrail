@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractPaperText } from "@/lib/paper-extract";
+import { sourceFingerprint } from "@/lib/copyright";
 import { translatePaperToArticle } from "@/lib/openrouter";
 import { requireAdmin } from "@/lib/auth-server";
 import { insertDraftArticle } from "@/lib/articles";
@@ -73,6 +74,9 @@ export async function POST(req: NextRequest) {
     let authors: string[] = [];
     let institutions: string[] = [];
     let sourceKind: "arxiv" | "pubmed" | "manual" = "manual";
+    let licence: string | null = null;
+    let textKind: "pdf" | "abstract" = "pdf";
+    let fingerprintSource = "";
 
     if (url) {
       // URL path: currently optimized for arXiv (abstract API + PDF text).
@@ -87,6 +91,8 @@ export async function POST(req: NextRequest) {
 
       article = await translatePaperToArticle(extracted.text, {
         fallbackTitle: extracted.title,
+        licence: extracted.licence,
+        sourceKind: extracted.textKind,
       });
       finalSourceUrl = extracted.sourceUrl;
       fallbackTitle = extracted.title;
@@ -94,6 +100,9 @@ export async function POST(req: NextRequest) {
       authors = extracted.authors || [];
       institutions = extracted.institutions || [];
       sourceKind = "arxiv";
+      licence = extracted.licence;
+      textKind = extracted.textKind;
+      fingerprintSource = extracted.text;
     } else {
       // Raw-text path: for non-arXiv or paywalled sources where automatic
       // extraction isn't reliable. The person pastes the abstract/text
@@ -118,9 +127,13 @@ export async function POST(req: NextRequest) {
 
       article = await translatePaperToArticle(trimmedText, {
         fallbackTitle: "Untitled submission",
+        licence: null,
+        sourceKind: "pdf",
       });
       finalSourceUrl = sourceUrl;
       fallbackTitle = "Untitled submission";
+      textKind = "pdf";
+      fingerprintSource = trimmedText;
       if (sourceUrl.includes("pubmed")) sourceKind = "pubmed";
       else if (sourceUrl.includes("arxiv")) sourceKind = "arxiv";
     }
@@ -129,6 +142,8 @@ export async function POST(req: NextRequest) {
       source: sourceKind,
       authors,
       institutions,
+      licence,
+      sourceFingerprint: textKind === "pdf" ? sourceFingerprint(fingerprintSource) : null,
     });
     return NextResponse.json({ success: true, article: data }, { status: 201 });
   } catch (err) {

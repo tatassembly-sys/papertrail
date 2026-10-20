@@ -37,6 +37,8 @@ export interface ArticleRow extends TranslatedArticle {
   category?: string | null;
   authors?: string[];
   institutions?: string[];
+  /** Source-paper licence. Missing means it is not treated as open. */
+  licence?: string | null;
   source?: PaperSourceKind | null;
   /** Populated when text search is active — HTML-safe highlighted snippets. */
   highlights?: {

@@ -161,6 +161,8 @@ Editorial notes, not reader accounts. Author names of the source paper are perso
 |---|---|---|---|---|---|
 | `authors`, `institutions` | Yes (researchers named on the paper) | Credit the source | Art. 6(1)(f) legitimate interests (citation). Journalism / academic exemption is for the owner to assess | Kept while the note exists | Atlas. Names may be sent to OpenRouter inside the paper text |
 | `title`, `headline`, `why_it_matters`, `plain_explanation`, `caveats`, `keywords`, `tags` | Usually no. A note must not be the raw PDF of a non-open paper | The published explanation | Art. 6(1)(f) legitimate interests | Kept while the note is on the site | Atlas. The source text used to draft the note is sent to OpenRouter or xAI |
+| `licence` | No | Credit the source paper’s licence on the note | — | Same | Atlas. Shown on the article page |
+| `source_fingerprint` | No (opening of an extracted PDF, not a reader) | Refuse to publish that PDF when the licence is not open | — | Same. Not shown on the page | Atlas |
 | `source_url`, `source`, `category`, `slug`, `status`, `created_at`, `published_at`, `shared_to`, `share_approved` | No | Publishing and linking back to the paper | — | Same | Atlas. `source_url` is public on the note |
 
 ### `fetch_queue`

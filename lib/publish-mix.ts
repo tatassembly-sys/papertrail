@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
+import { ARXIV_DEFAULT_LICENCE, licenceFromArxivXml } from "@/lib/copyright";
 import { publishBlocker } from "@/lib/publish-gate";
 
 const PER_FIELD = 1;
@@ -70,8 +71,8 @@ function splitSentences(text: string): string[] {
 
 async function fetchArxivBatch(
   ids: string[]
-): Promise<Map<string, { title: string; abstract: string }>> {
-  const out = new Map<string, { title: string; abstract: string }>();
+): Promise<Map<string, { title: string; abstract: string; licence: string }>> {
+  const out = new Map<string, { title: string; abstract: string; licence: string }>();
   if (ids.length === 0) return out;
   const res = await fetch(
     `https://export.arxiv.org/api/query?id_list=${ids.join(",")}&max_results=${ids.length}`,
@@ -88,7 +89,11 @@ async function fetchArxivBatch(
       `arXiv ${id}`;
     const abstract =
       entry.match(/<summary>([\s\S]*?)<\/summary>/)?.[1]?.replace(/\s+/g, " ").trim() || "";
-    out.set(id, { title, abstract });
+    out.set(id, {
+      title,
+      abstract,
+      licence: licenceFromArxivXml(entry) || ARXIV_DEFAULT_LICENCE,
+    });
   }
   return out;
 }
@@ -135,7 +140,16 @@ export async function publishDailyFieldMix(options: {
       source_url: { $type: "string", $ne: "" },
       title: { $type: "string", $ne: "" },
     })
-    .project({ title: 1, category: 1, source_url: 1, slug: 1, caveats: 1 })
+    .project({
+      title: 1,
+      category: 1,
+      source_url: 1,
+      slug: 1,
+      caveats: 1,
+      plain_explanation: 1,
+      licence: 1,
+      source_fingerprint: 1,
+    })
     .sort({ created_at: -1 })
     .limit(400)
     .toArray();
@@ -146,6 +160,10 @@ export async function publishDailyFieldMix(options: {
       publishBlocker({
         sourceUrl: typeof d.source_url === "string" ? d.source_url : null,
         caveats: typeof d.caveats === "string" ? d.caveats : "",
+        licence: typeof d.licence === "string" ? d.licence : null,
+        plainExplanation: typeof d.plain_explanation === "string" ? d.plain_explanation : "",
+        sourceFingerprint:
+          typeof d.source_fingerprint === "string" ? d.source_fingerprint : null,
       })
     ) {
       continue;
@@ -196,7 +214,7 @@ export async function publishDailyFieldMix(options: {
     if (row?.external_id) toFile.push({ name, row });
   }
 
-  let metas = new Map<string, { title: string; abstract: string }>();
+  let metas = new Map<string, { title: string; abstract: string; licence: string }>();
   try {
     metas = await fetchArxivBatch(toFile.map((f) => String(f.row.external_id)));
   } catch (err) {
@@ -229,6 +247,7 @@ export async function publishDailyFieldMix(options: {
       tags: ["daily-mix", "needs-review"],
       authors: [],
       institutions: [],
+      licence: meta?.licence || ARXIV_DEFAULT_LICENCE,
       slug: slugBase,
       source_url: row.url || `https://arxiv.org/abs/${id}`,
       source: "arxiv",
