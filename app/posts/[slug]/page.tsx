@@ -15,7 +15,7 @@ import { buildShareLinks } from "@/lib/share-links";
 import { getSiteUrl } from "@/lib/site-url";
 import { categoryLabel } from "@/lib/arxivCategories";
 import { sanitizeHttpUrl } from "@/lib/http-url";
-import { jsonLdScript } from "@/lib/json-ld";
+import { jsonLdScript, postStructuredData } from "@/lib/json-ld";
 import { slugifyLabel } from "@/lib/name-slug";
 import { canonicalPostUrl, postPageMetadata } from "@/lib/post-metadata";
 import { postIsOnFile } from "@/lib/public-route";
@@ -85,21 +85,24 @@ export default async function PostPage({ params }: PageProps) {
     [...(article.tags || []), ...(article.keywords || [])]
   );
   const minutes = readingMinutes(article);
-  const canonical = canonicalPostUrl(article, getSiteUrl());
+  const site = getSiteUrl();
+  const canonical = canonicalPostUrl(article, site);
   if (!canonical) notFound();
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ScholarlyArticle",
-    headline: article.title,
-    description: article.headline,
-    url: canonical,
+  const topicName = (article.tags?.[0] || article.keywords?.[0] || "").trim();
+  const jsonLd = postStructuredData({
+    siteUrl: site,
+    title: article.title,
+    headline: article.headline,
+    canonical,
     datePublished: article.published_at || article.created_at,
-    author: (article.authors || []).map((name) => ({ "@type": "Person", name })),
-    keywords: [...(article.keywords || []), ...(article.tags || [])].join(", "),
-    isBasedOn: sourceHref || undefined,
-    license:
-      article.licence && /^https?:\/\//i.test(article.licence) ? article.licence : undefined,
-  };
+    authors: article.authors || [],
+    keywords: [...(article.keywords || []), ...(article.tags || [])],
+    sourceUrl: sourceHref,
+    licence: article.licence,
+    topic: topicName
+      ? { name: topicName, path: `/topics/${encodeURIComponent(slugifyLabel(topicName))}` }
+      : null,
+  });
 
   return (
     <article className="mx-auto max-w-2xl">
