@@ -69,6 +69,8 @@ Written by `lib/newsletter.ts`.
 | `unsubscribe_token` | Yes (SHA-256) | One-click unsubscribe | Art. 6(1)(a) consent | Rotated only after Resend accepts a digest send | Atlas |
 | `created_at` | Yes | When the address was added | Art. 6(1)(a) consent | Same as the row | Atlas |
 | `verified_at` | Yes | When double opt-in completed | Art. 6(1)(a) consent | Same as the row | Atlas |
+| `consent_at` | Yes | Same instant as `verified_at`, written only by confirm | Art. 6(1)(a) consent | Same as the row | Atlas |
+| `consent_source` | Yes (a short label such as `double-opt-in`, not the token) | Where the confirm came from | Art. 6(1)(a) consent | Same as the row | Atlas |
 | `unsubscribed_at` | Yes | When they opted out | Art. 6(1)(a) consent | Same as the row | Atlas |
 
 Confirmation is `POST /api/newsletter/verify` only. Scanners that GET the link are redirected to a page and do not change `status`.

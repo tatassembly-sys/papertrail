@@ -22,6 +22,10 @@ export interface SubscriberDoc {
   unsubscribe_token: string;
   created_at: Date;
   verified_at?: Date | null;
+  /** When the reader confirmed. Same instant as verified_at. */
+  consent_at?: Date | null;
+  /** Where the confirm came from, for example double-opt-in. */
+  consent_source?: string | null;
   unsubscribed_at?: Date | null;
 }
 
@@ -133,20 +137,30 @@ export async function subscribeEmail(
   };
 }
 
-export async function confirmSubscription(verifyToken: string): Promise<boolean> {
+/** Fields written when a reader confirms. GET must not call this. */
+export function subscriptionConsentUpdate(source: string, at = new Date()) {
+  const when = at instanceof Date && !Number.isNaN(at.getTime()) ? at : new Date();
+  const consent_source = source.trim().slice(0, 120) || "double-opt-in";
+  return {
+    status: "active" as const,
+    verify_token: null as null,
+    verified_at: when,
+    consent_at: when,
+    consent_source,
+    unsubscribed_at: null as null,
+  };
+}
+
+export async function confirmSubscription(
+  verifyToken: string,
+  source = "double-opt-in"
+): Promise<boolean> {
   const candidates = tokenLookupValues(verifyToken);
   if (candidates.length === 0) return false;
   const col = await subs();
   const result = await col.updateOne(
     { verify_token: { $in: candidates } },
-    {
-      $set: {
-        status: "active",
-        verify_token: null,
-        verified_at: new Date(),
-        unsubscribed_at: null,
-      },
-    }
+    { $set: subscriptionConsentUpdate(source) }
   );
   return result.modifiedCount > 0;
 }

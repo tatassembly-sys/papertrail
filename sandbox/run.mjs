@@ -2195,6 +2195,19 @@ test("newsletter POST confirm activates", () => {
   s.confirmNewsletterGet(sub.verifyToken);
   assert(s.confirmNewsletterPost(sub.verifyToken));
   eq(s.subscribers[0].status, "active");
+  eq(s.subscribers[0].consent_at, s.now);
+  eq(s.subscribers[0].consent_source, "double-opt-in");
+  eq(s.subscribers[0].verified_at, s.now);
+});
+
+test("newsletter GET still does not record consent", () => {
+  const s = new P.PaperTrailSandbox();
+  const sub = s.subscribeNewsletter("reader@example.com");
+  const get = s.confirmNewsletterGet(sub.verifyToken);
+  eq(get.mutated, false);
+  eq(s.subscribers[0].status, "pending");
+  assert(!s.subscribers[0].consent_at);
+  assert(!s.subscribers[0].consent_source);
 });
 
 test("newsletter confirm URL is a page not the mutating API", () => {

@@ -1049,7 +1049,7 @@ export class PaperTrailSandbox {
     return { redirect: `/newsletter/confirm?token=${t}`, mutated: false };
   }
 
-  confirmNewsletterPost(token) {
+  confirmNewsletterPost(token, source = "double-opt-in") {
     const candidates = tokenLookupValues(token);
     const row = this.subscribers.find(
       (s) => s.verify_token && candidates.includes(s.verify_token)
@@ -1057,6 +1057,9 @@ export class PaperTrailSandbox {
     if (!row) return false;
     row.status = "active";
     row.verify_token = null;
+    row.verified_at = this.now;
+    row.consent_at = this.now;
+    row.consent_source = String(source || "double-opt-in").trim().slice(0, 120) || "double-opt-in";
     return true;
   }
 

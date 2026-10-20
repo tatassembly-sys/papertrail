@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       const t = form.get("token");
       token = typeof t === "string" ? t.slice(0, 128) : "";
     }
-    const ok = await confirmSubscription(token);
+    const ok = await confirmSubscription(token, "double-opt-in");
     if (!ok) {
       return NextResponse.json({ error: "Invalid or expired confirmation link." }, { status: 400 });
     }

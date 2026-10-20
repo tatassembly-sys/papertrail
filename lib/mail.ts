@@ -9,6 +9,25 @@ export interface SendEmailInput {
   listUnsubscribe?: string;
 }
 
+/** Resend JSON body. Log mode does not send this, so a missing API key still returns ok. */
+export function resendMessageBody(input: SendEmailInput, from: string) {
+  return {
+    from,
+    to: input.to,
+    subject: input.subject,
+    html: input.html,
+    text: input.text,
+    ...(input.listUnsubscribe
+      ? {
+          headers: {
+            "List-Unsubscribe": `<${input.listUnsubscribe}>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          },
+        }
+      : {}),
+  };
+}
+
 /**
  * Sends email via Resend when RESEND_API_KEY is set; otherwise logs the payload
  * so local/Railway deploys still work without SMTP.
@@ -29,6 +48,8 @@ export async function sendEmail(
       subject: input.subject,
       from,
       site: getSiteUrl(),
+      // The URL contains the unsubscribe token. Record only that a header was requested.
+      hasListUnsubscribe: Boolean(input.listUnsubscribe),
       // Never print token-bearing HTML in production logs.
       ...(isProd ? { htmlPreview: "[redacted]" } : { htmlPreview: input.html.slice(0, 280) }),
     });
@@ -42,21 +63,7 @@ export async function sendEmail(
         Authorization: `Bearer ${resendKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from,
-        to: input.to,
-        subject: input.subject,
-        html: input.html,
-        text: input.text,
-        ...(input.listUnsubscribe
-          ? {
-              headers: {
-                "List-Unsubscribe": `<${input.listUnsubscribe}>`,
-                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-              },
-            }
-          : {}),
-      }),
+      body: JSON.stringify(resendMessageBody(input, from)),
     });
 
     if (!res.ok) {
