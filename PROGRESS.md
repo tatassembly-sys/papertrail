@@ -75,7 +75,7 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 - Agent: Grok
 - Commit(s): `17c69dd`, `f357d0a`
 - Change: A published note's JSON-LD is a ScholarlyArticle plus a BreadcrumbList (home, topic when the note has one, then the note).
-- Checks run: `tests/json-ld.test.ts`, `tests/copyright.test.ts`, `tests/sitemap.test.ts`. Full `npm test` after `17c69dd` was 543/543 sandbox and 91/91 unit. `npm run typecheck` after `f357d0a` exited 0. `npm run build` is still outstanding on this tip.
+- Checks run: `tests/json-ld.test.ts`, `tests/copyright.test.ts`, `tests/sitemap.test.ts`. Gate on this tip: `npm ci` (Playwright browser download skipped) exit 0, `npm test` 543/543 sandbox and 91/91 unit, `npm run build` exit 0 (36/36 pages). The Next build typecheck passed. One edge-runtime page skips static generation. That warning is not a failure.
 - Evidence: A non-URL licence is omitted. `<` in a title is escaped for the script tag.
 - Follow-ups: M8.1, M8.3, M8.4, M8.5.
 
@@ -83,7 +83,7 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 - Agent: Grok
 - Commit(s): `c6ea15d`, `50777cb`, `e145538`, `3441671`, `8d67770`, `a12942a`
 - Change: Missing post, topic, author, and list pages call `notFound()` and there is still no `app/posts/[slug]/loading.tsx`. Concurrent cron-fetch and process-queue take a lock and file articles under a unique source id. Schedule input without a zone is Europe/London, including the March gap and the October overlap. The sitemap and canonical URL are published posts only. Verify and unsubscribe tokens expire and are single-use. Confirm still stores consent time. No `TODO` or `FIXME` in application source.
-- Checks run: `npm run typecheck` exit 0. `npm test` → 543/543 sandbox (`cron-idempotency` 7) and 89/89 unit. `npm run build` not yet on this tip.
+- Checks run: `npm run typecheck` exit 0. `npm test` → 543/543 sandbox (`cron-idempotency` 7) and 91/91 unit after the structured-data tests. `npm run build` exit 0 (36/36 pages).
 - Evidence: Copyright credit on the post page stayed. Stripe event indexes stayed. Confirm uses `subscriptionConsentUpdate(source, now)` so the consent clock and the expiry clock are the same instant (`a12942a`).
 - Follow-ups: none for the agent. M3 stays open in STATUS until this tip is pushed.
 
@@ -139,7 +139,7 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 - Agent: Grok
 - Commit(s): `65f9a59`, `bf94ccc`, `5e6925d`, `6c58ab4`, `cddc03a`, `526867d`
 - Change: Draft data inventory and privacy notice. Cookie page lists strictly necessary cookies and adds no banner. Signed-in readers can export their own rows (`me_export` 10/hour) without password hashes. Newsletter confirm stores `consent_at` and `consent_source`. Digest mail sends `List-Unsubscribe`. Closed-licence papers are credited and stored as a short excerpt, not the full text. CC BY, CC BY-SA, CC0, and public domain count as open. CC BY-NC and the arXiv non-exclusive licence do not.
-- Checks run: After M3 was rebased on top, `npm run typecheck` exited 0 and `npm test` was 543/543 sandbox and 89/89 unit. `npm run build` is still outstanding on this tip.
+- Checks run: After M3 was rebased on top, `npm run typecheck` exited 0. The later gate on this tip is `npm ci`, `npm test` 543/543 and 91/91, and `npm run build` exit 0.
 - Evidence: Privacy page still says `[controller name and address — owner]`. This is not a legal sign-off. Market decision stays NO-GO.
 - Follow-ups: M5.7 owner legal review, ICO decision, and the business name and address.
 
