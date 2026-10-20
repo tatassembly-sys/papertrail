@@ -24,7 +24,10 @@ test("GET newsletter verify does not confirm", () => {
   assert.equal(getFn.includes("confirmSubscription"), false);
   assert.match(getFn, /NextResponse\.redirect/);
   assert.match(src, /confirmSubscription\(token, "double-opt-in"\)/);
-  assert.match(readFileSync("lib/newsletter.ts", "utf8"), /subscriptionConsentUpdate\(source\)/);
+  assert.match(
+    readFileSync("lib/newsletter.ts", "utf8"),
+    /subscriptionConsentUpdate\(source, now\)/
+  );
 });
 
 test("List-Unsubscribe is a Resend header and log mode still succeeds", async () => {
