@@ -6,7 +6,7 @@
 import { execSync } from "node:child_process";
 
 function git(args) {
-  return execSync(`git ${args}`, { encoding: "utf8" }).trim();
+  return execSync(`git ${args}`, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 }
 
 let tag = "";

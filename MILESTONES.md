@@ -76,12 +76,12 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 **Why:** Earlier audits could not prove what production ran. A launch needs traceable releases.
 
 ### Tasks
-- [ ] **M1.1** `[AGENT]` `lib/running-commit.ts`: read `VERCEL_GIT_COMMIT_SHA` first, then `RAILWAY_GIT_COMMIT_SHA`; also expose `VERCEL_ENV`. Extend `tests/mr1.test.ts`.
-- [ ] **M1.2** `[AGENT]` Add ESLint (`next lint` / flat config with `eslint-config-next`), make `npm run lint` run ESLint (keep `typecheck` separate). Fix or explicitly disable (with comment) existing violations.
-- [ ] **M1.3** `[AGENT→OWNER]` Write `docs/ci/proposed-ci.yml` adding: `npm run lint`, `npm audit --omit=dev --audit-level=high`, gitleaks secret scan, Node 22 matrix. Owner copies into `.github/workflows/ci.yml`.
-- [ ] **M1.4** `[OWNER]` Enable branch protection on `main`: require the `check` job.
-- [ ] **M1.5** `[AGENT]` Remove committed noise: `git rm --cached tsconfig.tsbuildinfo tree.txt`, add to `.gitignore`.
-- [ ] **M1.6** `[AGENT]` Add `CHANGELOG.md` entry convention and a `npm run release:notes` script that prints commits since last tag.
+- [x] **M1.1** `[AGENT]` `lib/running-commit.ts`: read `VERCEL_GIT_COMMIT_SHA` first, then `RAILWAY_GIT_COMMIT_SHA`; also expose `VERCEL_ENV`. Extend `tests/mr1.test.ts`. (`5a96c9f`)
+- [x] **M1.2** `[AGENT]` Add ESLint (`next lint` / flat config with `eslint-config-next`), make `npm run lint` run ESLint (keep `typecheck` separate). Fix or explicitly disable (with comment) existing violations. (`33a3e3b`)
+- [x] **M1.3** `[AGENT→OWNER]` Write `docs/ci/proposed-ci.yml` adding: `npm run lint`, `npm audit --omit=dev --audit-level=high`, gitleaks secret scan, Node 22 matrix. Owner copies into `.github/workflows/ci.yml`. (`e93f575`)
+- [ ] **M1.4** `[OWNER]` Enable branch protection on `main`: require the `check` job. — BLOCKED (see PROGRESS)
+- [x] **M1.5** `[AGENT]` Remove committed noise: `git rm --cached tsconfig.tsbuildinfo tree.txt`, add to `.gitignore`. (`c46c980`)
+- [x] **M1.6** `[AGENT]` Add `CHANGELOG.md` entry convention and a `npm run release:notes` script that prints commits since last tag. (`a021c75`)
 
 ### Acceptance criteria (all verifiable)
 - `curl -s localhost:3000/api/health | jq .commit` is non-null when `VERCEL_GIT_COMMIT_SHA=abc npm start`.

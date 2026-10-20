@@ -9,7 +9,7 @@
 | Id | Milestone | State |
 |---|---|---|
 | M0 | Hosting cut-over: Railway → Vercel + MongoDB Atlas | open — agent prep M0.3, M0.4, M0.5, M0.7 done; Atlas, Vercel, scheduler, and Railway deletion are owner work |
-| M1 | Release truth and CI hardening | open |
+| M1 | Release truth and CI hardening | open — agent tasks M1.1, M1.2, M1.3, M1.5, M1.6 done; M1.4 branch protection and copying proposed CI are owner work |
 | M2 | Security hardening | open |
 | M3 | Correctness and known bugs | open |
 | M4 | Tests and CI depth | open |

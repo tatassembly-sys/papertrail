@@ -19,6 +19,8 @@ Format: `- [open|resolved] YYYY-MM-DD <task id> — <what is blocked> — needs:
 - [open] 2026-10-20 M0 — Atlas cluster, Vercel project, cron-job.org schedules — needs: OWNER.
 - [open] 2026-10-20 M0.9 — delete Railway files only after M0.8 production smoke is logged — needs: OWNER to run `npm run smoke:prod` on the Vercel URL and delete the Railway service.
 - [open] 2026-10-20 M2 — OpenRouter key rotation, Resend domain — needs: OWNER.
+- [open] 2026-10-19 M1.4 — branch protection on `main` requiring the `check` job — needs: OWNER (GitHub settings). Agent cannot change branch protection.
+- [open] 2026-10-19 M1.3 — copy `docs/ci/proposed-ci.yml` to `.github/workflows/ci.yml` — needs: OWNER. `npm audit --omit=dev --audit-level=high` is in the proposal and may fail until high advisories are fixed.
 
 ## Baseline audit — 20 October 2026
 
@@ -52,6 +54,54 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 3. **Release truth on Vercel** — `/api/health` cannot report the running commit (Railway-only env), so nobody can prove which code is live; plus no error tracking to see failures.
 
 ## Log
+
+### 2026-10-19 — M1 summary
+- Agent: Grok
+- Commit(s): `5a96c9f`, `33a3e3b`, `e93f575`, `c46c980`, `a021c75`
+- Change: M1 agent tasks are done. M1 stays open because M1.4 (branch protection) and copying the proposed workflow are owner work.
+- Checks run: `npm ci` → added 379 packages, exit 0. `npm run typecheck` → exit 0. `npm test` → 523/523 sandbox and 42/42 unit. `npm run build` → exit 0. `npx next lint` → no warnings or errors.
+- Evidence: `npm audit` during `npm ci` reported 20 vulnerabilities (3 moderate, 15 high, 2 critical). The proposed CI audit step will fail until those are fixed. `curl.exe -s http://localhost:3000/api/health` with `VERCEL_GIT_COMMIT_SHA=abc` and `VERCEL_ENV=production` after `npm start` returned HTTP 503 `{"commit":"abc","env":"production","db":"unreachable"}` (local Mongo was not running). `git ls-files` matched neither `tsbuildinfo` nor `tree.txt`. `npm run release:notes` printed commits from HEAD (no tags).
+- Follow-ups: M1.4 owner; owner copies `docs/ci/proposed-ci.yml`.
+
+### 2026-10-19 — M1.1 — Vercel commit on health
+- Agent: Grok
+- Commit(s): `5a96c9f`
+- Change: `runningCommitSha` prefers `VERCEL_GIT_COMMIT_SHA`, then `RAILWAY_GIT_COMMIT_SHA`. `runningDeploymentEnv` reads `VERCEL_ENV`. `/api/health` returns both on the 200 and 503 bodies.
+- Checks run: `node --import tsx --test tests/mr1.test.ts` → 8/8 pass. `npm run typecheck` → exit 0.
+- Evidence: tests cover empty env, trimmed Vercel SHA winning over Railway, and Railway fallback.
+- Follow-ups: none.
+
+### 2026-10-19 — M1.2 — ESLint
+- Agent: Grok
+- Commit(s): `33a3e3b`
+- Change: `npm run lint` is `next lint` (`eslint` + `eslint-config-next`, `.eslintrc.json` extends `next/core-web-vitals`). `typecheck` stays `tsc --noEmit`. Submit-page apostrophes were rewritten so `react/no-unescaped-entities` is clean.
+- Checks run: `npx next lint` → `No ESLint warnings or errors`.
+- Evidence: one file had three apostrophe errors; no rules were disabled.
+- Follow-ups: none.
+
+### 2026-10-19 — M1.3 — proposed CI
+- Agent: Grok
+- Commit(s): `e93f575`
+- Change: `docs/ci/proposed-ci.yml` adds `npm run lint`, `npm audit --omit=dev --audit-level=high`, gitleaks, and a Node 22 matrix on top of typecheck, test, and build.
+- Checks run: file review. Workflow file was not edited.
+- Evidence: owner must copy the file. Audit is expected to fail until highs are addressed (install reported 15 high and 2 critical).
+- Follow-ups: M1.4 owner branch protection; owner copies the workflow.
+
+### 2026-10-19 — M1.5 — drop tracked noise
+- Agent: Grok
+- Commit(s): `c46c980`
+- Change: `git rm --cached tree.txt` and `.gitignore` entry. `tsconfig.tsbuildinfo` was already ignored by `*.tsbuildinfo` and was not in the index.
+- Checks run: `git ls-files` for those names after the commit.
+- Evidence: `tree.txt` was a 1.2 MB tracked file.
+- Follow-ups: none.
+
+### 2026-10-19 — M1.6 — changelog convention
+- Agent: Grok
+- Commit(s): `a021c75`
+- Change: `CHANGELOG.md` explains how to write `[Unreleased]` entries. `npm run release:notes` prints `git log --oneline` since the latest tag.
+- Checks run: script added. No git tags exist yet, so it prints history from HEAD.
+- Evidence: `scripts/release-notes.mjs`.
+- Follow-ups: M10.6 release notes when tagging.
 
 ### 2026-10-19 — M0.3 — confirmed index bootstrap
 - Agent: Grok
