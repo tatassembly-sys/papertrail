@@ -147,3 +147,13 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 - Env vars set (production): MONGODB_URI, MONGODB_DB, AUTH_SECRET, CRON_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, NEXT_PUBLIC_SITE_URL. Email in log mode (no RESEND_API_KEY); OpenRouter/Stripe/social unset.
 - Status: homepage 200, cron unsigned 401. /api/health 503 `db: unreachable` — Atlas rejects the TLS handshake (alert 80): add 0.0.0.0/0 to Atlas Network Access.
 - TODO: Atlas network access; cron-job.org jobs with CRON_SECRET (stored in Vercel env); OPENROUTER_API_KEY for article generation.
+
+## Review 2026-10-20
+
+Reviewer: Grok Bot (owner audit), 04:5x BST. HEAD reviewed: d9dc710. Gate re-run on clean `npm ci`: PASS. CI on latest commit: green.
+
+- Ticked M0.3, M0.4, M0.5, M0.7, M1.1, M1.2, M1.3, M1.5, M1.6: all checked against the diff and real. Gate: 523 sandbox + 42 unit pass, lint clean, build ok. /api/health on Vercel reports commit d9dc710, env production, db connected.
+- Corrective tasks:
+  1. M1.3 is docs-only (docs/ci/proposed-ci.yml). The owner still has to copy it into .github/workflows/. Don't treat lint/audit/gitleaks as running in CI until that happens.
+  2. Run `npm run smoke:prod https://papertrail-six-rho.vercel.app` and record the output in PROGRESS (M0.7 evidence on the live deploy).
+  3. The unit count is still 42 even though 3 test files were added. Check that tests/site-url, smoke-prod and ensure-indexes really run under `npm run test:unit`, and update the count in AGENTS.md.
