@@ -45,6 +45,9 @@ export default function SiteFooter() {
           <Link href="/privacy" className="hover:text-redpen">
             Privacy
           </Link>
+          <Link href="/cookies" className="hover:text-redpen">
+            Cookies
+          </Link>
           <Link href="/terms" className="hover:text-redpen">
             Terms
           </Link>
