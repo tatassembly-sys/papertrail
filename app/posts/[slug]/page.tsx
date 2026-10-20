@@ -94,7 +94,7 @@ export default async function PostPage({ params }: PageProps) {
     title: article.title,
     headline: article.headline,
     canonical,
-    datePublished: article.published_at || article.created_at,
+    datePublished: article.published_at || article.created_at || null,
     authors: article.authors || [],
     keywords: [...(article.keywords || []), ...(article.tags || [])],
     sourceUrl: sourceHref,

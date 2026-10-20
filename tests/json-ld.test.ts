@@ -16,16 +16,20 @@ test("a published note emits ScholarlyArticle and BreadcrumbList", () => {
     topic: { name: "Physics", path: "/topics/physics" },
   });
 
-  assert.equal(data["@graph"][0]["@type"], "ScholarlyArticle");
-  assert.equal(data["@graph"][0].url, "https://papertrail.example/posts/dense-papers");
-  assert.equal(data["@graph"][0].datePublished, "2026-10-19T12:00:00.000Z");
-  assert.equal(data["@graph"][0].license, "https://creativecommons.org/licenses/by/4.0/");
-  assert.equal(data["@graph"][1]["@type"], "BreadcrumbList");
+  const article = data["@graph"][0];
+  const crumbs = data["@graph"][1];
+  assert.ok(article);
+  assert.ok(crumbs);
+  assert.equal(article["@type"], "ScholarlyArticle");
+  assert.equal(article.url, "https://papertrail.example/posts/dense-papers");
+  assert.equal(article.datePublished, "2026-10-19T12:00:00.000Z");
+  assert.equal(article.license, "https://creativecommons.org/licenses/by/4.0/");
+  assert.equal(crumbs["@type"], "BreadcrumbList");
   assert.deepEqual(
-    data["@graph"][1].itemListElement.map((item) => item.name),
+    crumbs.itemListElement.map((item) => item.name),
     ["Home", "Physics", "Dense papers, plain English"]
   );
-  assert.equal(data["@graph"][1].itemListElement[1].item, "https://papertrail.example/topics/physics");
+  assert.equal(crumbs.itemListElement[1]?.item, "https://papertrail.example/topics/physics");
 
   const html = jsonLdScript(data);
   assert.equal(html.includes("</script>"), false);
@@ -44,10 +48,14 @@ test("a note without a topic still breadcrumbs home and the article", () => {
     keywords: [],
     licence: "all rights reserved",
   });
-  assert.equal(data["@graph"][0].license, undefined);
-  assert.equal(data["@graph"][0].datePublished, undefined);
+  const article = data["@graph"][0];
+  const crumbs = data["@graph"][1];
+  assert.ok(article);
+  assert.ok(crumbs);
+  assert.equal(article.license, undefined);
+  assert.equal(article.datePublished, undefined);
   assert.deepEqual(
-    data["@graph"][1].itemListElement.map((item) => item.position),
+    crumbs.itemListElement.map((item) => item.position),
     [1, 2]
   );
   assert.equal(jsonLdScript(data).includes("\\u003c"), true);

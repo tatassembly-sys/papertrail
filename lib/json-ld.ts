@@ -41,29 +41,28 @@ export function postStructuredData(input: PostJsonLdInput) {
   const licence =
     input.licence && /^https?:\/\//i.test(input.licence) ? input.licence : undefined;
 
+  const article = {
+    "@type": "ScholarlyArticle" as const,
+    headline: input.title,
+    description: input.headline,
+    url: input.canonical,
+    datePublished: iso(input.datePublished),
+    author: input.authors.map((name) => ({ "@type": "Person" as const, name })),
+    keywords: input.keywords.join(", "),
+    isBasedOn: input.sourceUrl || undefined,
+    license: licence,
+  };
+  const breadcrumb = {
+    "@type": "BreadcrumbList" as const,
+    itemListElement: crumbs.map((crumb, index) => ({
+      "@type": "ListItem" as const,
+      position: index + 1,
+      name: crumb.name,
+      item: crumb.item,
+    })),
+  };
   return {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "ScholarlyArticle",
-        headline: input.title,
-        description: input.headline,
-        url: input.canonical,
-        datePublished: iso(input.datePublished),
-        author: input.authors.map((name) => ({ "@type": "Person", name })),
-        keywords: input.keywords.join(", "),
-        isBasedOn: input.sourceUrl || undefined,
-        license: licence,
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: crumbs.map((crumb, index) => ({
-          "@type": "ListItem",
-          position: index + 1,
-          name: crumb.name,
-          item: crumb.item,
-        })),
-      },
-    ],
+    "@context": "https://schema.org" as const,
+    "@graph": [article, breadcrumb] as [typeof article, typeof breadcrumb],
   };
 }
