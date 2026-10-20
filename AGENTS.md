@@ -36,6 +36,7 @@ Paper Trail turns research papers (arXiv RSS, PubMed, manual PDF/URL submissions
 | Release notes | `npm run release:notes` | `git log` since the latest tag. |
 | All tests | `npm test` | sandbox (543 scenarios) + unit (91 tests). No DB needed. |
 | Unit only | `npm run test:unit` | `node --import tsx --test tests/*.test.ts` |
+| Browser smoke | `npm run test:e2e` | Playwright. Not part of `npm test`. Skips when nothing is listening. |
 | Build | `npm run build` | `next build`; works without a live DB. |
 
 **The gate.** Run this before every commit. It must exit 0:

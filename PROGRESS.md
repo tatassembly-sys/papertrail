@@ -55,6 +55,14 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-10-19 — M4.1 — Playwright smoke
+- Agent: Grok
+- Commit(s): `e2cd41d`
+- Change: `npm run test:e2e` runs `e2e/smoke.spec.ts` against an already running app. Home, a post, register validation, and a rejected admin login are covered. If nothing is listening, the suite skips and exits 0. It is not part of `npm test`.
+- Checks run: file review. The suite was not executed here because Playwright browsers were not installed in this checkout, and `npm run build` on this tip had not finished.
+- Evidence: `playwright.config.ts` does not start a server and does not send a cron bearer.
+- Follow-ups: M4.2, M4.3, M4.4.
+
 ### 2026-10-20 — production smoke (read-only)
 - Agent: Grok
 - Commit(s): none (observation of the deployment already on origin, `9731a04`)
