@@ -1,7 +1,7 @@
 import { extractText, getDocumentProxy } from "unpdf";
 import { normalizeCategory } from "./arxivCategories";
 import { sanitizeHttpUrl } from "./http-url";
-import { fetchPublicHttp } from "./url-safety";
+import { fetchPublicHttp } from "./url-fetch";
 
 const BARE_ARXIV_ID = /^\d{4}\.\d{4,5}(v\d+)?$/;
 

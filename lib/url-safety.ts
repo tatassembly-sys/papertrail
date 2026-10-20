@@ -1,6 +1,7 @@
 /**
  * Blocks SSRF targets: loopback, private, link-local, and non-http(s).
- * Host checks are synchronous. Fetch follows redirects manually and re-checks each hop.
+ * Host checks stay synchronous so client components can import them.
+ * Server fetches live in lib/url-fetch.ts.
  */
 
 const BLOCKED_NAMES = new Set([
@@ -66,38 +67,4 @@ export function nextPublicHop(current: string, location: string): string | null 
   return next.toString();
 }
 
-export async function hostnameResolvesPublic(hostname: string): Promise<boolean> {
-  if (isBlockedHostname(hostname)) return false;
-  if (isIpLiteral(hostname)) return !isBlockedHostname(hostname);
-  const dns = await import("node:dns/promises");
-  try {
-    const records = await dns.lookup(hostname, { all: true, verbatim: true });
-    if (records.length === 0) return false;
-    return records.every((record) => !isBlockedHostname(record.address));
-  } catch {
-    return false;
-  }
-}
 
-/**
- * GET/POST an http(s) URL. Redirects are not followed by fetch; each Location
- * is checked again so a public URL cannot bounce to a private address.
- */
-export async function fetchPublicHttp(url: string, init: RequestInit = {}): Promise<Response> {
-  let current = nextPublicHop("https://example.invalid/", url);
-  if (!current) throw new Error("Blocked URL.");
-  for (let hop = 0; hop < 4; hop++) {
-    const parsed = new URL(current);
-    if (!(await hostnameResolvesPublic(parsed.hostname))) {
-      throw new Error("Blocked URL.");
-    }
-    const res = await fetch(current, { ...init, redirect: "manual" });
-    if (res.status < 300 || res.status >= 400) return res;
-    const location = res.headers.get("location");
-    if (!location) return res;
-    const next = nextPublicHop(current, location);
-    if (!next) throw new Error("Blocked redirect.");
-    current = next;
-  }
-  throw new Error("Too many redirects.");
-}
