@@ -15,6 +15,7 @@
     "test": "npm run test:sandbox && npm run test:unit",
     "test:sandbox": "node sandbox/run.mjs",
     "test:unit": "node --import tsx --test tests/*.test.ts",
+    "test:e2e": "playwright test",
     "smoke:prod": "node scripts/smoke-prod.mjs"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "unpdf": "^0.11.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/typography": "^0.5.15",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.0.0",
