@@ -226,3 +226,10 @@ Reading and the free tier do **not** require Stripe. Pro Checkout + portal + web
 | `PRODUCTION_HARDENING.md` / `PRODUCTION_HEALTH.md` | Earlier hardening + cron health notes |
 | `sandbox/README.md` | Isolated scenario suite |
 | `CHANGELOG.md` | Session ship summary |
+
+
+## Vercel deployment (2026-10-20)
+- Production URL: https://papertrail-six-rho.vercel.app (Vercel project `papertrail`, scope `procureai1`, GitHub repo connected for auto-deploy from `main`).
+- Env vars set (production): MONGODB_URI, MONGODB_DB, AUTH_SECRET, CRON_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, NEXT_PUBLIC_SITE_URL. Email in log mode (no RESEND_API_KEY); OpenRouter/Stripe/social unset.
+- Status: homepage 200, cron unsigned 401. /api/health 503 `db: unreachable` — Atlas rejects the TLS handshake (alert 80): add 0.0.0.0/0 to Atlas Network Access.
+- TODO: Atlas network access; cron-job.org jobs with CRON_SECRET (stored in Vercel env); OPENROUTER_API_KEY for article generation.

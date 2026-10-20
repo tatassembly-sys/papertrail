@@ -8,3 +8,4 @@ paper-trail.zip
 atlas-test.js
 .DS_Store
 *.log
+.vercel
