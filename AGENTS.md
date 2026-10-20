@@ -33,6 +33,7 @@ Paper Trail turns research papers (arXiv RSS, PubMed, manual PDF/URL submissions
 | Dev server | `npm run dev` | needs `MONGODB_URI` + `AUTH_SECRET` (≥32 chars) in `.env.local`. |
 | Typecheck | `npm run typecheck` | `tsc --noEmit`. |
 | Lint | `npm run lint` | `next lint` with `eslint-config-next` (`next/core-web-vitals`). |
+| Release notes | `npm run release:notes` | `git log` since the latest tag. |
 | All tests | `npm test` | sandbox (523 scenarios) + unit (41 tests). No DB needed. |
 | Unit only | `npm run test:unit` | `node --import tsx --test tests/*.test.ts` |
 | Build | `npm run build` | `next build`; works without a live DB. |

@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "release:notes": "node scripts/release-notes.mjs",
     "test": "npm run test:sandbox && npm run test:unit",
     "test:sandbox": "node sandbox/run.mjs",
     "test:unit": "node --import tsx --test tests/*.test.ts",

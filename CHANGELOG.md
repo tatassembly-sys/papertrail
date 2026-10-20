@@ -1,4 +1,19 @@
-# Changelog — Production hardening & Railway go-live
+# Changelog
+
+## How to add an entry
+
+- Keep **[Unreleased]** at the top. Add bullets under Added, Changed, or Fixed.
+- One line per user-visible change. Name the milestone id when there is one (`M1.6`).
+- Do not paste secrets, tokens, or live URLs that contain credentials.
+- On a release, rename `[Unreleased]` to the tag (`[v1.0.0] — YYYY-MM-DD`) and open a new empty `[Unreleased]`.
+- `npm run release:notes` prints `git log` since the latest tag. Use it as the source list, then edit.
+
+## [Unreleased]
+
+### Added
+- Hosting prep for Vercel: confirmed index script, Vercel site-URL order, cron-job.org runbook, read-only `smoke:prod` (M0).
+
+## History — production hardening and Railway go-live
 
 All notable modifications from the engineering session culminating 2026-08-04.
 
