@@ -8,6 +8,8 @@ import { getRateCount, hitRateLimit, undoRateLimit } from "@/lib/rate-limit";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
 import {
   CHAT_ABUSE_PER_HOUR,
+  CHAT_PER_IP_PER_DAY,
+  CHAT_PER_USER_PER_DAY,
   DAY_MS,
   FREE_CHAT_PER_DAY,
   HOUR_MS,
@@ -146,6 +148,25 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     );
   }
 
+  if (await hitRateLimit("chat_ip_day", ipKey, CHAT_PER_IP_PER_DAY, DAY_MS)) {
+    if (!pro) await undoRateLimit("chat_day", dayKey, DAY_MS);
+    await undoRateLimit("chat", ipKey, HOUR_MS);
+    return NextResponse.json(
+      { error: "Daily chat limit reached for this network. Try again tomorrow." },
+      { status: 429 }
+    );
+  }
+
+  if (session?.userId && (await hitRateLimit("chat_user_day", session.userId, CHAT_PER_USER_PER_DAY, DAY_MS))) {
+    if (!pro) await undoRateLimit("chat_day", dayKey, DAY_MS);
+    await undoRateLimit("chat", ipKey, HOUR_MS);
+    await undoRateLimit("chat_ip_day", ipKey, DAY_MS);
+    return NextResponse.json(
+      { error: "Daily chat limit reached for this account. Try again tomorrow." },
+      { status: 429 }
+    );
+  }
+
   const cookie = cookieChatKey(req);
   const key = threadKey(session?.userId, cookie.key);
 
@@ -170,6 +191,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     return res;
   } catch (err) {
     if (!pro) await undoRateLimit("chat_day", dayKey, DAY_MS);
+    await undoRateLimit("chat", ipKey, HOUR_MS);
+    await undoRateLimit("chat_ip_day", ipKey, DAY_MS);
+    if (session?.userId) await undoRateLimit("chat_user_day", session.userId, DAY_MS);
     console.error("chat error:", err);
     const msg = err instanceof Error ? err.message : "";
     if (/OPENROUTER_API_KEY|rejected the API key|401/i.test(msg)) {

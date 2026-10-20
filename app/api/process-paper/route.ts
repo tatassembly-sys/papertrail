@@ -8,6 +8,10 @@ import { publicErrorMessage } from "@/lib/safe-error";
 import { sanitizeHttpUrl } from "@/lib/http-url";
 import { parseArxivLocator } from "@/lib/paper-extract";
 import { JSON_LIMIT_ARTICLE, asRecord, readJsonBody } from "@/lib/json-body";
+import { SESSION_COOKIE } from "@/lib/auth";
+import { getClientIp, hashIp } from "@/lib/request-ip";
+import { hitRateLimit, undoRateLimit } from "@/lib/rate-limit";
+import { DAY_MS, PROCESS_PAPER_PER_DAY } from "@/lib/entitlements";
 
 export const runtime = "nodejs"; // required for PDF parsing (unpdf), the mongo driver, and larger fetches
 export const maxDuration = 60; // allow time for PDF download + LLM call
@@ -23,6 +27,22 @@ export async function POST(req: NextRequest) {
     // the route checks itself.
     if (!(await requireAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const ipKey = hashIp(getClientIp(req));
+    const adminKey = hashIp(req.cookies.get(SESSION_COOKIE)?.value || "admin");
+    if (await hitRateLimit("process_paper_ip_day", ipKey, PROCESS_PAPER_PER_DAY, DAY_MS)) {
+      return NextResponse.json(
+        { error: "Daily paper-processing limit reached." },
+        { status: 429 }
+      );
+    }
+    if (await hitRateLimit("process_paper_admin_day", adminKey, PROCESS_PAPER_PER_DAY, DAY_MS)) {
+      await undoRateLimit("process_paper_ip_day", ipKey, DAY_MS);
+      return NextResponse.json(
+        { error: "Daily paper-processing limit reached." },
+        { status: 429 }
+      );
     }
 
     const parsed = await readJsonBody(req, JSON_LIMIT_ARTICLE);
