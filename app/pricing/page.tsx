@@ -83,6 +83,12 @@ export default async function PricingPage() {
         availability: "https://schema.org/InStock",
         url: `${site}/pricing`,
         name: "Monthly",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: String(billing.monthly.amount),
+          priceCurrency: billing.currency,
+          valueAddedTaxIncluded: true,
+        },
       },
       {
         "@type": "Offer",
@@ -91,6 +97,12 @@ export default async function PricingPage() {
         availability: "https://schema.org/InStock",
         url: `${site}/pricing`,
         name: "Yearly",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: String(billing.yearly.amount),
+          priceCurrency: billing.currency,
+          valueAddedTaxIncluded: true,
+        },
       },
     ],
   };
@@ -138,6 +150,7 @@ export default async function PricingPage() {
           </p>
           <p className="mt-1 text-sm text-ink-soft">
             or {billing.yearly.label}/year (two months free). Cancel anytime.
+            Prices include VAT.
           </p>
           <CheckoutButtons
             configured={billing.configured}

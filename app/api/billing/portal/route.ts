@@ -9,14 +9,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const limited = await tooManyPublicWrites(req, "billing_portal", 10, 60 * 60 * 1000);
-  if (limited) return limited;
   if (!isBillingConfigured()) {
     return NextResponse.json(
       { error: "Billing portal is not configured." },
       { status: 503 }
     );
   }
+
+  const limited = await tooManyPublicWrites(req, "billing_portal", 10, 60 * 60 * 1000);
+  if (limited) return limited;
 
   const session = await getCurrentUserSession();
   if (!session) {
