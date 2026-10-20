@@ -4,6 +4,7 @@ import { isValidObjectId } from "./object-id";
 import { sanitizeHttpUrl } from "./http-url";
 import { PublishGateError, publishBlocker } from "./publish-gate";
 import { anchoredSlugRegex, escapeRegex, matchPublishedLabel } from "./name-slug";
+import { canonicalSourceId } from "./source-id";
 import type { ArticleRow, PaperSourceKind, TranslatedArticle } from "./prompts";
 import {
   applyHighlights,
@@ -29,6 +30,8 @@ export interface ArticleDoc {
   slug: string;
   source_url: string | null;
   source?: PaperSourceKind | null;
+  /** arXiv id or PMID. Unique with `source` when set. */
+  source_id?: string | null;
   status: "draft" | "published";
   created_at: Date;
   published_at?: Date | null;
@@ -510,12 +513,20 @@ export async function insertDraftArticle(
     institutions?: string[];
     licence?: string | null;
     sourceFingerprint?: string | null;
+    sourceId?: string | null;
   } = {}
 ): Promise<ArticleRow> {
   const col = await articlesCollection();
   const baseSlug = slugify(article.title || fallbackTitle);
 
   const cleanSource = sanitizeHttpUrl(sourceUrl);
+  const source =
+    meta.source ??
+    (sourceUrl?.includes("pubmed") ? "pubmed" : sourceUrl?.includes("arxiv") ? "arxiv" : "manual");
+  const sourceId = canonicalSourceId({
+    externalId: meta.sourceId,
+    sourceUrl: cleanSource,
+  });
   const doc: Omit<ArticleDoc, "_id"> = {
     title: article.title,
     headline: article.headline,
@@ -530,7 +541,7 @@ export async function insertDraftArticle(
     source_fingerprint: meta.sourceFingerprint?.trim().toLowerCase().slice(0, 180) || null,
     slug: baseSlug,
     source_url: cleanSource,
-    source: meta.source ?? (sourceUrl?.includes("pubmed") ? "pubmed" : sourceUrl?.includes("arxiv") ? "arxiv" : "manual"),
+    source,
     status: "draft",
     created_at: new Date(),
     published_at: null,
@@ -540,20 +551,17 @@ export async function insertDraftArticle(
   if (!cleanSource) {
     delete (doc as { source_url?: string | null }).source_url;
   }
+  if (sourceId) doc.source_id = sourceId;
 
   try {
     const result = await col.insertOne(doc as ArticleDoc);
     return toArticleRow({ ...doc, _id: result.insertedId } as ArticleDoc);
   } catch (err: unknown) {
-    const isDuplicateKey =
-      typeof err === "object" &&
-      err !== null &&
-      "code" in err &&
-      (err as { code: number }).code === 11000;
-    if (!isDuplicateKey) throw err;
+    if (!isDuplicateKey(err)) throw err;
 
-    const existing = await existingDraftFromDuplicate(col, err, doc.source_url);
+    const existing = await existingDraftFromDuplicate(col, err, doc);
     if (existing) return existing;
+    if (!duplicateKeyIsSlug(err)) throw err;
 
     const retrySlug = `${baseSlug}-${Date.now().toString(36)}`;
     const retryDoc = { ...doc, slug: retrySlug };
@@ -561,34 +569,67 @@ export async function insertDraftArticle(
       const result = await col.insertOne(retryDoc as ArticleDoc);
       return toArticleRow({ ...retryDoc, _id: result.insertedId } as ArticleDoc);
     } catch (retryErr: unknown) {
-      const retryDup =
-        typeof retryErr === "object" &&
-        retryErr !== null &&
-        "code" in retryErr &&
-        (retryErr as { code: number }).code === 11000;
-      if (!retryDup) throw retryErr;
-      const again = await existingDraftFromDuplicate(col, retryErr, doc.source_url);
+      if (!isDuplicateKey(retryErr)) throw retryErr;
+      const again = await existingDraftFromDuplicate(col, retryErr, retryDoc);
       if (again) return again;
       throw retryErr;
     }
   }
 }
 
+function isDuplicateKey(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code: number }).code === 11000
+  );
+}
+
+function duplicateKeyValue(err: unknown): Record<string, unknown> | null {
+  if (!err || typeof err !== "object" || !("keyValue" in err)) return null;
+  const keyValue = (err as { keyValue?: unknown }).keyValue;
+  if (!keyValue || typeof keyValue !== "object") return null;
+  return keyValue as Record<string, unknown>;
+}
+
+function duplicateKeyIsSlug(err: unknown): boolean {
+  const keyValue = duplicateKeyValue(err);
+  if (!keyValue) return false;
+  return "slug" in keyValue && !("source_id" in keyValue) && !("source_url" in keyValue);
+}
+
 async function existingDraftFromDuplicate(
   col: Awaited<ReturnType<typeof articlesCollection>>,
   err: unknown,
-  sourceUrl: string | null
+  doc: { source_url?: string | null; source?: ArticleDoc["source"]; source_id?: string | null }
 ): Promise<ArticleRow | null> {
-  const keyValue =
-    typeof err === "object" && err !== null && "keyValue" in err
-      ? (err as { keyValue?: Record<string, unknown> }).keyValue
-      : undefined;
+  const keyValue = duplicateKeyValue(err);
+  if (keyValue && typeof keyValue.source_id === "string") {
+    const rawSource = typeof keyValue.source === "string" ? keyValue.source : doc.source;
+    const source =
+      rawSource === "arxiv" ||
+      rawSource === "pubmed" ||
+      rawSource === "manual" ||
+      rawSource === "submission"
+        ? rawSource
+        : undefined;
+    const found = await col.findOne({
+      source_id: keyValue.source_id,
+      ...(source ? { source } : {}),
+    });
+    if (found) return toArticleRow(found);
+  }
   if (keyValue && typeof keyValue.source_url === "string") {
     const found = await col.findOne({ source_url: keyValue.source_url });
-    return found ? toArticleRow(found) : null;
+    if (found) return toArticleRow(found);
   }
-  if (sourceUrl) {
-    const found = await col.findOne({ source_url: sourceUrl });
+  if (doc.source_id && doc.source) {
+    const found = await col.findOne({ source: doc.source, source_id: doc.source_id });
+    if (found) return toArticleRow(found);
+  }
+  if (doc.source_url) {
+    const found = await col.findOne({ source_url: doc.source_url });
     return found ? toArticleRow(found) : null;
   }
   return null;
@@ -733,6 +774,23 @@ export async function getExistingSourceUrls(urls: string[]): Promise<Set<string>
     .find({ source_url: { $in: urls } }, { projection: { source_url: 1 } })
     .toArray();
   return new Set(docs.map((d) => d.source_url as string).filter(Boolean));
+}
+
+export async function getExistingSourceIds(
+  source: PaperSourceKind,
+  ids: string[]
+): Promise<Set<string>> {
+  const unique = [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+  if (unique.length === 0) return new Set();
+  const col = await articlesCollection();
+  const docs = await col
+    .find({ source, source_id: { $in: unique } }, { projection: { source_id: 1 } })
+    .toArray();
+  return new Set(
+    docs
+      .map((d) => d.source_id)
+      .filter((id): id is string => typeof id === "string" && id.length > 0)
+  );
 }
 
 export async function markShared(id: string, platform: string): Promise<void> {

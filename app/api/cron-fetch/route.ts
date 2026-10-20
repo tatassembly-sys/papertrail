@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getExistingSourceUrls } from "@/lib/articles";
+import { getExistingSourceIds, getExistingSourceUrls } from "@/lib/articles";
 import { enqueuePapers, getQueuedExternalIds } from "@/lib/queue";
 import { arxivFeedCategoriesFromEnv } from "@/lib/arxivCategories";
 import { assertCronAuthorized } from "@/lib/cron-auth";
+import { acquireCronLock, CRON_FETCH_LOCK_MS, releaseCronLock } from "@/lib/cron-lock";
 import { runCronJob } from "@/lib/cron-run";
 import { publicErrorMessage } from "@/lib/safe-error";
+import { canonicalSourceId } from "@/lib/source-id";
 
 export const runtime = "nodejs"; // needs the mongo driver's Node TCP APIs
 export const maxDuration = 60; // many field feeds; keep under host maxDuration
@@ -65,6 +67,11 @@ export async function GET(req: NextRequest) {
   if (denied) return denied;
 
   return runCronJob("cron-fetch", async () => {
+  const gate = await acquireCronLock("cron-fetch", CRON_FETCH_LOCK_MS);
+  if (!gate) {
+    return NextResponse.json({ success: true, skipped: true, reason: "locked" });
+  }
+  try {
   try {
     const entries = await fetchRecentArxivLinks();
 
@@ -78,14 +85,23 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const [existingUrls, queuedIds] = await Promise.all([
+    const sourceIds = entries
+      .map((e) => canonicalSourceId({ externalId: e.arxivId, sourceUrl: e.absUrl }))
+      .filter((id): id is string => Boolean(id));
+    const [existingUrls, queuedIds, existingIds] = await Promise.all([
       getExistingSourceUrls(entries.map((e) => e.absUrl)),
       getQueuedExternalIds("arxiv", entries.map((e) => e.arxivId)),
+      getExistingSourceIds("arxiv", sourceIds),
     ]);
 
-    const toEnqueue = entries.filter(
-      (e) => !existingUrls.has(e.absUrl) && !queuedIds.has(e.arxivId)
-    );
+    const toEnqueue = entries.filter((e) => {
+      const sourceId = canonicalSourceId({ externalId: e.arxivId, sourceUrl: e.absUrl });
+      return (
+        !existingUrls.has(e.absUrl) &&
+        !queuedIds.has(e.arxivId) &&
+        !(sourceId && existingIds.has(sourceId))
+      );
+    });
 
     const enqueuedCount = await enqueuePapers(
       "arxiv",
@@ -104,6 +120,9 @@ export async function GET(req: NextRequest) {
       { error: publicErrorMessage(err, "Cron fetch failed.") },
       { status: 500 }
     );
+  }
+  } finally {
+    await releaseCronLock("cron-fetch", gate.owner);
   }
   });
 }

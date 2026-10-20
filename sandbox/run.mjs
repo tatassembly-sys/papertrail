@@ -2568,6 +2568,122 @@ test("constructor is not in VALID_PLATFORMS", () => {
 
 test("LIVE_STATUSES has past_due", () => assert(P.LIVE_STATUSES.has("past_due")));
 
+/* -------------------------------------------------------------------------- */
+group("cron-idempotency");
+
+test("canonical source id strips an arXiv version", () => {
+  eq(P.canonicalSourceId({ externalId: "2401.00002v3" }), "2401.00002");
+  eq(
+    P.canonicalSourceId({ sourceUrl: "https://arxiv.org/pdf/2401.00009v2" }),
+    "2401.00009"
+  );
+  eq(
+    P.canonicalSourceId({ sourceUrl: "https://pubmed.ncbi.nlm.nih.gov/12345678/" }),
+    "12345678"
+  );
+});
+
+test("second cron-fetch does not enqueue the same paper", () => {
+  const s = new P.PaperTrailSandbox();
+  const entry = {
+    source: "arxiv",
+    externalId: "2401.00003",
+    url: "https://arxiv.org/abs/2401.00003",
+  };
+  eq(s.cronFetch([entry]).enqueued, 1);
+  eq(s.cronFetch([entry]).enqueued, 0);
+  eq(s.queue.length, 1);
+});
+
+test("cron-fetch while locked does not enqueue", () => {
+  const s = new P.PaperTrailSandbox(Date.parse("2026-01-15T00:00:00.000Z"));
+  const owner = s.holdCronLock("cron-fetch");
+  const blocked = s.cronFetch([
+    { source: "arxiv", externalId: "2401.00004", url: "https://arxiv.org/abs/2401.00004" },
+  ]);
+  eq(blocked.status, "locked");
+  eq(s.queue.length, 0);
+  s.releaseCronLock("cron-fetch", owner);
+  eq(
+    s.cronFetch([
+      { source: "arxiv", externalId: "2401.00004", url: "https://arxiv.org/abs/2401.00004" },
+    ]).enqueued,
+    1
+  );
+});
+
+test("expired cron lock can be taken", () => {
+  const s = new P.PaperTrailSandbox(Date.parse("2026-06-01T12:00:00.000Z"));
+  s.holdCronLock("cron-fetch", 1000);
+  s.setNow(s.now + 1000);
+  eq(
+    s.cronFetch([
+      { source: "arxiv", externalId: "2401.00005", url: "https://arxiv.org/abs/2401.00005" },
+    ]).enqueued,
+    1
+  );
+});
+
+test("held process-queue lock blocks a second worker", () => {
+  const s = new P.PaperTrailSandbox(Date.parse("2026-06-01T12:00:00.000Z"));
+  eq(
+    s.cronFetch([
+      {
+        source: "arxiv",
+        externalId: "2401.00002v3",
+        url: "https://arxiv.org/abs/2401.00002v3",
+      },
+    ]).enqueued,
+    1
+  );
+  eq(s.queue[0].externalId, "2401.00002");
+  const owner = s.holdCronLock("process-queue");
+  eq(s.processQueue().status, "locked");
+  eq(s.articles.size, 0);
+  s.releaseCronLock("process-queue", owner);
+  eq(s.processQueue().status, "drafted");
+  eq(s.articles.size, 1);
+  eq(s.processQueue().status, "empty");
+  eq(s.articles.size, 1);
+});
+
+test("same source id cannot create a second article", () => {
+  const s = new P.PaperTrailSandbox();
+  const first = s.insertDraftFromSource({
+    source: "arxiv",
+    source_id: "2401.00009v2",
+    source_url: "https://arxiv.org/abs/2401.00009v2",
+    title: "One",
+  });
+  const second = s.insertDraftFromSource({
+    source: "arxiv",
+    source_id: "2401.00009",
+    source_url: "https://arxiv.org/pdf/2401.00009",
+    title: "Again",
+  });
+  eq(second.duplicate, true);
+  eq(second.article.id, first.article.id);
+  eq(s.articles.size, 1);
+});
+
+test("process-queue collapses a raced insert of the same source", () => {
+  const s = new P.PaperTrailSandbox();
+  s.cronFetch([
+    { source: "pubmed", externalId: "998877", url: "https://pubmed.ncbi.nlm.nih.gov/998877/" },
+  ]);
+  eq(s.processQueue().status, "drafted");
+  const again = s.insertDraftFromSource({
+    source: "pubmed",
+    source_id: "998877",
+    source_url: "https://pubmed.ncbi.nlm.nih.gov/998877/",
+    title: "Race",
+  });
+  eq(again.duplicate, true);
+  eq(s.articles.size, 1);
+});
+
+group("count-guard");
+
 test("suite defines at least 500 scenarios", () => {
   const n = results.filter((r) => r.name !== "count-guard · suite defines at least 500 scenarios").length + 1;
   assert(n >= 500, `only ${n} tests registered`);

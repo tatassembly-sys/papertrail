@@ -12,6 +12,7 @@ import {
   releaseQueueClaim,
 } from "@/lib/queue";
 import { assertCronAuthorized } from "@/lib/cron-auth";
+import { acquireCronLock, PROCESS_QUEUE_LOCK_MS, releaseCronLock } from "@/lib/cron-lock";
 import { runCronJob } from "@/lib/cron-run";
 
 export const runtime = "nodejs";
@@ -26,6 +27,11 @@ export async function GET(req: NextRequest) {
   if (denied) return denied;
 
   return runCronJob("process-queue", async () => {
+  const gate = await acquireCronLock("process-queue", PROCESS_QUEUE_LOCK_MS);
+  if (!gate) {
+    return NextResponse.json({ success: true, skipped: true, reason: "locked" });
+  }
+  try {
   const results: {
     externalId: string;
     source: string;
@@ -99,6 +105,7 @@ export async function GET(req: NextRequest) {
         institutions,
         licence,
         sourceFingerprint: textKind === "pdf" ? sourceFingerprint(text) : null,
+        sourceId: row.external_id,
       });
 
       await markQueueDone(row._id);
@@ -166,6 +173,9 @@ export async function GET(req: NextRequest) {
       { error: "Queue worker failed.", processed: results.length, results },
       { status: 500 }
     );
+  }
+  } finally {
+    await releaseCronLock("process-queue", gate.owner);
   }
   });
 }

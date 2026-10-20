@@ -13,6 +13,7 @@ import { SESSION_COOKIE } from "@/lib/auth";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit, undoRateLimit } from "@/lib/rate-limit";
 import { DAY_MS, PROCESS_PAPER_PER_DAY } from "@/lib/entitlements";
+import { canonicalSourceId } from "@/lib/source-id";
 
 export const runtime = "nodejs"; // required for PDF parsing (unpdf), the mongo driver, and larger fetches
 export const maxDuration = 60; // allow time for PDF download + LLM call
@@ -144,6 +145,10 @@ export async function POST(req: NextRequest) {
       institutions,
       licence,
       sourceFingerprint: textKind === "pdf" ? sourceFingerprint(fingerprintSource) : null,
+      sourceId: canonicalSourceId({
+        externalId: url && !url.includes("://") ? url : null,
+        sourceUrl: finalSourceUrl,
+      }),
     });
     return NextResponse.json({ success: true, article: data }, { status: 201 });
   } catch (err) {

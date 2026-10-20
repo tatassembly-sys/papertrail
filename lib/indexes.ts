@@ -63,6 +63,7 @@ async function createAll(db: Db): Promise<void> {
   await safeIndex(articles, { status: 1, source: 1 }, { name: "articles_status_source" });
   await safeIndex(articles, { source_url: 1 }, { name: "articles_source_url" });
   await ensureSourceUrlUnique(articles);
+  await ensureSourceIdUnique(articles);
   await safeIndex(articles, { tags: 1 }, { name: "articles_tags" });
   await safeIndex(articles, { authors: 1 }, { name: "articles_authors" });
   await safeIndex(articles, { status: 1, share_approved: 1 }, { name: "articles_share_approved" });
@@ -225,6 +226,40 @@ async function ensureSourceUrlUnique(articles: {
     await articles.createIndex({ source_url: 1 }, opts);
   } catch (err) {
     console.error("source_url unique index recreate failed:", err);
+  }
+}
+
+async function ensureSourceIdUnique(articles: {
+  createIndex: (spec: IndexSpecification, opts?: CreateIndexesOptions) => Promise<string>;
+  dropIndex: (name: string) => Promise<unknown>;
+}): Promise<void> {
+  const opts: CreateIndexesOptions = {
+    unique: true,
+    name: "articles_source_id_unique",
+    partialFilterExpression: { source_id: { $type: "string", $gt: "" } },
+  };
+  try {
+    await articles.createIndex({ source: 1, source_id: 1 }, opts);
+    return;
+  } catch (err) {
+    const code =
+      typeof err === "object" && err !== null && "code" in err
+        ? (err as { code: number }).code
+        : 0;
+    if (code !== 85 && code !== 86) {
+      console.warn("source_id unique index create failed:", err);
+      return;
+    }
+  }
+  try {
+    await articles.dropIndex("articles_source_id_unique");
+  } catch {
+    /* not present */
+  }
+  try {
+    await articles.createIndex({ source: 1, source_id: 1 }, opts);
+  } catch (err) {
+    console.error("source_id unique index recreate failed:", err);
   }
 }
 

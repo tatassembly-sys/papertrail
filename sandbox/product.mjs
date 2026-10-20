@@ -165,6 +165,20 @@ const MIX_FIELDS = [
 
 const MAX_URL_LENGTH = 500;
 
+/** arXiv id or PMID. Versions collapse so two workers cannot file the same paper. */
+export function canonicalSourceId({ externalId, sourceUrl } = {}) {
+  const explicit = String(externalId || "").trim();
+  const arxiv = explicit.match(/^(\d{4}\.\d{4,5})(?:v\d+)?$/);
+  if (arxiv) return arxiv[1];
+  if (/^\d{1,12}$/.test(explicit)) return explicit;
+  const url = String(sourceUrl || "");
+  const fromArxiv = url.match(/arxiv\.org\/(?:abs|pdf)\/(\d{4}\.\d{4,5})(?:v\d+)?/i);
+  if (fromArxiv) return fromArxiv[1];
+  const pmid = url.match(/pubmed\.ncbi\.nlm\.nih\.gov\/(\d{1,12})/i);
+  if (pmid) return pmid[1];
+  return null;
+}
+
 export function hashToken(token) {
   return createHash("sha256").update(token, "utf8").digest("hex");
 }
@@ -1019,6 +1033,9 @@ export class PaperTrailSandbox {
     this.mixRuns = new Set();
     this.rate = new Map();
     this.env = {};
+    this.queue = [];
+    this.queueKeys = new Set();
+    this.locks = new Map();
   }
 
   setNow(t) {
@@ -1529,6 +1546,117 @@ export class PaperTrailSandbox {
     const k = `${bucket}:${key}:${windowId}`;
     const n = this.rate.get(k) || 0;
     if (n > 0) this.rate.set(k, n - 1);
+  }
+
+  claimCronLock(job, ttlMs) {
+    const current = this.locks.get(job);
+    if (current?.owner && current.lockedUntil > this.now) {
+      return { acquired: false, owner: null };
+    }
+    const owner = randomBytes(8).toString("hex");
+    this.locks.set(job, { owner, lockedUntil: this.now + ttlMs });
+    return { acquired: true, owner };
+  }
+
+  holdCronLock(job, ttlMs = 120000) {
+    const owner = `held-${job}`;
+    this.locks.set(job, { owner, lockedUntil: this.now + ttlMs });
+    return owner;
+  }
+
+  releaseCronLock(job, owner) {
+    const current = this.locks.get(job);
+    if (!current || current.owner !== owner) return false;
+    this.locks.set(job, { owner: null, lockedUntil: this.now });
+    return true;
+  }
+
+  insertDraftFromSource(input) {
+    const source = input.source || "arxiv";
+    const sourceId = canonicalSourceId({
+      externalId: input.source_id || input.externalId,
+      sourceUrl: input.source_url,
+    });
+    if (sourceId) {
+      const existing = [...this.articles.values()].find(
+        (a) => a.source === source && a.source_id === sourceId
+      );
+      if (existing) return { duplicate: true, article: existing };
+    }
+    const url = input.source_url === undefined ? null : sanitizeHttpUrl(input.source_url);
+    if (url && this.hasSourceUrl(url)) {
+      const existing = [...this.articles.values()].find((a) => a.source_url === url);
+      return { duplicate: true, article: existing, error: "duplicate_source" };
+    }
+    const id = new ObjectId().toString();
+    const row = {
+      ...sampleArticle({
+        status: "draft",
+        published_at: null,
+        title: input.title || sourceId || "Draft",
+        slug: input.slug || `draft-${id.slice(-6)}`,
+      }),
+      id,
+      source,
+      source_id: sourceId,
+      source_url: url,
+    };
+    this.articles.set(id, row);
+    return { article: row, duplicate: false };
+  }
+
+  cronFetch(entries) {
+    const lock = this.claimCronLock("cron-fetch", 90_000);
+    if (!lock.acquired) return { status: "locked", enqueued: 0 };
+    try {
+      let enqueued = 0;
+      for (const entry of entries) {
+        const source = entry.source || "arxiv";
+        const sourceId = canonicalSourceId({
+          externalId: entry.externalId,
+          sourceUrl: entry.url,
+        });
+        if (!sourceId) continue;
+        const key = `${source}:${sourceId}`;
+        if (this.queueKeys.has(key)) continue;
+        if ([...this.articles.values()].some((a) => a.source === source && a.source_id === sourceId)) {
+          continue;
+        }
+        const url = sanitizeHttpUrl(entry.url);
+        if (url && this.hasSourceUrl(url)) continue;
+        this.queue.push({ source, externalId: sourceId, url, status: "pending" });
+        this.queueKeys.add(key);
+        enqueued += 1;
+      }
+      return { status: "ok", enqueued };
+    } finally {
+      this.releaseCronLock("cron-fetch", lock.owner);
+    }
+  }
+
+  processQueue() {
+    const lock = this.claimCronLock("process-queue", 150_000);
+    if (!lock.acquired) return { status: "locked", processed: 0, articles: this.articles.size };
+    try {
+      const row = this.queue.find((item) => item.status === "pending");
+      if (!row) return { status: "empty", processed: 0, articles: this.articles.size };
+      row.status = "processing";
+      const inserted = this.insertDraftFromSource({
+        source: row.source,
+        source_id: row.externalId,
+        source_url: row.url,
+        title: row.externalId,
+      });
+      row.status = "done";
+      return {
+        status: inserted.duplicate ? "duplicate" : "drafted",
+        processed: 1,
+        articles: this.articles.size,
+        article: inserted.article,
+      };
+    } finally {
+      this.releaseCronLock("process-queue", lock.owner);
+    }
   }
 }
 
