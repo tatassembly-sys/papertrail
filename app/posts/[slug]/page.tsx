@@ -17,7 +17,7 @@ import { categoryLabel } from "@/lib/arxivCategories";
 import { sanitizeHttpUrl } from "@/lib/http-url";
 import { jsonLdScript } from "@/lib/json-ld";
 import { slugifyLabel } from "@/lib/name-slug";
-import { postPageMetadata } from "@/lib/post-metadata";
+import { canonicalPostUrl, postPageMetadata } from "@/lib/post-metadata";
 import { postIsOnFile } from "@/lib/public-route";
 import { readingMinutes, readingTimeLabel } from "@/lib/reading-time";
 import { licenceCreditLabel } from "@/lib/copyright";
@@ -85,7 +85,8 @@ export default async function PostPage({ params }: PageProps) {
     [...(article.tags || []), ...(article.keywords || [])]
   );
   const minutes = readingMinutes(article);
-  const canonical = `${getSiteUrl()}/posts/${article.slug}`;
+  const canonical = canonicalPostUrl(article, getSiteUrl());
+  if (!canonical) notFound();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ScholarlyArticle",

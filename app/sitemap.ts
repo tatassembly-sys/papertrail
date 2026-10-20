@@ -5,6 +5,7 @@ import {
   getPublishedTagCounts,
 } from "@/lib/articles";
 import { slugifyLabel } from "@/lib/name-slug";
+import { publishedSitemapArticles } from "@/lib/post-metadata";
 import { getSiteUrl } from "@/lib/site-url";
 
 // The sitemap contains live database data and must not query Atlas at build time.
@@ -31,16 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Failed to load sitemap taxonomy:", error);
   }
 
-  const articleEntries: MetadataRoute.Sitemap = articles.map((article) => ({
-    url: `${baseUrl}/posts/${article.slug}`,
-    lastModified: article.published_at
-      ? new Date(article.published_at)
-      : article.created_at
-        ? new Date(article.created_at)
-        : undefined,
-    changeFrequency: "monthly" as const,
-    priority: 0.7,
-  }));
+  const articleEntries: MetadataRoute.Sitemap = publishedSitemapArticles(articles, baseUrl);
 
   return [
     {
