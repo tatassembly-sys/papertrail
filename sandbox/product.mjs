@@ -28,7 +28,7 @@ export const SUBMIT_IP_WINDOW_MS = HOUR_MS;
 export const JSON_LIMIT_AUTH = 8 * 1024;
 export const JSON_LIMIT_DEFAULT = 32 * 1024;
 export const JSON_LIMIT_ARTICLE = 256 * 1024;
-export const MIN_PASSWORD_LENGTH = 8;
+export const MIN_PASSWORD_LENGTH = 10;
 export const MAX_PASSWORD_LENGTH = 72;
 export const MAX_EMAIL_LENGTH = 254;
 export const WPM = 220;
@@ -220,6 +220,37 @@ export function timingSafeEqualString(a, b) {
   return timingSafeEqual(left, right);
 }
 
+function isReservedIpv4(a, b) {
+  if (a === 0 || a === 10 || a === 127) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && (b === 168 || b === 0)) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  if (a >= 224) return true;
+  return false;
+}
+
+export function isBlockedHostname(hostname) {
+  const host = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
+  if (!host) return true;
+  if (host === "localhost" || host === "localhost.localdomain" || host === "metadata.google.internal") return true;
+  if (host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal")) return true;
+  if (host === "0.0.0.0" || host === "::" || host === "::1") return true;
+  if (/^\d+$/.test(host)) return true;
+  if (/^(\d{1,3}\.){1,3}\d{1,3}$/.test(host)) {
+    const parts = host.split(".").map((part) => Number(part));
+    if (parts.some((n) => Number.isNaN(n) || n > 255)) return true;
+    if (parts.length !== 4) return true;
+    return isReservedIpv4(parts[0], parts[1]);
+  }
+  if (host.includes(":")) {
+    if (host.startsWith("fe80:") || host.startsWith("fc") || host.startsWith("fd")) return true;
+    const mapped = host.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
+    if (mapped) return isBlockedHostname(mapped[1]);
+  }
+  return false;
+}
+
 export function sanitizeHttpUrl(value, maxLen = MAX_URL_LENGTH) {
   if (!value || typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -228,6 +259,7 @@ export function sanitizeHttpUrl(value, maxLen = MAX_URL_LENGTH) {
     const parsed = new URL(trimmed);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
     if (parsed.username || parsed.password) return null;
+    if (isBlockedHostname(parsed.hostname)) return null;
     return parsed.toString();
   } catch {
     return null;
@@ -828,9 +860,33 @@ export function validEmailPassword(email, password) {
     normalized.includes("@") &&
     normalized.length <= MAX_EMAIL_LENGTH &&
     password.length >= MIN_PASSWORD_LENGTH &&
-    password.length <= MAX_PASSWORD_LENGTH
+    password.length <= MAX_PASSWORD_LENGTH &&
+    !COMMON_PASSWORDS.has(String(password).toLowerCase())
   );
 }
+
+const COMMON_PASSWORDS = new Set([
+  "password",
+  "password1",
+  "password12",
+  "password123",
+  "1234567890",
+  "123456789",
+  "qwertyuiop",
+  "qwerty123",
+  "iloveyou1",
+  "admin12345",
+  "letmein123",
+  "welcome123",
+  "changeme123",
+  "papertrail",
+  "papertrail1",
+  "abcdefghij",
+  "1111111111",
+  "0000000000",
+  "passw0rd12",
+  "trustno1ab",
+]);
 
 export function validSlug(slug) {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(slug);
@@ -910,7 +966,7 @@ export class PaperTrailSandbox {
 
   register(email, password, name = "") {
     if (!validEmailPassword(email, password)) {
-      return { error: "Valid email and password (8–72 chars) required." };
+      return { error: "Use a password between 10 and 72 characters." };
     }
     const normalized = email.trim().toLowerCase();
     if ([...this.users.values()].some((u) => u.email === normalized)) {

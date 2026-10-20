@@ -52,7 +52,7 @@ function article() {
 
 function userStore(overrides = {}) {
   const s = new P.PaperTrailSandbox();
-  const res = s.register("reader@example.com", "password1", "Reader");
+  const res = s.register("reader@example.com", "sandbox-pw1", "Reader");
   if (overrides.pro) s.grantPro(res.user.id, overrides.pro === "stripe" ? "stripe" : "override");
   return { s, user: s.users.get(res.user.id), id: res.user.id, verifyToken: res.verifyToken };
 }
@@ -345,6 +345,14 @@ const urlCases = [
   ["not a url", false],
   ["https://", false],
   ["  https://arxiv.org/abs/2  ", true],
+  ["http://127.0.0.1/admin", false],
+  ["http://localhost/secret", false],
+  ["http://10.1.2.3/x", false],
+  ["http://192.168.1.9/", false],
+  ["http://172.16.0.4/", false],
+  ["http://169.254.169.254/latest", false],
+  ["http://[::1]/", false],
+  ["https://1.1.1.1/", true],
 ];
 for (const [input, ok] of urlCases) {
   test(`${ok ? "allow" : "reject"} ${JSON.stringify(input)}`, () => {
@@ -808,12 +816,17 @@ group("auth");
 
 test("short password rejected", () => {
   const s = new P.PaperTrailSandbox();
-  eq(s.register("a@b.com", "short").error.includes("8–72"), true);
+  eq(s.register("a@b.com", "short").error.includes("10"), true);
 });
 
-test("password 8 chars ok", () => {
+test("password 11 chars ok", () => {
   const s = new P.PaperTrailSandbox();
-  assert(s.register("a@b.com", "12345678").user);
+  assert(s.register("a@b.com", "sandbox-pw1").user);
+});
+
+test("common password rejected", () => {
+  const s = new P.PaperTrailSandbox();
+  assert(s.register("a@b.com", "password123").error);
 });
 
 test("password 73 chars rejected", () => {
@@ -823,28 +836,28 @@ test("password 73 chars rejected", () => {
 
 test("email must contain @", () => {
   const s = new P.PaperTrailSandbox();
-  assert(s.register("not-an-email", "12345678").error);
+  assert(s.register("not-an-email", "sandbox-pw1").error);
 });
 
 test("duplicate email generic error", () => {
   const s = new P.PaperTrailSandbox();
-  s.register("a@b.com", "12345678");
-  includes(s.register("a@b.com", "12345678").error, "Try signing in");
+  s.register("a@b.com", "sandbox-pw1");
+  includes(s.register("a@b.com", "sandbox-pw1").error, "Try signing in");
 });
 
 test("email normalized lowercase", () => {
   const s = new P.PaperTrailSandbox();
-  eq(s.register("A@B.COM", "12345678").user.email, "a@b.com");
+  eq(s.register("A@B.COM", "sandbox-pw1").user.email, "a@b.com");
 });
 
 test("starts unverified", () => {
   const s = new P.PaperTrailSandbox();
-  eq(s.register("a@b.com", "12345678").user.email_verified, false);
+  eq(s.register("a@b.com", "sandbox-pw1").user.email_verified, false);
 });
 
 test("verify token hashed in store", () => {
   const s = new P.PaperTrailSandbox();
-  const r = s.register("a@b.com", "12345678");
+  const r = s.register("a@b.com", "sandbox-pw1");
   const stored = [...s.users.values()][0];
   eq(stored.verify_token, P.hashToken(r.verifyToken));
   assert(stored.verify_token !== r.verifyToken);
@@ -852,14 +865,14 @@ test("verify token hashed in store", () => {
 
 test("verifyEmail with raw token works", () => {
   const s = new P.PaperTrailSandbox();
-  const r = s.register("a@b.com", "12345678");
+  const r = s.register("a@b.com", "sandbox-pw1");
   assert(s.verifyEmail(r.verifyToken));
   assert([...s.users.values()][0].email_verified);
 });
 
 test("GET verify-email does not mark verified", () => {
   const s = new P.PaperTrailSandbox();
-  const r = s.register("a@b.com", "12345678");
+  const r = s.register("a@b.com", "sandbox-pw1");
   const get = s.verifyEmailGet(r.verifyToken);
   includes(get.redirect, "/verify-email");
   eq(get.mutated, false);
@@ -868,20 +881,20 @@ test("GET verify-email does not mark verified", () => {
 
 test("POST verify-email after GET still works", () => {
   const s = new P.PaperTrailSandbox();
-  const r = s.register("a@b.com", "12345678");
+  const r = s.register("a@b.com", "sandbox-pw1");
   s.verifyEmailGet(r.verifyToken);
   assert(s.verifyEmail(r.verifyToken));
 });
 
 test("verifyEmail wrong token fails", () => {
   const s = new P.PaperTrailSandbox();
-  s.register("a@b.com", "12345678");
+  s.register("a@b.com", "sandbox-pw1");
   assert(!s.verifyEmail("deadbeef"));
 });
 
 test("stored verify hash is not a bearer", () => {
   const s = new P.PaperTrailSandbox();
-  const r = s.register("a@b.com", "12345678");
+  const r = s.register("a@b.com", "sandbox-pw1");
   const stored = [...s.users.values()][0].verify_token;
   assert(!s.verifyEmail(stored));
   eq([...s.users.values()][0].email_verified, false);
@@ -890,46 +903,46 @@ test("stored verify hash is not a bearer", () => {
 
 test("login success", () => {
   const s = new P.PaperTrailSandbox();
-  s.register("a@b.com", "12345678");
-  assert(s.login("a@b.com", "12345678").user);
+  s.register("a@b.com", "sandbox-pw1");
+  assert(s.login("a@b.com", "sandbox-pw1").user);
 });
 
 test("login wrong password 401", () => {
   const s = new P.PaperTrailSandbox();
-  s.register("a@b.com", "12345678");
+  s.register("a@b.com", "sandbox-pw1");
   eq(s.login("a@b.com", "nope!!!!").status, 401);
 });
 
 test("login rate limit after 5 fails", () => {
   const s = new P.PaperTrailSandbox();
-  s.register("a@b.com", "12345678");
+  s.register("a@b.com", "sandbox-pw1");
   for (let i = 0; i < 5; i++) s.login("a@b.com", "wrongpwd", "9.9.9.9");
-  eq(s.login("a@b.com", "12345678", "9.9.9.9").status, 429);
+  eq(s.login("a@b.com", "sandbox-pw1", "9.9.9.9").status, 429);
 });
 
 test("login limit is per ip", () => {
   const s = new P.PaperTrailSandbox();
-  s.register("a@b.com", "12345678");
+  s.register("a@b.com", "sandbox-pw1");
   for (let i = 0; i < 5; i++) s.login("a@b.com", "wrongpwd", "9.9.9.9");
-  assert(s.login("a@b.com", "12345678", "8.8.8.8").user);
+  assert(s.login("a@b.com", "sandbox-pw1", "8.8.8.8").user);
 });
 
 test("success clears failures", () => {
   const s = new P.PaperTrailSandbox();
-  s.register("a@b.com", "12345678");
+  s.register("a@b.com", "sandbox-pw1");
   s.login("a@b.com", "wrongpwd", "1.2.3.4");
-  s.login("a@b.com", "12345678", "1.2.3.4");
+  s.login("a@b.com", "sandbox-pw1", "1.2.3.4");
   eq(s.loginAttempts.filter((a) => a.ip_hash === P.hashIp("1.2.3.4")).length, 0);
 });
 
 test("name defaults from email local part", () => {
   const s = new P.PaperTrailSandbox();
-  eq(s.register("ada@uni.edu", "12345678").user.name, "ada");
+  eq(s.register("ada@uni.edu", "sandbox-pw1").user.name, "ada");
 });
 
 test("name capped 80", () => {
   const s = new P.PaperTrailSandbox();
-  eq(s.register("a@b.com", "12345678", "n".repeat(200)).user.name.length, 80);
+  eq(s.register("a@b.com", "sandbox-pw1", "n".repeat(200)).user.name.length, 80);
 });
 
 test("new user token_version 1", () => {
@@ -1244,7 +1257,7 @@ test("pro 51st list is abuse cap not upgrade", () => {
 
 test("other user cannot add", () => {
   const { s, id } = userStore();
-  const other = s.register("b@b.com", "12345678").user.id;
+  const other = s.register("b@b.com", "sandbox-pw1").user.id;
   const c = s.createCollection(id, "Reading").collection;
   eq(s.addToCollection(c.id, other, "p-1").error, "Not found.");
 });
@@ -1893,8 +1906,8 @@ test("login unknown email still 401", () => {
 
 test("register then login email case-insensitive", () => {
   const s = new P.PaperTrailSandbox();
-  s.register("Ada@Uni.edu", "12345678");
-  assert(s.login("ada@uni.edu", "12345678").user);
+  s.register("Ada@Uni.edu", "sandbox-pw1");
+  assert(s.login("ada@uni.edu", "sandbox-pw1").user);
 });
 
 test("chat abuse hour cap", () => {
@@ -1961,10 +1974,14 @@ test("canPublish whitespace source fails", () => {
 test("validEmailPassword 254 edge", () => {
   const email = `${"a".repeat(64)}@${"b".repeat(200)}.com`;
   assert(email.length > 254);
-  assert(!P.validEmailPassword(email, "12345678"));
+  assert(!P.validEmailPassword(email, "sandbox-pw1"));
 });
 
-test("validEmailPassword 8 exactly", () => assert(P.validEmailPassword("a@b.c", "12345678")));
+test("validEmailPassword rejects short and common passwords", () => {
+  assert(!P.validEmailPassword("a@b.c", "shortpw"));
+  assert(!P.validEmailPassword("a@b.c", "password123"));
+  assert(P.validEmailPassword("a@b.c", "sandboxpw1"));
+});
 
 test("hashToken unicode stable", () => {
   eq(P.hashToken("café"), P.hashToken("café"));
@@ -2371,7 +2388,7 @@ test("password 72 chars ok", () => {
 test("email 255 rejected", () => {
   const s = new P.PaperTrailSandbox();
   const local = "a".repeat(250);
-  assert(s.register(`${local}@b.com`, "12345678").error);
+  assert(s.register(`${local}@b.com`, "sandbox-pw1").error);
 });
 
 test("publish whitespace caveats blocked", () => {
@@ -2427,7 +2444,7 @@ test("rss no extra when no filters", () => {
 
 test("verify GET redirect keeps token slice", () => {
   const s = new P.PaperTrailSandbox();
-  const r = s.register("z@z.com", "12345678");
+  const r = s.register("z@z.com", "sandbox-pw1");
   includes(s.verifyEmailGet(r.verifyToken).redirect, r.verifyToken.slice(0, 128));
 });
 

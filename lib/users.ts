@@ -5,11 +5,10 @@ import { getDb } from "./mongodb";
 import { isValidObjectId } from "./object-id";
 import { hashToken, tokenLookupValues } from "./token-hash";
 import { entitlementsFor, isProUser, type Entitlements, type PlanName } from "./entitlements";
+import { passwordPolicyError } from "./passwords";
 
 export { hashToken } from "./token-hash";
 
-const MIN_PASSWORD_LENGTH = 8;
-const MAX_PASSWORD_LENGTH = 72;
 const MAX_EMAIL_LENGTH = 254;
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync("timing-pad", 10);
 
@@ -101,14 +100,11 @@ export async function registerUser(
   name: string
 ): Promise<{ user: UserPublic; verifyToken: string } | { error: string }> {
   const normalized = email.trim().toLowerCase();
-  if (
-    !normalized.includes("@") ||
-    normalized.length > MAX_EMAIL_LENGTH ||
-    password.length < MIN_PASSWORD_LENGTH ||
-    password.length > MAX_PASSWORD_LENGTH
-  ) {
-    return { error: "Valid email and password (8–72 chars) required." };
+  if (!normalized.includes("@") || normalized.length > MAX_EMAIL_LENGTH) {
+    return { error: "A valid email is required." };
   }
+  const policy = passwordPolicyError(password);
+  if (policy) return { error: policy };
   const existing = await findUserByEmail(normalized);
   if (existing) {
     // Spend a bcrypt compare so existence isn't obvious from timing.
@@ -215,11 +211,7 @@ export async function resetPasswordWithToken(
   newPassword: string
 ): Promise<boolean> {
   const candidates = tokenLookupValues(token);
-  if (
-    candidates.length === 0 ||
-    newPassword.length < MIN_PASSWORD_LENGTH ||
-    newPassword.length > MAX_PASSWORD_LENGTH
-  ) {
+  if (candidates.length === 0 || passwordPolicyError(newPassword)) {
     return false;
   }
   const col = await users();

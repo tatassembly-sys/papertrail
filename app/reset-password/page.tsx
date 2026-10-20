@@ -54,11 +54,11 @@ function ResetForm() {
         <input
           type="password"
           required
-          minLength={8}
+          minLength={10}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
-          placeholder="At least 8 characters"
+          placeholder="At least 10 characters"
           className="pt-input mt-1"
         />
       </label>
@@ -67,7 +67,7 @@ function ResetForm() {
         <input
           type="password"
           required
-          minLength={8}
+          minLength={10}
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           autoComplete="new-password"
