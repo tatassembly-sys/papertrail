@@ -35,13 +35,13 @@ Rewritten 20 October 2026 after a fresh code audit (see `PROGRESS.md` → Baseli
 ### Tasks
 - [ ] **M0.1** `[OWNER]` Create Atlas M0 cluster (EU region, e.g. `eu-west-2`/`eu-west-1`), DB user, Network Access `0.0.0.0/0`; put SRV string in Vercel `MONGODB_URI`, set `MONGODB_DB`. If old data matters: `mongodump` from Railway Mongo before it is deleted, `mongorestore` into Atlas.
 - [ ] **M0.2** `[OWNER]` Vercel → import `tatassembly-sys/papertrail` (Next.js preset). Set all env vars from AGENTS.md §4 for Production. Set `NEXT_PUBLIC_SITE_URL=https://<project>.vercel.app`.
-- [ ] **M0.3** `[AGENT]` Add `scripts/ensure-indexes.mjs` (or extend existing) that calls the index definitions in `lib/indexes.ts` idempotently; document `node scripts/ensure-indexes.mjs` in `SETUP.md`. Must refuse to run unless `CONFIRM_INDEXES=yes` is set.
-- [ ] **M0.4** `[AGENT]` Replace Railway fallbacks: in `lib/` site-URL helpers, prefer `NEXT_PUBLIC_SITE_URL`, then `https://${VERCEL_PROJECT_PRODUCTION_URL}`, then `VERCEL_URL`; keep `RAILWAY_*` only as last fallback. Unit test in `tests/site-url.test.ts`.
-- [ ] **M0.5** `[AGENT]` Write `docs/runbooks/cron-job-org.md`: each cron URL, cadence, header `Authorization: Bearer <CRON_SECRET>`, expected 200 body, and how to see the last run on `/admin/status`.
+- [x] **M0.3** `[AGENT]` Add `scripts/ensure-indexes.mjs` (or extend existing) that calls the index definitions in `lib/indexes.ts` idempotently; document `node scripts/ensure-indexes.mjs` in `SETUP.md`. Must refuse to run unless `CONFIRM_INDEXES=yes` is set. (`3e92d68`)
+- [x] **M0.4** `[AGENT]` Replace Railway fallbacks: in `lib/` site-URL helpers, prefer `NEXT_PUBLIC_SITE_URL`, then `https://${VERCEL_PROJECT_PRODUCTION_URL}`, then `VERCEL_URL`; keep `RAILWAY_*` only as last fallback. Unit test in `tests/site-url.test.ts`. (`0998658`)
+- [x] **M0.5** `[AGENT]` Write `docs/runbooks/cron-job-org.md`: each cron URL, cadence, header `Authorization: Bearer <CRON_SECRET>`, expected 200 body, and how to see the last run on `/admin/status`. (`147edf9`)
 - [ ] **M0.6** `[OWNER]` Create the cron-job.org jobs from `docs/runbooks/cron-job-org.md`.
-- [ ] **M0.7** `[AGENT]` Add `scripts/smoke-prod.mjs <baseUrl>`: GET `/`, `/api/health` (expects `status: ok`), a missing post slug (expects 404), unsigned `/api/process-queue` (expects 401), `/sitemap.xml`, `/robots.txt`. Exit non-zero on any mismatch. npm script `smoke:prod`.
+- [x] **M0.7** `[AGENT]` Add `scripts/smoke-prod.mjs <baseUrl>`: GET `/`, `/api/health` (expects `status: ok`), a missing post slug (expects 404), unsigned `/api/process-queue` (expects 401), `/sitemap.xml`, `/robots.txt`. Exit non-zero on any mismatch. npm script `smoke:prod`. (`26f3bf3`)
 - [ ] **M0.8** `[OWNER]` Run `npm run smoke:prod -- https://<project>.vercel.app`; paste output into PROGRESS.md. Then delete the Railway service.
-- [ ] **M0.9** `[AGENT]` After M0.8 is logged: delete `railway.toml`/`.railwayignore`, remove Railway wording from README/SETUP/STATUS.
+- [ ] **M0.9** `[AGENT]` After M0.8 is logged: delete `railway.toml`/`.railwayignore`, remove Railway wording from README/SETUP/STATUS. — BLOCKED (see PROGRESS)
 
 ### Acceptance criteria (all verifiable)
 - `node scripts/smoke-prod.mjs http://localhost:3000` passes against `npm run build && npm start` with a local Mongo (or is documented as skipped).

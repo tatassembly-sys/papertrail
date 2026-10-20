@@ -17,6 +17,7 @@ Append-only log written by coding agents and the owner. Newest entries at the to
 Format: `- [open|resolved] YYYY-MM-DD <task id> — <what is blocked> — needs: <who/what> — tried: <...>`
 
 - [open] 2026-10-20 M0 — Atlas cluster, Vercel project, cron-job.org schedules — needs: OWNER.
+- [open] 2026-10-20 M0.9 — delete Railway files only after M0.8 production smoke is logged — needs: OWNER to run `npm run smoke:prod` on the Vercel URL and delete the Railway service.
 - [open] 2026-10-20 M2 — OpenRouter key rotation, Resend domain — needs: OWNER.
 
 ## Baseline audit — 20 October 2026
@@ -51,6 +52,38 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 3. **Release truth on Vercel** — `/api/health` cannot report the running commit (Railway-only env), so nobody can prove which code is live; plus no error tracking to see failures.
 
 ## Log
+
+### 2026-10-19 — M0.3 — confirmed index bootstrap
+- Agent: Grok
+- Commit(s): `3e92d68`
+- Change: `CONFIRM_INDEXES=yes node scripts/ensure-indexes.mjs` applies `lib/indexes.ts` and refuses otherwise. Documented in `SETUP.md`.
+- Checks run: `node scripts/ensure-indexes.mjs` without the flag → exit 1, stderr contains `CONFIRM_INDEXES=yes`, under 2s (`tests/ensure-indexes.test.ts`). With the flag against local `127.0.0.1:27017` → `Indexes ensured on papertrail.` twice.
+- Evidence: unit test pass; local MongoDB 7 container only. Not run against Atlas.
+- Follow-ups: owner runs it on Atlas after M0.1.
+
+### 2026-10-19 — M0.4 — Vercel site URL order
+- Agent: Grok
+- Commit(s): `0998658`
+- Change: `getSiteUrl` prefers `NEXT_PUBLIC_SITE_URL`, then `VERCEL_PROJECT_PRODUCTION_URL`, then `VERCEL_URL`. Railway hosts are the last fallback.
+- Checks run: `npm run test:unit` → `tests/site-url.test.ts` pass. Sandbox site-url group 7/7.
+- Evidence: explicit URL beats Vercel; Vercel production host beats Railway.
+- Follow-ups: none.
+
+### 2026-10-19 — M0.5 — cron-job.org runbook
+- Agent: Grok
+- Commit(s): `147edf9`
+- Change: `docs/runbooks/cron-job-org.md` lists six jobs, cadences, the bearer header, expected 200, and `/admin/status`.
+- Checks run: doc only. No scheduler was created.
+- Evidence: file matches `CRON_JOBS` in `lib/cron-run.ts`.
+- Follow-ups: M0.6 owner creates the jobs.
+
+### 2026-10-19 — M0.7 — read-only production smoke
+- Agent: Grok
+- Commit(s): `26f3bf3`
+- Change: `npm run smoke:prod` checks `/`, `/api/health` (`status: ok`), a missing post (404), unsigned `/api/process-queue` (401), `/sitemap.xml`, `/robots.txt`.
+- Checks run: `node scripts/smoke-prod.mjs http://localhost:3000` against `npm run build && npm start` with local Mongo → `OK home 200`, `OK health 200`, `OK missing-post 404`, `OK unsigned-queue 401`, `OK sitemap 200`, `OK robots 200`.
+- Evidence: that local run. Not run against Vercel (no project yet). Gate before these commits: `npm ci` (cleanup EPERM warning, install exit 0), `npm run typecheck` exit 0, `npm test` → 523/523 sandbox and 41/41 unit, `npm run build` exit 0.
+- Follow-ups: M0.8 owner runs the same command on the Vercel URL.
 
 ### 20 October 2026 — setup — agent operating manual and launch milestones
 - Agent: Grok Bot (audit)

@@ -20,7 +20,7 @@ Paper Trail turns research papers (arXiv RSS, PubMed, manual PDF/URL submissions
 | `components/` | React UI components. |
 | `middleware.ts` | Edge middleware (admin gate / headers). |
 | `next.config.ts` | Security headers incl. CSP; `X-Robots-Tag: noindex` on private routes. |
-| `sandbox/run.mjs` | 520-scenario offline sandbox suite (`npm run test:sandbox`). |
+| `sandbox/run.mjs` | 523-scenario offline sandbox suite (`npm run test:sandbox`). |
 | `tests/*.test.ts` | `node:test` unit tests via `tsx` (`npm run test:unit`). |
 | `scripts/` | Ops scripts (index creation etc.). |
 | `vercel.json` | `regions: ["lhr1"]`, no crons (external scheduler instead). |
@@ -32,7 +32,7 @@ Paper Trail turns research papers (arXiv RSS, PubMed, manual PDF/URL submissions
 | Install | `npm ci` | Node 22 (CI uses 22). |
 | Dev server | `npm run dev` | needs `MONGODB_URI` + `AUTH_SECRET` (≥32 chars) in `.env.local`. |
 | Typecheck | `npm run typecheck` | `tsc --noEmit`. `npm run lint` is currently the **same** command (no ESLint yet — see M4). |
-| All tests | `npm test` | sandbox (520 scenarios) + unit (34 tests). No DB needed. |
+| All tests | `npm test` | sandbox (523 scenarios) + unit (41 tests). No DB needed. |
 | Unit only | `npm run test:unit` | `node --import tsx --test tests/*.test.ts` |
 | Build | `npm run build` | `next build`; works without a live DB. |
 
