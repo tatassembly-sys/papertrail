@@ -45,9 +45,9 @@ export default function SubmitPage() {
         Know a paper worth translating?
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-        Send us a link. Every suggestion is reviewed by an editor before it's translated
-        or published — nothing goes live automatically, and submitting doesn't guarantee
-        it'll be picked up. Free accounts can send three suggestions a week;{" "}
+        Send us a link. Every suggestion is reviewed by an editor before it is translated
+        or published. Nothing goes live automatically, and submitting does not guarantee
+        it will be picked up. Free accounts can send three suggestions a week;{" "}
         <a href="/pricing" className="text-redpen hover:underline">
           Pro
         </a>{" "}
