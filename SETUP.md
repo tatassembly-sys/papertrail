@@ -69,11 +69,17 @@ first write. Four collections are used: `articles`, `fetch_queue`,
 `lib/articles.ts`, `lib/queue.ts`, `lib/scheduledPosts.ts`, and
 `lib/submissions.ts` — there's no separate SQL/schema file to run.
 
-**One index is required, not optional:** both the public homepage search bar
-and the admin dashboard's search box use MongoDB's built-in `$text` search,
-which needs a text index to exist first — search will error without it (a
-plain community MongoDB feature, not an Atlas-only one, so this works fine on
-Railway's MongoDB plugin). Run this once against your database:
+**Indexes are created by the app's script, not by hand.** Homepage search
+needs the text index in `lib/indexes.ts`. After `MONGODB_URI` points at the
+database you mean to change (Atlas, once the owner has created it):
+
+```
+CONFIRM_INDEXES=yes node scripts/ensure-indexes.mjs
+```
+
+The script refuses to connect without `CONFIRM_INDEXES=yes`. It is idempotent
+and applies every index in `lib/indexes.ts`, including the text index. The
+mongosh snippets below are the same idea, kept so you can inspect them.
 ```js
 db.articles.createIndex({ title: "text", headline: "text", plain_explanation: "text" });
 ```
