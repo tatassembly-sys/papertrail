@@ -18,6 +18,7 @@ import { sanitizeHttpUrl } from "@/lib/http-url";
 import { jsonLdScript } from "@/lib/json-ld";
 import { slugifyLabel } from "@/lib/name-slug";
 import { postPageMetadata } from "@/lib/post-metadata";
+import { postIsOnFile } from "@/lib/public-route";
 import { readingMinutes, readingTimeLabel } from "@/lib/reading-time";
 import { licenceCreditLabel } from "@/lib/copyright";
 
@@ -56,7 +57,7 @@ export default async function PostPage({ params }: PageProps) {
     );
   }
 
-  if (!article) notFound();
+  if (!postIsOnFile(article)) notFound();
 
   const session = await getCurrentUserSession();
   const hdrs = await headers();

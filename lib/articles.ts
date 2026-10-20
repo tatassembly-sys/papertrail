@@ -3,7 +3,7 @@ import { getDb } from "./mongodb";
 import { isValidObjectId } from "./object-id";
 import { sanitizeHttpUrl } from "./http-url";
 import { PublishGateError, publishBlocker } from "./publish-gate";
-import { escapeRegex, labelMatchesSlug, slugToLooseRegex } from "./name-slug";
+import { anchoredSlugRegex, escapeRegex, matchPublishedLabel } from "./name-slug";
 import type { ArticleRow, PaperSourceKind, TranslatedArticle } from "./prompts";
 import {
   applyHighlights,
@@ -328,15 +328,28 @@ export async function getPublishedAuthorCounts(
 }
 
 export async function resolveAuthorNameFromSlug(slug: string): Promise<string | null> {
-  if (!slug) return null;
+  const rx = anchoredSlugRegex(slug);
+  if (!rx) return null;
   const col = await articlesCollection();
-  const rx = slugToLooseRegex(slug);
   const doc = await col.findOne(
     { status: "published", authors: rx },
     { projection: { authors: 1 } }
   );
-  const match = (doc?.authors || []).find((name) => labelMatchesSlug(name, slug));
-  return match || doc?.authors?.find((name) => rx.test(name)) || null;
+  if (!doc) return null;
+  return matchPublishedLabel(slug, doc.authors || []);
+}
+
+/** Published tag or keyword for this slug. Unknown slugs stay null (404). */
+export async function resolvePublishedTag(slug: string): Promise<string | null> {
+  const rx = anchoredSlugRegex(slug);
+  if (!rx) return null;
+  const col = await articlesCollection();
+  const doc = await col.findOne(
+    { status: "published", $or: [{ tags: rx }, { keywords: rx }] },
+    { projection: { tags: 1, keywords: 1 } }
+  );
+  if (!doc) return null;
+  return matchPublishedLabel(slug, [...(doc.tags || []), ...(doc.keywords || [])]);
 }
 
 export async function getTrendingArticles(limit = 5): Promise<ArticleRow[]> {

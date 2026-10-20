@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPublishedArticles, getPublishedTagCounts } from "@/lib/articles";
-import { labelMatchesSlug, slugifyLabel } from "@/lib/name-slug";
+import { getPublishedArticles, resolvePublishedTag } from "@/lib/articles";
+import { slugifyLabel } from "@/lib/name-slug";
+import { topicIsOnFile } from "@/lib/public-route";
 import ArticleCard from "@/components/ArticleCard";
 import FollowTopic from "@/components/FollowTopic";
 
@@ -12,16 +13,12 @@ interface PageProps {
   params: Promise<{ tag: string }>;
 }
 
-async function resolveTag(slug: string): Promise<string | null> {
-  const decoded = decodeURIComponent(slug);
-  const tags = await getPublishedTagCounts(200).catch(() => []);
-  const hit = tags.find((t) => labelMatchesSlug(t.tag, decoded) || t.tag === decoded);
-  return hit?.tag || (decoded ? decoded.replace(/-/g, " ") : null);
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { tag } = await params;
-  const label = (await resolveTag(tag)) || tag;
+  const label = await resolvePublishedTag(tag);
+  if (!topicIsOnFile(label)) {
+    return { title: "Not on file", robots: { index: false, follow: false } };
+  }
   return {
     title: label,
     description: `Plain-language notes on ${label}.`,
@@ -30,8 +27,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function TopicPage({ params }: PageProps) {
   const { tag } = await params;
-  const label = await resolveTag(tag);
-  if (!label) notFound();
+  const label = await resolvePublishedTag(tag);
+  // notFound() before any shell. Do not add loading.tsx on this segment.
+  if (!topicIsOnFile(label)) notFound();
 
   const { articles, total } = await getPublishedArticles(1, 16, { tag: label });
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublishedArticles, resolveAuthorNameFromSlug } from "@/lib/articles";
 import ArticleCard from "@/components/ArticleCard";
+import { authorIsOnFile } from "@/lib/public-route";
 import { getSiteUrl } from "@/lib/site-url";
 import { jsonLdScript } from "@/lib/json-ld";
 
@@ -15,7 +16,9 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const name = await resolveAuthorNameFromSlug(slug);
-  if (!name) return { title: "Author" };
+  if (!authorIsOnFile(name)) {
+    return { title: "Not on file", robots: { index: false, follow: false } };
+  }
   return {
     title: name,
     description: `Plain-language notes on papers by ${name}.`,
@@ -25,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function AuthorPage({ params }: PageProps) {
   const { slug } = await params;
   const name = await resolveAuthorNameFromSlug(slug);
-  if (!name) notFound();
+  if (!authorIsOnFile(name)) notFound();
 
   const { articles, total } = await getPublishedArticles(1, 16, { author: name });
   const jsonLd = {

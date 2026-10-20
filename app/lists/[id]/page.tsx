@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getCollection } from "@/lib/collections";
 import { getPublishedArticlesBySlugs } from "@/lib/articles";
 import ArticleCard from "@/components/ArticleCard";
+import { listIsOnFile } from "@/lib/public-route";
 import { getSiteUrl } from "@/lib/site-url";
 import { jsonLdScript } from "@/lib/json-ld";
 
@@ -16,7 +17,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
   const list = await getCollection(id);
-  if (!list || !list.public) return { title: "List", robots: { index: false } };
+  if (!listIsOnFile(list)) return { title: "Not on file", robots: { index: false, follow: false } };
   return {
     title: list.name,
     description: list.description || `A Paper Trail reading list: ${list.name}`,
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function PublicListPage({ params }: PageProps) {
   const { id } = await params;
   const list = await getCollection(id);
-  if (!list || !list.public) notFound();
+  if (!listIsOnFile(list)) notFound();
   const articles = await getPublishedArticlesBySlugs(list.slugs, 80);
   const jsonLd = {
     "@context": "https://schema.org",
