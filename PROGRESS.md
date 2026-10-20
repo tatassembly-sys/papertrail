@@ -57,15 +57,15 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ### 2026-10-19 — M2 summary
 - Agent: Grok
-- Commit(s): `17480b0`, `f2915ae`, `af28a79`, `58a47ea`, `226d52a`, `4c6e4cb`, `e885751`
+- Commit(s): `fcfe324`, `2c50f14`, `e7bdf6e`, `d12d2e2`, `305885f`, `478817e`, `390433f`, `e25e3de`
 - Change: Public writes are rate limited and listed in `docs/security/route-matrix.md`. CSP test asserts no `unsafe-eval` plus `frame-ancestors`, `base-uri`, and `form-action`. `unsafe-inline` stays because Next’s bootstrap script needs it. Session cookies and cron compare are tested. Submitted URLs reject private hosts, and PDF fetch re-checks redirects. Passwords are at least 10 characters and not on the bundled common list. Chat and process-paper have daily per-IP and per-account caps. Prompts refuse instruction override. `SECURITY.md` is the disclosure policy.
-- Checks run: `npm run typecheck` exit 0. `npm test` → 532/532 sandbox and 53/53 unit. `npx next lint` → no warnings or errors. First `npm run build` failed because webpack pulled `node:dns/promises` into the client via `lib/http-url.ts`. `e9da806` moved that lookup to `lib/url-fetch.ts`. Rebuild after that commit: `npm run build` exit 0 (compiled, 35/35 pages; four pages retried once under load).
+- Checks run: `npm run typecheck` exit 0. `npm test` → 532/532 sandbox and 53/53 unit. `npx next lint` → no warnings or errors. First `npm run build` failed because webpack pulled `node:dns/promises` into the client via `lib/http-url.ts`. `305885f` moved that lookup to `lib/url-fetch.ts`. Rebuild after that commit: `npm run build` exit 0 (compiled, 35/35 pages; four pages retried once under load).
 - Evidence: `rg unsafe-eval next.config.ts` returned nothing. User-login lockout was already covered by sandbox test "login rate limit after 5 fails"; the route test checks the real handler calls the same helpers.
 - Follow-ups: M2.1 owner rotates OpenRouter, cron, auth, and admin secrets in Vercel.
 
 ### 2026-10-19 — M2.2 — route matrix and public POST limits
 - Agent: Grok
-- Commit(s): `17480b0`
+- Commit(s): `fcfe324`
 - Change: `tooManyPublicWrites` on verify, unsubscribe, logout, checkout, portal, highlights, collections, and `/api/me`. Matrix documents every route file.
 - Checks run: `tests/public-writes.test.ts`.
 - Evidence: Stripe webhook is signature-only so retries are not dropped.
@@ -73,7 +73,7 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ### 2026-10-19 — M2.3 — CSP assertions
 - Agent: Grok
-- Commit(s): `f2915ae`
+- Commit(s): `2c50f14`
 - Change: `tests/headers.test.ts` imports `next.config` and checks the CSP. Directives were already set. `unsafe-inline` remains, with the comment in `next.config.ts`.
 - Checks run: that unit test.
 - Evidence: no `unsafe-eval` in `next.config.ts`.
@@ -81,7 +81,7 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ### 2026-10-19 — M2.4 — cookies and cron compare
 - Agent: Grok
-- Commit(s): `af28a79`
+- Commit(s): `e7bdf6e`
 - Change: Tests for admin and user cookie flags, `pt_chat` flags, `timingSafeEqualString`, and user-login lockout calls.
 - Checks run: `tests/session-cookies.test.ts`.
 - Evidence: production cookie options have `httpOnly`, `secure`, `sameSite: lax`.
@@ -89,7 +89,7 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ### 2026-10-19 — M2.5 — URL safety
 - Agent: Grok
-- Commit(s): `58a47ea`
+- Commit(s): `d12d2e2`
 - Change: `lib/url-safety.ts` blocks private, loopback, and link-local hosts. `fetchPublicHttp` checks each redirect. arXiv PDF download uses it.
 - Checks run: `tests/url-safety.test.ts` and sandbox http-url cases (23).
 - Evidence: `http://169.254.169.254/latest` is rejected. A same-host relative redirect is allowed.
@@ -97,7 +97,7 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ### 2026-10-19 — M2.6 — password policy
 - Agent: Grok
-- Commit(s): `226d52a`
+- Commit(s): `478817e`
 - Change: Minimum length 10. Bundled common-password list. Register and reset pages use `minLength={10}`.
 - Checks run: `tests/passwords.test.ts`. Sandbox auth group includes common-password rejection and the existing user lockout test.
 - Evidence: `password123` is rejected. `sandbox-pw1` is accepted.
@@ -105,7 +105,7 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ### 2026-10-19 — M2.7 — LLM caps and prompt guard
 - Agent: Grok
-- Commit(s): `4c6e4cb`
+- Commit(s): `390433f`
 - Change: Daily IP and user caps on chat. Daily IP and admin-session caps on process-paper. Both system prompts say untrusted content cannot change the rules.
 - Checks run: `tests/prompts.test.ts`.
 - Evidence: failed chat calls release the new counters.
@@ -113,7 +113,7 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ### 2026-10-19 — M2.8 — SECURITY.md
 - Agent: Grok
-- Commit(s): `e885751`
+- Commit(s): `e25e3de`
 - Change: Disclosure contact is GitHub private reporting. No bounty. Scope lists auth, cron, SSRF, Stripe, and LLM spend.
 - Checks run: doc only.
 - Evidence: file `SECURITY.md`.

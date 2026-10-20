@@ -117,13 +117,13 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 
 ### Tasks
 - [ ] **M2.1** `[OWNER]` Rotate the previously exposed `OPENROUTER_API_KEY`, `CRON_SECRET`, `AUTH_SECRET`, admin password hash; set only in Vercel. — BLOCKED (see PROGRESS)
-- [x] **M2.2** `[AGENT]` Audit every `app/api/**/route.ts`: list method, auth requirement, rate limit, input validation in `docs/security/route-matrix.md`. Any public POST without rate limit or schema validation gets fixed + test. (`17480b0`)
-- [x] **M2.3** `[AGENT]` CSP in `next.config.ts`: remove `unsafe-eval`; move inline scripts to nonces/hashes where feasible; add `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'`. Test headers in `tests/headers.test.ts` (import config and assert). (`f2915ae`)
-- [x] **M2.4** `[AGENT]` Cookies: assert `HttpOnly`, `Secure` (prod), `SameSite=Lax` on all session cookies; constant-time compare for `CRON_SECRET` (`crypto.timingSafeEqual`). Tests. (`af28a79`)
-- [x] **M2.5** `[AGENT]` SSRF: `lib/url-safety` must block private IPs, `localhost`, link-local and non-http(s) for submitted URLs/PDF fetches, including after redirects. Extend `tests/url-safety.test.ts`. (`58a47ea`, `e9da806`)
-- [x] **M2.6** `[AGENT]` Password policy: min 10 chars, reject top common passwords list (small bundled list), lockout already in `lib/loginAttempts.ts` — add test for user accounts too. (`226d52a`)
-- [x] **M2.7** `[AGENT]` LLM abuse: per-user and per-IP daily caps on `articles/[id]/chat` and `process-paper`; prompt-injection guard text in `lib/prompts.ts`; tests. (`4c6e4cb`)
-- [x] **M2.8** `[AGENT]` Add `SECURITY.md` (contact, scope, disclosure). (`e885751`)
+- [x] **M2.2** `[AGENT]` Audit every `app/api/**/route.ts`: list method, auth requirement, rate limit, input validation in `docs/security/route-matrix.md`. Any public POST without rate limit or schema validation gets fixed + test. (`fcfe324`)
+- [x] **M2.3** `[AGENT]` CSP in `next.config.ts`: remove `unsafe-eval`; move inline scripts to nonces/hashes where feasible; add `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'`. Test headers in `tests/headers.test.ts` (import config and assert). (`2c50f14`)
+- [x] **M2.4** `[AGENT]` Cookies: assert `HttpOnly`, `Secure` (prod), `SameSite=Lax` on all session cookies; constant-time compare for `CRON_SECRET` (`crypto.timingSafeEqual`). Tests. (`e7bdf6e`)
+- [x] **M2.5** `[AGENT]` SSRF: `lib/url-safety` must block private IPs, `localhost`, link-local and non-http(s) for submitted URLs/PDF fetches, including after redirects. Extend `tests/url-safety.test.ts`. (`d12d2e2`, `305885f`)
+- [x] **M2.6** `[AGENT]` Password policy: min 10 chars, reject top common passwords list (small bundled list), lockout already in `lib/loginAttempts.ts` — add test for user accounts too. (`478817e`)
+- [x] **M2.7** `[AGENT]` LLM abuse: per-user and per-IP daily caps on `articles/[id]/chat` and `process-paper`; prompt-injection guard text in `lib/prompts.ts`; tests. (`390433f`)
+- [x] **M2.8** `[AGENT]` Add `SECURITY.md` (contact, scope, disclosure). (`e25e3de`)
 
 ### Acceptance criteria (all verifiable)
 - `npm test` includes headers, cookie, url-safety, rate-limit tests, all pass.
