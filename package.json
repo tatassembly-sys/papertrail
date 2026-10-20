@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run test:sandbox && npm run test:unit",
     "test:sandbox": "node sandbox/run.mjs",
-    "test:unit": "node --import tsx --test tests/*.test.ts"
+    "test:unit": "node --import tsx --test tests/*.test.ts",
+    "smoke:prod": "node scripts/smoke-prod.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
