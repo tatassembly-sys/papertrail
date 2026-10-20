@@ -126,6 +126,6 @@ If you cannot finish a task (needs an `[OWNER]` step, missing credential, ambigu
 
 ## 12. Repository-specific notes
 - Missing articles: `app/posts/[slug]/` has **no** `loading.tsx` on purpose (a loading boundary makes Next stream a 200 before `notFound()`). Do not add one. Regression tests live in `tests/mr1.test.ts`.
-- `lib/running-commit.ts` only reads `RAILWAY_GIT_COMMIT_SHA` — on Vercel `/api/health` will report `commit: null` until M1.1 is done.
+- `lib/running-commit.ts` reads `VERCEL_GIT_COMMIT_SHA`, then `RAILWAY_GIT_COMMIT_SHA`. `/api/health` also returns `env` from `VERCEL_ENV` (including on the 503 path).
 - Vercel Hobby crons run at most daily; frequent jobs are triggered by an external scheduler with `Authorization: Bearer $CRON_SECRET`. Keep cron handlers idempotent and under `maxDuration` (process-queue = 120 s).
 - The OpenRouter key was previously exposed and must be rotated by the owner (M2).
