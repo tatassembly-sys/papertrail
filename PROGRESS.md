@@ -55,6 +55,24 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+## Review 2026-10-25
+
+Reviewer: Grok Bot (owner audit), 22:xx GMT. Range reviewed: 6070b20..b92717f (31 commits). Gate on clean `npm ci`: lint, typecheck, `npm test` (543 sandbox + 91 unit), build all PASS. GitHub CI on b92717f: green.
+
+- Agent work: M2.3–M2.8, M3.1–M3.5, M4.1, M5.1–M5.6, M6.1–M6.3, M8.2. I spot-checked the diffs for M3.2 (cron lock + idempotency test), M3.5 (single-use, expiring tokens), M6.1 (webhook dedupe + tests) and M4.1 (Playwright suite, kept out of the gate as specified). All real, with tests. No false ticks found. Commits are tagged and focused.
+- Earlier findings: (1) the 3 test files do run: `npm run test:unit` reports 91 tests, and site-url (4), smoke-prod (2) and ensure-indexes (1) pass on their own; AGENTS.md says 91. FIXED. (2) Live smoke has been run and logged. I re-ran it today, `npm run smoke:prod -- https://papertrail-six-rho.vercel.app`: OK home 200, health 200, missing-post 404, unsigned-queue 401, sitemap 200, robots 200. `/api/health`: status ok, db connected, commit b92717f, env production, openrouter false (no key yet, expected).
+- Reviewer commits: `0124051` M7.4 incident runbook; `5911170` npm audit fix (non-breaking), prod advisories 8 → 4 (still open: `postcss`, `tar`, including 1 critical through the Next toolchain; needs a major bump).
+
+### Next up for agents (in order; each must end with the gate green and a PROGRESS entry)
+1. **M2 deps** — clear the remaining `npm audit --omit=dev` advisories (postcss, tar). Try a Next.js minor/patch bump first. Done when: `npm audit --omit=dev --audit-level=high` exits 0, gate green, smoke:prod OK after deploy.
+2. **M4.3** — add `c8` coverage for `npm run test:unit` (`npm run test:coverage`) and record the baseline % of `lib/` here. Done when: the script exists and the baseline is logged (target ≥60%; list the files below it).
+3. **M4.2** — integration tests with `mongodb-memory-server` for `lib/users.ts`, `lib/submissions.ts`, rate-limit (`npm run test:integration`). Note: the owner box blocks 27017, but the memory server picks a random port. If it can't download a binary, mark BLOCKED with the error.
+4. **M4.4** — add test:integration/coverage to `docs/ci/proposed-ci.yml` (don't edit `.github/workflows`).
+5. **M7.2** — `lib/log.ts` structured JSON logger (level, route, requestId, no PII). Replace `console.*` in `app/api/**`. Done when: `rg "console\.(log|error|warn)" app/api` returns nothing, and a unit test proves emails/tokens are redacted.
+6. **M7.3** — `/api/health` adds `cron_last_run` per job + `queue_depth`, and `/admin/status` shows stale cron in red. Unit-test the staleness rule (>2× cadence).
+7. **M7.1** — Sentry gated on `SENTRY_DSN` (no-op if unset, PII scrubbed). Test that it's a no-op without the DSN.
+Self-check after each: `npm ci && npm run lint && npm run typecheck && npm test && npm run build`. After a push, wait for CI to go green, then run `npm run smoke:prod -- https://papertrail-six-rho.vercel.app`.
+
 ### 2026-10-19 — M4.1 — Playwright smoke
 - Agent: Grok
 - Commit(s): `e2cd41d`

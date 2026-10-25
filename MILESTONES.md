@@ -313,7 +313,7 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 - [ ] **M7.1** `[AGENT]` Add Sentry (`@sentry/nextjs`) gated on `SENTRY_DSN` (no-op if unset); scrub PII; document env.
 - [ ] **M7.2** `[AGENT]` Structured JSON logger `lib/log.ts` (level, route, requestId, no PII); replace `console.*` in API routes.
 - [ ] **M7.3** `[AGENT]` `/api/health` adds `cron_last_run` per job and `queue_depth`; `/admin/status` shows stale cron (>2× cadence) in red.
-- [ ] **M7.4** `[AGENT]` `docs/runbooks/incidents.md`: DB down, LLM quota, cron missed, email bounce, how to roll back on Vercel (Promote previous deployment).
+- [x] **M7.4** `[AGENT]` `docs/runbooks/incidents.md`: DB down, LLM quota, cron missed, email bounce, how to roll back on Vercel (Promote previous deployment). (`0124051`)
 - [ ] **M7.5** `[OWNER]` UptimeRobot (free) on `/api/health`; Sentry project; Atlas alerting email.
 
 ### Acceptance criteria (all verifiable)
