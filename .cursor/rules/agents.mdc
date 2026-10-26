@@ -7,3 +7,6 @@ Work queue is `MILESTONES.md` (first unchecked [AGENT] task, lowest milestone). 
 Gate before every commit: `npm ci && npm run typecheck && npm test && npm run build`
 Never: secrets in git, force-push, edit .github/workflows, destructive DB ops, production/dashboard changes, live payments.
 Blocked → `PROGRESS.md` BLOCKERS section, then next task.
+
+
+Agent lanes (AGENTS.md §0): work on branch `vscode/work`, open PRs to `main` labelled `vscode-agent`, log in `agents/vscode/LOG.md`, never push to `main` or `grokbot/*`, check `agents/grokbot/LOG.md` first to avoid duplicate items.
