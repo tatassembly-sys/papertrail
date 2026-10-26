@@ -30,8 +30,9 @@ for (const path of ["/", "/register"]) {
 
 test("axe: a post page has no serious/critical violations", async ({ page }) => {
   await page.goto("/");
-  const href = await page.locator('a[href^="/posts/"]').first().getAttribute("href");
-  test.skip(!href, "No published post to check");
+  const links = page.locator('a[href^="/posts/"]');
+  test.skip((await links.count()) === 0, "No published post to check");
+  const href = await links.first().getAttribute("href");
   await page.goto(href!);
   expect(await seriousViolations(page)).toEqual([]);
 });
