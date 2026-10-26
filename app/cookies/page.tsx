@@ -79,11 +79,11 @@ export default function CookiesPage() {
 
         <p>
           See also the{" "}
-          <Link href="/privacy" className="text-redpen hover:underline">
+          <Link href="/privacy" className="text-redpen underline underline-offset-2">
             privacy policy
           </Link>{" "}
           and the{" "}
-          <Link href="/terms" className="text-redpen hover:underline">
+          <Link href="/terms" className="text-redpen underline underline-offset-2">
             terms of use
           </Link>
           .

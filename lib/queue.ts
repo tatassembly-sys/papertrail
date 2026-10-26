@@ -160,3 +160,19 @@ export async function releaseQueueClaim(
     }
   );
 }
+
+/** Admin: put failed rows back to pending with a fresh attempt budget (M9.3). */
+export async function retryFailedQueueItems(ids?: string[]): Promise<number> {
+  const col = await queueCollection();
+  const filter: Record<string, unknown> = { status: "error" };
+  if (ids) {
+    const valid = ids.filter((id) => ObjectId.isValid(id)).map((id) => new ObjectId(id));
+    if (valid.length === 0) return 0;
+    filter._id = { $in: valid };
+  }
+  const result = await col.updateMany(filter, {
+    $set: { status: "pending", attempts: 0 },
+    $unset: { error_message: "", processing_started_at: "" },
+  });
+  return result.modifiedCount;
+}

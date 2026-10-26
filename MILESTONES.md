@@ -348,11 +348,11 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 **Why:** Organic search is the main acquisition channel for a research explainer site.
 
 ### Tasks
-- [ ] **M8.1** `[AGENT]` Add `npm run lighthouse` (lighthouse-ci with `lighthouserc.json`, assertions ≥0.9) against a local prod build; record scores in PROGRESS.md.
+- [x] **M8.1** `[AGENT]` Add `npm run lighthouse` (lighthouse-ci with `lighthouserc.json`, assertions ≥0.9) against a local prod build; record scores in PROGRESS.md.
 - [x] **M8.2** `[AGENT]` Structured data: `Article`/`ScholarlyArticle` JSON-LD on posts, `BreadcrumbList`; validate with a unit test of the generated object. `(17c69dd`, `f357d0a)`
-- [ ] **M8.3** `[AGENT]` Accessibility: run `@axe-core/playwright` in e2e on home/post/register; fix all serious/critical.
+- [x] **M8.3** `[AGENT]` Accessibility: run `@axe-core/playwright` in e2e on home/post/register; fix all serious/critical.
 - [ ] **M8.4** `[AGENT]` Caching: ISR/`revalidate` for public pages, `Cache-Control` on `posts/published` API; Mongo projection to avoid sending full text in lists.
-- [ ] **M8.5** `[AGENT]` Images/fonts: `next/font`, OG images cached; no layout shift.
+- [x] **M8.5** `[AGENT]` Images/fonts: `next/font`, OG images cached; no layout shift.
 
 ### Acceptance criteria (all verifiable)
 - `npm run lighthouse` passes assertions locally.
@@ -386,11 +386,11 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 **Why:** Retention and owner time are the scaling limits.
 
 ### Tasks
-- [ ] **M9.1** `[AGENT]` Empty/error/loading states for every public page (except `posts/[slug]` loading, see AGENTS.md).
+- [x] **M9.1** `[AGENT]` Empty/error/loading states for every public page (except `posts/[slug]` loading, see AGENTS.md).
 - [ ] **M9.2** `[AGENT]` Onboarding: `/welcome` topic picks → personalised `/today`; newsletter CTA after 2nd article.
 - [ ] **M9.3** `[AGENT]` Admin: bulk approve/reject queue, show LLM model used + cost estimate, retry failed items.
-- [ ] **M9.4** `[AGENT]` Mobile layout pass at 360px; dark mode contrast check.
-- [ ] **M9.5** `[AGENT]` Search: `search/suggest` debounced, keyboard accessible, empty-state suggestions.
+- [x] **M9.4** `[AGENT]` Mobile layout pass at 360px; dark mode contrast check.
+- [x] **M9.5** `[AGENT]` Search: `search/suggest` debounced, keyboard accessible, empty-state suggestions.
 
 ### Acceptance criteria (all verifiable)
 - Playwright mobile viewport smoke passes.

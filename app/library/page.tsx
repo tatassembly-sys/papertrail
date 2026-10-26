@@ -56,7 +56,7 @@ export default async function LibraryPage() {
         <h1 className="font-display text-3xl font-medium text-ink">Your papers</h1>
         <p className="mt-2 text-sm text-ink-soft">
           Saved notes, reading lists, and highlights.{" "}
-          <Link href="/account" className="text-redpen hover:underline">
+          <Link href="/account" className="text-redpen underline underline-offset-2">
             Account
           </Link>
         </p>

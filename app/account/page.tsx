@@ -168,11 +168,11 @@ function AccountInner() {
         </h1>
         <p className="mt-1 text-sm text-ink-soft">{user.email}</p>
         <p className="mt-2 text-sm">
-          <Link href="/library" className="text-redpen hover:underline">
+          <Link href="/library" className="text-redpen underline underline-offset-2">
             Open library
           </Link>
           {" · "}
-          <Link href="/welcome" className="text-redpen hover:underline">
+          <Link href="/welcome" className="text-redpen underline underline-offset-2">
             Edit topics
           </Link>
         </p>

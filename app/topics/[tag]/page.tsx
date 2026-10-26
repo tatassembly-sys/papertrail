@@ -45,11 +45,11 @@ export default async function TopicPage({ params }: PageProps) {
       </h1>
       <p className="mt-2 text-sm text-ink-soft">
         {total} {total === 1 ? "note" : "notes"}.{" "}
-        <Link href={`/?tag=${encodeURIComponent(label)}`} className="text-redpen hover:underline">
+        <Link href={`/?tag=${encodeURIComponent(label)}`} className="text-redpen underline underline-offset-2">
           Open in search
         </Link>
         {" · "}
-        <a href={`/feed.xml?tag=${encodeURIComponent(label)}`} className="text-redpen hover:underline">
+        <a href={`/feed.xml?tag=${encodeURIComponent(label)}`} className="text-redpen underline underline-offset-2">
           RSS
         </a>
       </p>

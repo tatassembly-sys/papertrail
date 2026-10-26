@@ -34,7 +34,7 @@ export default function PrivacyPage() {
         <p>
           Paper Trail publishes plain-language notes on academic papers. For a
           privacy request, use the{" "}
-          <Link href="/submit" className="text-redpen hover:underline">
+          <Link href="/submit" className="text-redpen underline underline-offset-2">
             suggest a paper
           </Link>{" "}
           form and put “privacy request” in the note, or write to the
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
           thread key. They are strictly necessary for those features. Theme is
           stored in localStorage on your device and is not a cookie. Details
           are on the{" "}
-          <Link href="/cookies" className="text-redpen hover:underline">
+          <Link href="/cookies" className="text-redpen underline underline-offset-2">
             cookie page
           </Link>
           . There is no consent banner because there is no analytics cookie.
@@ -243,11 +243,11 @@ export default function PrivacyPage() {
 
         <p>
           See also the{" "}
-          <Link href="/cookies" className="text-redpen hover:underline">
+          <Link href="/cookies" className="text-redpen underline underline-offset-2">
             cookie page
           </Link>{" "}
           and the{" "}
-          <Link href="/terms" className="text-redpen hover:underline">
+          <Link href="/terms" className="text-redpen underline underline-offset-2">
             terms of use
           </Link>
           .

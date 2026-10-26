@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { emptyStateHints } from "@/lib/search-hints";
 
 interface Suggestion {
   slug: string;
@@ -29,6 +30,7 @@ export default function SearchBar({
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(-1);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [noMatch, setNoMatch] = useState(false);
 
   useEffect(() => {
     setQuery(initialQuery);
@@ -44,6 +46,7 @@ export default function SearchBar({
     const q = query.trim();
     if (q.length < 2) {
       setSuggestions([]);
+      setNoMatch(false);
       setOpen(false);
       setLoading(false);
       return;
@@ -60,7 +63,8 @@ export default function SearchBar({
         if (!ac.signal.aborted) {
           const next = Array.isArray(body.suggestions) ? body.suggestions : [];
           setSuggestions(next);
-          setOpen(next.length > 0);
+          setNoMatch(next.length === 0);
+          setOpen(true);
           setActive(-1);
         }
       } catch {
@@ -139,6 +143,7 @@ export default function SearchBar({
             aria-autocomplete="list"
             aria-expanded={open}
             aria-controls={listId}
+            aria-activedescendant={open && active >= 0 ? `${listId}-opt-${active}` : undefined}
             role="combobox"
           />
           {open && (
@@ -148,7 +153,7 @@ export default function SearchBar({
               className="absolute z-20 mt-1 max-h-80 w-full overflow-auto rounded-sm border border-rule bg-surface shadow-md"
             >
               {suggestions.map((s, i) => (
-                <li key={s.slug} role="option" aria-selected={i === active}>
+                <li key={s.slug} id={`${listId}-opt-${i}`} role="option" aria-selected={i === active}>
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
@@ -165,6 +170,20 @@ export default function SearchBar({
                   </button>
                 </li>
               ))}
+              {noMatch && (
+                <li role="presentation" className="px-3 py-2.5 text-sm text-ink-soft">
+                  No quick matches. Try{" "}
+                  {emptyStateHints(query).map((h, i) => (
+                    <span key={h}>
+                      {i > 0 ? ", " : ""}
+                      <a href={`/?q=${encodeURIComponent(h)}`} className="text-redpen underline">
+                        {h}
+                      </a>
+                    </span>
+                  ))}
+                  , or press Enter to search everything.
+                </li>
+              )}
             </ul>
           )}
         </div>

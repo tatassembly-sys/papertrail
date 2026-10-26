@@ -48,7 +48,7 @@ export default function SubmitPage() {
         Send us a link. Every suggestion is reviewed by an editor before it is translated
         or published. Nothing goes live automatically, and submitting does not guarantee
         it will be picked up. Free accounts can send three suggestions a week;{" "}
-        <a href="/pricing" className="text-redpen hover:underline">
+        <a href="/pricing" className="text-redpen underline underline-offset-2">
           Pro
         </a>{" "}
         requests jump the editor queue.

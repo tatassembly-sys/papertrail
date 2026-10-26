@@ -72,7 +72,7 @@ export default function FollowTopic({
       <p className="mt-3 text-sm text-ink-soft">
         <Link
           href={`/user-login?next=${encodeURIComponent(nextPath)}`}
-          className="text-redpen hover:underline"
+          className="text-redpen underline underline-offset-2"
         >
           Sign in
         </Link>{" "}
@@ -92,7 +92,7 @@ export default function FollowTopic({
         <p className="mt-2 text-sm text-ink-soft">
           {msg}{" "}
           {/follow/i.test(msg) && (
-            <Link href="/pricing" className="text-redpen hover:underline">
+            <Link href="/pricing" className="text-redpen underline underline-offset-2">
               See Pro
             </Link>
           )}

@@ -77,7 +77,7 @@ export default function TermsPage() {
 
         <p>
           Personal data is described in the{" "}
-          <Link href="/privacy" className="text-redpen hover:underline">
+          <Link href="/privacy" className="text-redpen underline underline-offset-2">
             privacy policy
           </Link>
           .

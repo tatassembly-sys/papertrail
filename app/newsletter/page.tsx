@@ -61,7 +61,7 @@ function NewsletterForm() {
       <p className="mt-3 text-base leading-relaxed text-ink-soft">
         Every week: newest papers, trending notes, editor picks, and a short AI
         summary of the week — in plain language. Unsubscribe any time. See the{" "}
-        <Link href="/privacy" className="text-redpen hover:underline">
+        <Link href="/privacy" className="text-redpen underline underline-offset-2">
           privacy policy
         </Link>
         .
@@ -137,7 +137,7 @@ function NewsletterForm() {
 
       <p className="mt-8 text-sm text-ink-soft">
         Already subscribed?{" "}
-        <Link href="/newsletter/unsubscribe" className="text-redpen hover:underline">
+        <Link href="/newsletter/unsubscribe" className="text-redpen underline underline-offset-2">
           Unsubscribe
         </Link>
       </p>

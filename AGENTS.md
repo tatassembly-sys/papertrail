@@ -53,6 +53,9 @@ Paper Trail turns research papers (arXiv RSS, PubMed, manual PDF/URL submissions
 | All tests | `npm test` | sandbox (543 scenarios) + unit (91 tests). No DB needed. |
 | Unit only | `npm run test:unit` | `node --import tsx --test tests/*.test.ts` |
 | Browser smoke | `npm run test:e2e` | Playwright. Not part of `npm test`. Skips when nothing is listening. |
+| Local DB for e2e | `npm run db:memory` | in-memory Mongo (random port) seeded with one post; prints `MONGODB_URI`. |
+| Integration | `npm run test:integration` | mongodb-memory-server; not part of `npm test`. |
+| Coverage | `npm run test:coverage` | c8 over `lib/`. |
 | Build | `npm run build` | `next build`; works without a live DB. |
 
 **The gate.** Run this before every commit. It must exit 0:

@@ -58,7 +58,7 @@ export default async function TodayPage() {
 
       <p className="mt-8 text-sm text-ink-soft">
         Want this in your inbox?{" "}
-        <Link href="/newsletter" className="text-redpen hover:underline">
+        <Link href="/newsletter" className="text-redpen underline underline-offset-2">
           Weekly digest
         </Link>
         .

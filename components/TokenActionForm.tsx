@@ -102,7 +102,7 @@ function TokenActionInner({
       </form>
 
       <p className="mt-6 text-sm">
-        <Link href={backHref} className="text-redpen hover:underline">
+        <Link href={backHref} className="text-redpen underline underline-offset-2">
           {backLabel}
         </Link>
       </p>
