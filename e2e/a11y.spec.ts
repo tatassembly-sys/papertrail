@@ -35,3 +35,22 @@ test("axe: a post page has no serious/critical violations", async ({ page }) => 
   await page.goto(href!);
   expect(await seriousViolations(page)).toEqual([]);
 });
+
+// M9.4: dark mode contrast, and no horizontal overflow at 360px.
+for (const path of ["/", "/register"]) {
+  test(`axe dark mode: ${path} has no serious/critical violations`, async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("pt-theme", "dark"));
+    await page.goto(path);
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+
+  test(`mobile 360px: ${path} has no horizontal overflow`, async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto(path);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+}

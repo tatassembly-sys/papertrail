@@ -389,7 +389,7 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 - [x] **M9.1** `[AGENT]` Empty/error/loading states for every public page (except `posts/[slug]` loading, see AGENTS.md).
 - [ ] **M9.2** `[AGENT]` Onboarding: `/welcome` topic picks → personalised `/today`; newsletter CTA after 2nd article.
 - [ ] **M9.3** `[AGENT]` Admin: bulk approve/reject queue, show LLM model used + cost estimate, retry failed items.
-- [ ] **M9.4** `[AGENT]` Mobile layout pass at 360px; dark mode contrast check.
+- [x] **M9.4** `[AGENT]` Mobile layout pass at 360px; dark mode contrast check.
 - [x] **M9.5** `[AGENT]` Search: `search/suggest` debounced, keyboard accessible, empty-state suggestions.
 
 ### Acceptance criteria (all verifiable)
