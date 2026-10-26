@@ -310,7 +310,7 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 **Why:** Free tiers fail silently (Atlas pauses, cron misses, LLM quota).
 
 ### Tasks
-- [ ] **M7.1** `[AGENT]` Add Sentry (`@sentry/nextjs`) gated on `SENTRY_DSN` (no-op if unset); scrub PII; document env.
+- [x] **M7.1** `[AGENT]` Add Sentry (`@sentry/nextjs`) gated on `SENTRY_DSN` (no-op if unset); scrub PII; document env.
 - [x] **M7.2** `[AGENT]` Structured JSON logger `lib/log.ts` (level, route, requestId, no PII); replace `console.*` in API routes.
 - [x] **M7.3** `[AGENT]` `/api/health` adds `cron_last_run` per job and `queue_depth`; `/admin/status` shows stale cron (>2× cadence) in red.
 - [x] **M7.4** `[AGENT]` `docs/runbooks/incidents.md`: DB down, LLM quota, cron missed, email bounce, how to roll back on Vercel (Promote previous deployment). (`0124051`)

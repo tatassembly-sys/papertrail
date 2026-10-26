@@ -21,6 +21,7 @@
     "test:integration": "node --import tsx --test tests/integration/*.test.ts"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.76.2",
     "bcryptjs": "^2.4.3",
     "jose": "^5.9.6",
     "mongodb": "^6.10.0",

@@ -69,12 +69,27 @@ export function formatLog(level: LogLevel, msg: string, err?: unknown, ctx?: Log
   return JSON.stringify(entry);
 }
 
+type ErrorReporter = (err: unknown, ctx?: LogContext) => void;
+let reporter: ErrorReporter | null = null;
+
+/** Error tracking hook (Sentry registers here when SENTRY_DSN is set). */
+export function setErrorReporter(next?: ErrorReporter): void {
+  reporter = next ?? null;
+}
+
 function emit(level: LogLevel, msg: string, err?: unknown, ctx?: LogContext) {
   if (level === "debug" && process.env.LOG_LEVEL !== "debug") return;
   try {
     sink(formatLog(level, msg, err, ctx), level);
   } catch {
     /* logging must never throw */
+  }
+  if (level === "error" && reporter && err !== undefined) {
+    try {
+      reporter(err, { ...ctx, msg });
+    } catch {
+      /* reporting must never throw */
+    }
   }
 }
 
