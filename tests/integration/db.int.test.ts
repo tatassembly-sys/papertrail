@@ -162,3 +162,43 @@ describe("text search index (in-memory Mongo)", () => {
     assert.ok(hits.length >= 1);
   });
 });
+
+describe("admin bulk review and queue retry (in-memory Mongo)", () => {
+  it("publishes eligible drafts, rejects drafts, never touches published", async () => {
+    const { getDb } = await import("@/lib/mongodb");
+    const { bulkReview } = await import("@/lib/bulk-review");
+    const db = await getDb();
+    const base = { headline: "h", plain_explanation: "p", created_at: new Date() };
+    const ok = await db.collection("articles").insertOne({
+      ...base, title: "Good draft", slug: "good-draft", status: "draft",
+      source_url: "https://arxiv.org/abs/2401.00001", caveats: "Small sample; observational.",
+    });
+    const bad = await db.collection("articles").insertOne({ ...base, title: "No source", slug: "no-src", status: "draft", source_url: null, caveats: "" });
+    const pub = await db.collection("articles").findOne({ slug: "t-1" });
+    const ids = [ok.insertedId, bad.insertedId, pub!._id].map(String);
+    const res = await bulkReview("publish", ids);
+    assert.deepEqual(res.map((r) => r.ok), [true, false, false]);
+    assert.equal((await db.collection("articles").findOne({ _id: ok.insertedId }))?.status, "published");
+    const rej = await bulkReview("reject", [String(bad.insertedId), String(pub!._id)]);
+    assert.deepEqual(rej.map((r) => r.ok), [true, false]);
+    assert.equal(await db.collection("articles").countDocuments({ _id: bad.insertedId }), 0);
+    assert.equal(await db.collection("articles").countDocuments({ _id: pub!._id }), 1);
+  });
+
+  it("retries failed queue rows with a fresh attempt budget", async () => {
+    const { getDb } = await import("@/lib/mongodb");
+    const { retryFailedQueueItems } = await import("@/lib/queue");
+    const db = await getDb();
+    const r = await db.collection("fetch_queue").insertMany([
+      { source: "arxiv", external_id: "e1", status: "error", attempts: 3, error_message: "x" },
+      { source: "arxiv", external_id: "e2", status: "error", attempts: 3, error_message: "y" },
+    ]);
+    assert.equal(await retryFailedQueueItems([String(r.insertedIds[0])]), 1);
+    const one = await db.collection("fetch_queue").findOne({ external_id: "e1" });
+    assert.equal(one?.status, "pending");
+    assert.equal(one?.attempts, 0);
+    assert.equal(one?.error_message, undefined);
+    assert.equal(await retryFailedQueueItems(["bad-id"]), 0);
+    assert.equal(await retryFailedQueueItems(), 1);
+  });
+});

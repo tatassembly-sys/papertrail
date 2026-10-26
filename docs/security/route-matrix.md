@@ -7,6 +7,8 @@ Limits are per hashed client IP unless noted. Schema means a size-capped JSON or
 | Route | Methods | Auth | Rate limit | Input validation |
 |---|---|---|---|---|
 | `app/api/admin/billing/grant/route.ts` | POST | admin | admin session | JSON body |
+| `app/api/admin/articles/bulk/route.ts` | POST | admin | admin session | JSON ≤16 KB; `action` publish/reject, ≤100 string ids; publish gate per article; only drafts |
+| `app/api/admin/queue/retry/route.ts` | POST | admin | admin session | JSON ≤16 KB; optional `ids` (strings, ≤500) |
 | `app/api/admin/publish-mix/route.ts` | POST | cron bearer or admin | cron compare / admin session | none (no body) |
 | `app/api/admin/status/route.ts` | GET | admin | admin session | none |
 | `app/api/articles/[id]/approve-share/route.ts` | POST | admin | admin session | JSON body |

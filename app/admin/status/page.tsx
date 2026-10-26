@@ -1,5 +1,6 @@
 import { getAdminOpsStatus } from "@/lib/admin-status";
 import GrantProForm from "@/components/GrantProForm";
+import RetryFailedQueue from "@/components/RetryFailedQueue";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,8 @@ export default async function AdminStatusPage() {
               <span className="mt-1 block">{status.queue.lastError}</span>
             </p>
           ) : null}
+
+          <RetryFailedQueue count={status.queue.error} />
 
           <ul className="mb-6 divide-y divide-rule rounded-sm border border-rule bg-surface text-sm">
             {status.crons.map((run) => (
