@@ -5,6 +5,8 @@ import { ARXIV_CATEGORY_CODES, categoryLabel } from "@/lib/arxivCategories";
 import { isEmailConfigured } from "@/lib/mail";
 import { probeOpenRouterKey } from "@/lib/openrouter-health";
 import PublishMixButton from "@/components/PublishMixButton";
+import AdminArticleList from "@/components/AdminArticleList";
+import { llmLabel } from "@/lib/llm-cost";
 
 export const dynamic = "force-dynamic"; // always show latest drafts, never cache
 
@@ -202,32 +204,17 @@ export default async function AdminPage({ searchParams }: PageProps) {
       )}
 
       {!error && articles.length > 0 && (
-        <div className="flex flex-col divide-y divide-rule rounded-sm border border-rule bg-surface">
-          {articles.map((article) => (
-            <Link
-              key={article.id}
-              href={`/admin/${article.id}`}
-              className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-paper"
-            >
-              <div className="min-w-0">
-                <p className="truncate font-medium text-ink">{article.title}</p>
-                <p className="truncate text-sm text-ink-soft">
-                  {article.source_url || "Pasted text (no source URL)"}
-                  {article.category && ` · ${categoryLabel(article.category)}`}
-                </p>
-              </div>
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
-                  article.status === "published"
-                    ? "bg-success/15 text-success"
-                    : "bg-redpen-soft text-ink"
-                }`}
-              >
-                {article.status}
-              </span>
-            </Link>
-          ))}
-        </div>
+        <AdminArticleList
+          items={articles.map((article) => ({
+            id: article.id || "",
+            title: article.title,
+            subtitle:
+              (article.source_url || "Pasted text (no source URL)") +
+              (article.category ? ` · ${categoryLabel(article.category)}` : ""),
+            status: article.status,
+            llmLabel: llmLabel(article.llm),
+          }))}
+        />
       )}
 
       {totalPages > 1 && (

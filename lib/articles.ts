@@ -12,6 +12,7 @@ import {
   type SearchFilters,
   type SearchSort,
 } from "./search";
+import type { LlmUsage } from "./llm-cost";
 
 export interface ArticleDoc {
   _id: ObjectId;
@@ -38,6 +39,8 @@ export interface ArticleDoc {
   shared_to?: string[];
   category?: string | null;
   share_approved?: boolean;
+  /** Model + cost that wrote the draft (M9.3). */
+  llm?: LlmUsage | null;
 }
 
 function toArticleRow(doc: ArticleDoc & { score?: number }): ArticleRow {
@@ -63,6 +66,7 @@ function toArticleRow(doc: ArticleDoc & { score?: number }): ArticleRow {
     category: doc.category ?? null,
     score: doc.score,
     share_approved: Boolean(doc.share_approved),
+    llm: doc.llm ?? null,
   };
 }
 
@@ -83,6 +87,7 @@ const LIST_PROJECTION = {
   created_at: 1,
   shared_to: 1,
   share_approved: 1,
+  llm: 1,
 } as const;
 
 async function articlesCollection() {
@@ -555,6 +560,7 @@ export async function insertDraftArticle(
     published_at: null,
     category,
     share_approved: false,
+    llm: article.llm ?? null,
   };
   if (!cleanSource) {
     delete (doc as { source_url?: string | null }).source_url;

@@ -66,6 +66,13 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-10-26 15:30 — M9.3, M9.2, M8.4, M4.3, M10.6
+- Agent: Grok Bot (branch grokbot/work, PR #4)
+- Commit(s): 1931047 (M9.3), 1307a25 (M9.2), 863795f (M8.4), bc797fc (M4.3), 5cf9112 (M10.6)
+- Change: M9.3 done: `translatePaperToArticle` records `llm` {provider, model, prompt/completion tokens, cost_microusd (integer micro-USD; OpenRouter `usage.cost`, free models 0, unknown null)}; `insertDraftArticle` stores it; /admin list shows "provider · model · cost" per article and has draft checkboxes with Approve/Reject (reject confirms first) calling the bulk API. M9.2: /welcome saves topics then goes to /today, which lists followed-topic items first marked "For you" (and nudges signed-in readers with no topics to pick some); posts show a dismissible newsletter prompt from the 2nd distinct article read (localStorage, no server data). M8.4: /topics, /authors (static, revalidate 300 s) and /topics/[tag], /authors/[slug] (ISR on first request via empty generateStaticParams); 404s preserved (checked locally: missing tag/author 404 on first and cached hits). Home, posts, today, lists stay dynamic: they read the session cookie or must 404 fresh. M4.3: new `tests/integration/domain.int.test.ts` (articles, newsletter, collections, highlights, scheduled posts, login lockout, billing inquiries, publish mix, admin status); **lib/ coverage 37.9% → 66.7% lines** (branches 74.1%, functions 79.6%); `test:coverage` now fails under 60%. M10.6: CHANGELOG v1.0.0 release-candidate notes; owner sets the date and pushes the tag.
+- Checks run: unit 117/117, integration 20/20, sandbox 543/543, lint, typecheck, build; local e2e 11/11 (smoke + axe + dark + 360px) on a prod build with db:memory.
+- Follow-ups: owner pushes tag v1.0.0 at launch.
+
 ### 2026-10-26 16:20 — M9.4, M8.5, M9.3 (partial), M10.2 (partial)
 - Agent: Grok Bot (branch grokbot/work)
 - Commit(s): 57f4cfd (M9.4), cec72c3 (M8.5), b738992 (M9.3 partial)

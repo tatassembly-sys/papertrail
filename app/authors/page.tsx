@@ -8,7 +8,8 @@ export const metadata: Metadata = {
   description: "Researchers whose papers Paper Trail has translated.",
 };
 
-export const dynamic = "force-dynamic";
+// M8.4: public, cookie-free page. Served from cache, refreshed every 5 minutes.
+export const revalidate = 300;
 
 export default async function AuthorsIndexPage() {
   const authors = await getPublishedAuthorCounts(80).catch(() => []);

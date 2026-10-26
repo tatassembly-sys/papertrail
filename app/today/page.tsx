@@ -3,6 +3,9 @@ import Link from "next/link";
 import { getLastPublishMix } from "@/lib/publish-mix";
 import { getPublishedArticlesBySlugs } from "@/lib/articles";
 import { categoryLabel } from "@/lib/arxivCategories";
+import { getCurrentUserSession } from "@/lib/user-auth";
+import { getUserPublic } from "@/lib/users";
+import { personaliseMix } from "@/lib/onboarding";
 
 export const metadata: Metadata = {
   title: "Today",
@@ -16,6 +19,10 @@ export default async function TodayPage() {
   const articles = mix?.items?.length
     ? await getPublishedArticlesBySlugs(mix.items.map((item) => String(item.slug || "")))
     : [];
+  const session = await getCurrentUserSession().catch(() => null);
+  const user = session ? await getUserPublic(session.userId).catch(() => null) : null;
+  const followed = user?.followed_topics || [];
+  const ordered = personaliseMix(articles, followed);
 
   return (
     <article className="mx-auto max-w-2xl">
@@ -29,12 +36,20 @@ export default async function TodayPage() {
         One paper per field, the way Nature Briefing and The Conversation keep a
         day small enough to finish. {mix?.dateKey ? `Filed ${mix.dateKey}.` : ""}
       </p>
+      {user && followed.length === 0 ? (
+        <p className="mt-3 text-sm text-ink-soft">
+          <Link href="/welcome" className="text-redpen underline underline-offset-2">
+            Pick your topics
+          </Link>{" "}
+          to see your fields first.
+        </p>
+      ) : null}
 
       {articles.length === 0 ? (
         <p className="mt-8 text-sm text-ink-soft">No mix filed yet. Check back after the daily publish.</p>
       ) : (
         <ol className="mt-8 divide-y divide-rule rounded-sm border border-rule bg-surface">
-          {articles.map((article, i) => (
+          {ordered.map(({ item: article, forYou }, i) => (
             <li key={article.slug}>
               <Link
                 href={`/posts/${article.slug}`}
@@ -46,6 +61,7 @@ export default async function TodayPage() {
                 <span>
                   <span className="block font-mono text-[10px] uppercase tracking-widest text-stamp">
                     {categoryLabel(article.category)}
+                    {forYou ? " · For you" : ""}
                   </span>
                   <span className="mt-1 block font-medium text-ink">{article.title}</span>
                   <span className="mt-1 block text-sm text-ink-soft">{article.headline}</span>

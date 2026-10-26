@@ -3,6 +3,7 @@ import { getSiteUrl } from "./site-url";
 import { guardModelBody } from "./copyright";
 import { draftFromExtract } from "./extract-draft";
 import { isXaiConfigured, xaiChat } from "./xai";
+import { usageFrom, type LlmUsage } from "./llm-cost";
 
 const REQUIRED_KEYS: (keyof TranslatedArticle)[] = [
   "title",
@@ -144,6 +145,8 @@ export interface OpenRouterChatResult {
   content: string;
   model: string;
   attempts: { model: string; status: number | "network"; detail?: string }[];
+  /** Raw OpenRouter usage block (tokens, cost in USD) when returned. */
+  usage?: unknown;
 }
 
 function openRouterHeaders(apiKey: string, title: string): Record<string, string> {
@@ -234,7 +237,7 @@ export async function openRouterChat(
       const usedModel =
         typeof data?.model === "string" && data.model ? data.model : model;
       attempts.push({ model: usedModel, status: response.status });
-      return { content, model: usedModel, attempts };
+      return { content, model: usedModel, attempts, usage: data?.usage };
     } catch (err) {
       if (err instanceof Error && /OPENROUTER_API_KEY|rejected the API key/i.test(err.message)) {
         throw err;
@@ -275,7 +278,8 @@ function cleanJsonResponse(raw: string): string {
     .trim();
 }
 
-export async function translatePaperToArticle(
+async function translateInner(
+  track: { llm: LlmUsage | null },
   paperText: string,
   options?: {
     fallbackTitle?: string;
@@ -311,6 +315,7 @@ export async function translatePaperToArticle(
     });
     rawContent = result.content;
     model = result.model;
+    track.llm = usageFrom("openrouter", result.model, result.usage);
   } catch (err) {
     const message = err instanceof Error ? err.message : "";
     // Config failures must surface so cron can release the batch instead of
@@ -326,6 +331,7 @@ export async function translatePaperToArticle(
       try {
         rawContent = await xaiChat({ messages, temperature: 0.4, maxTokens });
         model = "xai";
+        track.llm = usageFrom("xai", process.env.XAI_MODEL || "xai");
       } catch (xerr) {
         console.warn("[xai] translator failed, using extract draft", xerr);
       }
@@ -335,6 +341,7 @@ export async function translatePaperToArticle(
   const sourceKind = options?.sourceKind === "abstract" ? "abstract" : "pdf";
 
   if (!rawContent) {
+    track.llm = usageFrom("extract", "extract");
     return draftFromExtract(paperText, options?.fallbackTitle, {
       licence: options?.licence,
       kind: sourceKind,
@@ -346,6 +353,7 @@ export async function translatePaperToArticle(
     parsed = JSON.parse(cleanJsonResponse(rawContent));
   } catch {
     console.warn(`[openrouter] invalid JSON from ${model}; using extract draft`);
+    track.llm = usageFrom("extract", "extract");
     return draftFromExtract(paperText, options?.fallbackTitle, {
       licence: options?.licence,
       kind: sourceKind,
@@ -354,6 +362,7 @@ export async function translatePaperToArticle(
 
   if (!isValidTranslatedArticle(parsed)) {
     console.warn("[openrouter] schema mismatch; using extract draft");
+    track.llm = usageFrom("extract", "extract");
     return draftFromExtract(paperText, options?.fallbackTitle, {
       licence: options?.licence,
       kind: sourceKind,
@@ -380,4 +389,18 @@ export async function translatePaperToArticle(
       ? record.tags.filter((k): k is string => typeof k === "string")
       : [],
   };
+}
+
+/** Translate a paper and record which model wrote it and its cost (M9.3). */
+export async function translatePaperToArticle(
+  paperText: string,
+  options?: {
+    fallbackTitle?: string;
+    licence?: string | null;
+    sourceKind?: "pdf" | "abstract";
+  }
+): Promise<TranslatedArticle> {
+  const track: { llm: LlmUsage | null } = { llm: null };
+  const article = await translateInner(track, paperText, options);
+  return { ...article, llm: track.llm };
 }

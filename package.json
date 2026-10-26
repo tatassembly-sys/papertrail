@@ -17,7 +17,7 @@
     "test:unit": "node --import tsx --test tests/*.test.ts",
     "test:e2e": "playwright test",
     "smoke:prod": "node scripts/smoke-prod.mjs",
-    "test:coverage": "c8 --all --include=lib/** --reporter=text-summary --reporter=text node --import tsx --test tests/*.test.ts tests/integration/*.test.ts",
+    "test:coverage": "c8 --all --include=lib/** --check-coverage --lines 60 --reporter=text-summary --reporter=text node --import tsx --test tests/*.test.ts tests/integration/*.test.ts",
     "test:integration": "node --import tsx --test tests/integration/*.test.ts",
     "db:memory": "node scripts/memory-db.mjs",
     "lighthouse": "lhci autorun"
