@@ -5,6 +5,7 @@ import { isEmailConfigured } from "@/lib/mail";
 import { isBillingConfigured } from "@/lib/entitlements";
 import { runningCommitSha, runningDeploymentEnv } from "@/lib/running-commit";
 import { log } from "@/lib/log";
+import { cronHealthSummary } from "@/lib/cron-run";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,11 @@ export async function GET() {
     const hasXaiKey = Boolean(process.env.XAI_API_KEY?.trim());
     const freeModel =
       process.env.OPENROUTER_MODEL?.trim() || "openrouter/free";
+    // Cron/queue info is informational: a failure here must not fail health.
+    const cron = await cronHealthSummary().catch((err) => {
+      log.warn("health cron summary failed", err, { route: "/api/health" });
+      return { cron_last_run: null, queue_depth: null };
+    });
     return NextResponse.json({
       status: "ok",
       db: "connected",
@@ -32,6 +38,8 @@ export async function GET() {
       billing: isBillingConfigured() ? "stripe" : "off",
       commit: runningCommitSha(),
       env: runningDeploymentEnv(),
+      cron_last_run: cron.cron_last_run,
+      queue_depth: cron.queue_depth,
     });
   } catch (err) {
     // Never expose raw driver/TLS messages publicly in production.

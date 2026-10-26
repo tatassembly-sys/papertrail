@@ -110,3 +110,25 @@ describe("rate-limit (in-memory Mongo)", () => {
     assert.equal(await rl.getRateCount("c", "k", 60_000), 10);
   });
 });
+
+describe("health cron summary (in-memory Mongo)", () => {
+  it("reports cron_last_run per job and queue_depth", async () => {
+    const { getDb } = await import("@/lib/mongodb");
+    const { cronHealthSummary, CRON_JOBS } = await import("@/lib/cron-run");
+    const db = await getDb();
+    await db.collection("cron_runs").insertMany([
+      { job: "process-queue", status: 200, ok: true, at: new Date() },
+      { job: "cron-fetch", status: 500, ok: false, at: new Date(Date.now() - 5 * 86_400_000) },
+    ]);
+    await db.collection("fetch_queue").insertMany(
+      ["a", "b", "c"].map((id, i) => ({ source: "arxiv", external_id: id, status: i < 2 ? "pending" : "done" }))
+    );
+    const h = await cronHealthSummary();
+    assert.equal(h.queue_depth, 2);
+    assert.deepEqual(Object.keys(h.cron_last_run), [...CRON_JOBS]);
+    assert.equal(h.cron_last_run["process-queue"].stale, false);
+    assert.equal(h.cron_last_run["cron-fetch"].stale, true);
+    assert.equal(h.cron_last_run["cron-fetch"].ok, false);
+    assert.equal(h.cron_last_run["newsletter-digest"].at, null);
+  });
+});
