@@ -65,6 +65,13 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-10-26 16:20 — M9.4, M8.5, M9.3 (partial), M10.2 (partial)
+- Agent: Grok Bot (branch grokbot/work)
+- Commit(s): 57f4cfd (M9.4), cec72c3 (M8.5), b738992 (M9.3 partial)
+- Change: M9.4 e2e: dark-mode axe (0 serious/critical) and no horizontal overflow at 360px on / and /register, all passing on a local prod build. M8.5: fonts already next/font (self-hosted, swap), OG images fixed 1200x630 and served `public, immutable, max-age=31536000` in production, cards reserve a 1.91:1 box; Lighthouse CLS ≈0.0001 on home and post; a test locks these in. M9.3 (partial): `POST /api/admin/articles/bulk` {action publish|reject, ids ≤100} (admin session first; publish gate per article; drafts only; published never deleted) and `POST /api/admin/queue/retry` (failed rows → pending, attempts 0) with a Retry button on /admin/status. Route matrix updated. Not done: bulk checkboxes in the admin list UI, and showing LLM model + cost per draft (the model is not stored on articles yet).
+- M10.2 (partial, read-only): `npm run smoke:prod -- https://papertrail-six-rho.vercel.app` → OK home 200, health 200, missing-post 404, unsigned-queue 401, sitemap 200, robots 200. Live /api/health on a062c63: status ok, db connected, queue_depth 0, every cron_last_run null (no scheduler yet, M0.6). Production has no published posts, so post-page Lighthouse/e2e on prod are not meaningful yet.
+- Checks run: unit 110/110, integration 12/12, local e2e (a11y + smoke) passing; gate before push.
+
 ### 2026-10-26 15:40 — M9.1, M9.5, M8.3, M8.1
 - Agent: Grok Bot (branch grokbot/work)
 - Commit(s): b6eaaa5 (M9.1), 40902f7 (M9.5), be79c9f (M8.3), 4e3e493 (M8.1)
