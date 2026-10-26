@@ -1,12 +1,10 @@
-## ▶ START HERE (2026-10-26)
+## ▶ START HERE (2026-10-26 afternoon)
 
-**Agents have stalled since the 2026-10-25 evening review. Do not wait for further instructions — start now.**
-
-- **Next task:** **M2 deps** — clear the remaining `npm audit --omit=dev` advisories (`postcss`, `tar`, via the Next toolchain). Try a Next.js minor/patch bump first.
-- **Done when:** `npm audit --omit=dev --audit-level=high` exits 0 **and** the gate is green.
-- **Gate (run before every commit):** `npm ci && npm run lint && npm run typecheck && npm test && npm run build`
-- **Then continue down the "Next up for agents" list below (M4.3 → M4.2 → M4.4 → M7.2 → M7.3 → M7.1) without stopping.** After each item: gate green → PROGRESS entry → commit → push (per AGENTS.md §0 lanes: VS Code agents push to `vscode/work` and open/update a `vscode-agent` PR). Only stop if an item is BLOCKED; log the error and move to the next one.
-- If an item is already marked in progress/done in `agents/grokbot/LOG.md`, skip it and take the next unclaimed one.
+- Read **Review 2026-10-26 (afternoon, Europe/London)** below. Take only tasks marked for **your lane** (`grokbot` = Grok Bot workers on `grokbot/work`; `vscode` = VS Code agents on `vscode/work`, PR label `vscode-agent`, never push to `main`).
+- Before starting: `git fetch origin && git merge origin/main` into your lane branch (main moved a lot today: PRs #1–#3 were squash-merged).
+- **Gate (run before every commit):** `npm ci && npm run lint && npm run typecheck && npm test && npm run test:integration && npm run build`
+- Write PROGRESS/LOG times with `TZ=Europe/London date '+%Y-%m-%d %H:%M'` (several entries today were stamped 1–2 h in the future).
+- If an item is already marked in progress/done in the other lane's LOG, skip it and take your next one.
 
 # PROGRESS.md — Paper Trail
 
@@ -26,6 +24,9 @@ Append-only log written by coding agents and the owner. Newest entries at the to
 ## BLOCKERS
 Format: `- [open|resolved] YYYY-MM-DD <task id> — <what is blocked> — needs: <who/what> — tried: <...>`
 
+- [open] 2026-10-26 M7.5 — Sentry project + `SENTRY_DSN` in Vercel — needs: OWNER (new account; skipped pre-launch). Code is a no-op until set.
+- [open] 2026-10-26 M10.2 — production Lighthouse/e2e not meaningful: production has no published posts and no scheduler (M0.6) — needs: OWNER cron-job.org schedules.
+- [open] 2026-10-26 M10.6 — `v1.0.0` tag push — needs: OWNER.
 - [open] 2026-10-20 M0 — Atlas was reachable on the read-only smoke below (`db connected`). Vercel cron-job.org schedules and Railway deletion are still owner work.
 - [open] 2026-10-20 M0.9 — delete Railway files only after M0.8 production smoke is logged — needs: OWNER to run `npm run smoke:prod` on the Vercel URL and delete the Railway service.
 - [open] 2026-10-20 M2 — OpenRouter key rotation, Resend domain — needs: OWNER.
@@ -107,6 +108,23 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 - Change: npm `overrides`: `postcss` → `$postcss` (8.5.x, same major; Next pinned 8.4.31) and `@mapbox/node-pre-gyp` → ^2.0.3 (tar 7.5.22; reached via unpdf → canvas). No Next major bump.
 - Checks run: `npm audit --omit=dev --audit-level=high` → found 0 vulnerabilities, exit 0. Gate: lint clean, typecheck pass, `npm test` sandbox all + unit 91/91, build pass.
 - Follow-ups: none.
+
+## Review 2026-10-26 (afternoon, Europe/London)
+
+Reviewer: Grok Bot (orchestrator). Range: 3cf4f3c..6f9fd39 on `main`.
+
+- New pushes: Grok Bot lane only — PRs #1 (M2 deps), #2 (M4.2–M4.4, M7.2, M7.3; M7.1 Sentry also landed), #3 (M8.1, M8.3, M8.5, M9.1, M9.3 partial, M9.4, M9.5, M10.1) all squash-merged with green CI. VS Code lane: **no `vscode/work` branch, no PRs, no LOG entries.** No branch has commits ahead of `main` without a PR.
+- Ticks verified by reading code: M4.2 (`tests/integration`, 12/12), M7.1 (`instrumentation.ts` + `lib/sentry.ts`, no-op without `SENTRY_DSN`), M7.2 (`lib/log.ts`; `console.*` gone from `app/api`), M7.3 (`/api/health` `cron_last_run`/`queue_depth`), M8.1 (`lighthouserc.json`, `npm run lighthouse`), M8.3 (`e2e/a11y.spec.ts`), M10.1 (`docs/launch-checklist.md`) — OK.
+- **False tick: M4.3** — target is ≥60% of `lib/`, recorded baseline is 37.91% lines. Unticked and marked PARTIAL in MILESTONES.md.
+- Gate on a clean `npm ci` at 6f9fd39: lint PASS, typecheck PASS, `npm test` PASS (sandbox + unit 110/110), `npm run test:integration` 12/12, build PASS, `npm audit --omit=dev` 0 vulnerabilities, tree clean.
+- CI: all runs today green (latest on `main` for #3 was still running at review time; its PR-branch runs were green).
+- Lane sync: VS Code agents, create `vscode/work` from current `main` (`git fetch origin && git checkout -b vscode/work origin/main`). Grok Bot workers: merge `origin/main` into `grokbot/work` before the next item.
+
+### Next up for agents (afternoon 2026-10-26; each ends with the gate green, a PROGRESS entry and a LOG entry in your lane)
+Grok Bot already claimed M9.3 remainder, M4.3 coverage, M8.4 remainder, M9.2 and M10.6 in open PR #4 (`grokbot/work`). VS Code agents must not touch those.
+1. `[grokbot]` Finish PR #4 items: **M4.3** lib/ lines ≥60% (`npm run test:coverage`, paste the summary line, then re-tick); **M9.3** bulk-select UI + `llm_model`/cost stored and shown; **M8.4** ISR/`revalidate` where no session is needed (or record BLOCKED with the reason); **M9.2** `/welcome` topics → `/today` + CTA after 2nd article, with a unit test; **M10.6** CHANGELOG v1.0.0 (no tag push). Merge only when CI is green.
+2. `[vscode]` **E2E account journeys** (tests only, new file `e2e/account.spec.ts`): against `npm run db:memory` + local prod build — register → verify link (read from the log-mode email output) → login → `/account` export download → delete account. Done when: `npx playwright test e2e/account.spec.ts` passes locally; record the command and output in PROGRESS. Do not change app code; if a step fails, log the bug in PROGRESS as a follow-up for Grok Bot.
+3. `[vscode]` **Admin pages a11y/mobile check** (tests only, new file `e2e/admin-a11y.spec.ts`): log in as a seeded admin on db:memory and run axe (wcag2a/aa) + 360px overflow check on `/admin`, `/admin/status`. Done when the spec runs; report any serious/critical findings in PROGRESS for Grok Bot to fix (do not edit admin components, PR #4 is changing them).
 
 ## Review 2026-10-26 (08:00 Europe/London)
 
