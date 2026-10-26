@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getArticleBySlug } from "@/lib/articles";
 import { postProbeStatus } from "@/lib/post-probe";
+import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
     const article = await getArticleBySlug(slug);
     return new NextResponse(null, { status: postProbeStatus(Boolean(article)) });
   } catch (error) {
-    console.error("post probe failed:", error);
+    log.error("post probe failed", error, { route: "/api/posts/published" });
     return new NextResponse(null, { status: 503 });
   }
 }

@@ -16,6 +16,7 @@ import {
   isProUser,
 } from "@/lib/entitlements";
 import { randomBytes } from "crypto";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -194,7 +195,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     await undoRateLimit("chat", ipKey, HOUR_MS);
     await undoRateLimit("chat_ip_day", ipKey, DAY_MS);
     if (session?.userId) await undoRateLimit("chat_user_day", session.userId, DAY_MS);
-    console.error("chat error:", err);
+    log.error("chat error", err, { route: "/api/articles/[id]/chat" });
     const msg = err instanceof Error ? err.message : "";
     if (/OPENROUTER_API_KEY|rejected the API key|401/i.test(msg)) {
       return NextResponse.json(

@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/mail";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
     res.cookies.set(USER_SESSION_COOKIE, token, userSessionCookieOptions());
     return res;
   } catch (err) {
-    console.error("register error:", err);
+    log.error("register error", err, { route: "/api/auth/register" });
     return NextResponse.json({ error: "Registration failed." }, { status: 500 });
   }
 }

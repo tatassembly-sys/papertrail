@@ -4,6 +4,7 @@ import { publicErrorMessage } from "@/lib/safe-error";
 import { isEmailConfigured } from "@/lib/mail";
 import { isBillingConfigured } from "@/lib/entitlements";
 import { runningCommitSha, runningDeploymentEnv } from "@/lib/running-commit";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,7 +35,7 @@ export async function GET() {
     });
   } catch (err) {
     // Never expose raw driver/TLS messages publicly in production.
-    console.error("health check failed:", err);
+    log.error("health check failed", err, { route: "/api/health" });
     return NextResponse.json(
       {
         status: "error",

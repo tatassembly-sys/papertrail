@@ -5,6 +5,7 @@ import { sendEmail, isEmailConfigured } from "@/lib/mail";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
       ...(process.env.NODE_ENV !== "production" && resetUrl ? { resetUrl } : {}),
     });
   } catch (err) {
-    console.error("forgot-password:", err);
+    log.error("forgot-password", err, { route: "/api/auth/forgot-password" });
     return NextResponse.json({ error: "Request failed." }, { status: 500 });
   }
 }

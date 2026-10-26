@@ -4,6 +4,7 @@ import { isEmailConfigured } from "@/lib/mail";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
         : {}),
     });
   } catch (err) {
-    console.error("newsletter subscribe:", err);
+    log.error("newsletter subscribe", err, { route: "/api/newsletter/subscribe" });
     return NextResponse.json({ error: "Subscribe failed." }, { status: 500 });
   }
 }

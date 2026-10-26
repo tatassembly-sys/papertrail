@@ -8,6 +8,7 @@ import {
   normalizeSubscription,
   verifyStripeSignature,
 } from "@/lib/stripe";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
   try {
     claim = await store.claim(eventId, type);
   } catch (err) {
-    console.error("stripe webhook claim:", err);
+    log.error("stripe webhook claim", err, { route: "/api/billing/webhook" });
     return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
   }
   if (claim === "done") {
@@ -118,11 +119,11 @@ export async function POST(req: NextRequest) {
   try {
     if (object) await applyStripeEvent(type, object);
   } catch (err) {
-    console.error("stripe webhook handler:", err);
+    log.error("stripe webhook handler", err, { route: "/api/billing/webhook" });
     try {
       await store.release(eventId);
     } catch (releaseErr) {
-      console.error("stripe webhook release:", releaseErr);
+      log.error("stripe webhook release", releaseErr, { route: "/api/billing/webhook" });
     }
     return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
   }
@@ -131,7 +132,7 @@ export async function POST(req: NextRequest) {
     await store.finish(eventId);
   } catch (err) {
     // Applied already. Do not release, or a retry would apply the event twice.
-    console.error("stripe webhook finish:", err);
+    log.error("stripe webhook finish", err, { route: "/api/billing/webhook" });
     return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
   }
 

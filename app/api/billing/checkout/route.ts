@@ -5,6 +5,7 @@ import { LIVE_STATUSES, isBillingConfigured } from "@/lib/entitlements";
 import { createCheckoutSession, StripeConfigError } from "@/lib/stripe";
 import { JSON_LIMIT_DEFAULT, asRecord, readJsonBody } from "@/lib/json-body";
 import { tooManyPublicWrites } from "@/lib/rate-limit";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (err instanceof StripeConfigError) {
       return NextResponse.json({ error: err.message }, { status: 503 });
     }
-    console.error("checkout error:", err);
+    log.error("checkout error", err, { route: "/api/billing/checkout" });
     return NextResponse.json(
       { error: "Could not start checkout. Try again shortly." },
       { status: 502 }

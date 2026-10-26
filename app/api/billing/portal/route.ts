@@ -4,6 +4,7 @@ import { getCurrentUserSession } from "@/lib/user-auth";
 import { findUserById } from "@/lib/users";
 import { isBillingConfigured } from "@/lib/entitlements";
 import { createPortalSession, StripeConfigError } from "@/lib/stripe";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
     if (err instanceof StripeConfigError) {
       return NextResponse.json({ error: err.message }, { status: 503 });
     }
-    console.error("portal error:", err);
+    log.error("portal error", err, { route: "/api/billing/portal" });
     return NextResponse.json(
       { error: "Could not open billing portal." },
       { status: 502 }

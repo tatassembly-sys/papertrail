@@ -14,6 +14,7 @@ import {
   isProUser,
 } from "@/lib/entitlements";
 import { getRateCount, hitRateLimit, undoRateLimit } from "@/lib/rate-limit";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 
@@ -121,7 +122,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    console.error("submission error:", err);
+    log.error("submission error", err, { route: "/api/submissions" });
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

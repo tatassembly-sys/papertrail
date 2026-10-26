@@ -3,6 +3,7 @@ import { verifyEmailToken } from "@/lib/users";
 import { getSiteUrl } from "@/lib/site-url";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
 import { tooManyPublicWrites } from "@/lib/rate-limit";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("verify-email:", err);
+    log.error("verify-email", err, { route: "/api/auth/verify-email" });
     return NextResponse.json({ error: "Verification failed." }, { status: 500 });
   }
 }

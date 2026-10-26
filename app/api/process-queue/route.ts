@@ -14,6 +14,7 @@ import {
 import { assertCronAuthorized } from "@/lib/cron-auth";
 import { acquireCronLock, PROCESS_QUEUE_LOCK_MS, releaseCronLock } from "@/lib/cron-lock";
 import { runCronJob } from "@/lib/cron-run";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -163,7 +164,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ success: true, processed: batch.length, results });
   } catch (err) {
-    console.error("process-queue crashed:", err);
+    log.error("process-queue crashed", err, { route: "/api/process-queue" });
     for (const row of batch) {
       if (!finished.has(row._id.toString())) {
         await releaseQueueClaim(row._id, "Worker aborted; claim released.");

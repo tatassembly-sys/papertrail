@@ -3,6 +3,7 @@ import { resetPasswordWithToken } from "@/lib/users";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("reset-password:", err);
+    log.error("reset-password", err, { route: "/api/auth/reset-password" });
     return NextResponse.json({ error: "Reset failed." }, { status: 500 });
   }
 }

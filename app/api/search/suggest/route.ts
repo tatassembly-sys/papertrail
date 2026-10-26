@@ -3,6 +3,7 @@ import { suggestPublishedArticles } from "@/lib/articles";
 import { categoryLabel } from "@/lib/arxivCategories";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
       })),
     });
   } catch (err) {
-    console.error("search suggest:", err);
+    log.error("search suggest", err, { route: "/api/search/suggest" });
     return NextResponse.json({ suggestions: [] });
   }
 }
