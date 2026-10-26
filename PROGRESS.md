@@ -65,6 +65,13 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-10-26 15:05 — M8.4 (partial), M10.1, DB text-index fix
+- Agent: Grok Bot (branch grokbot/work)
+- Commit(s): 20c4951 (M8.4 partial), f1cd6ca (M10.1), 5da1980 (fix db)
+- Change: `/api/posts/published` probe sends `Cache-Control: public, s-maxage=60, stale-while-revalidate=300` (503 is no-store) and uses an `_id`-only existence query; trending and editor-picks lists project `LIST_PROJECTION` (no article body). ISR/revalidate for public pages NOT done: they are force-dynamic and read the session cookie, and the build has no DB; left open. `docs/launch-checklist.md` lists every launch item with its proof command. **Bug fix:** Stable API strict mode (the default) made `createIndex(text)` fail with APIStrictError 323 and the fallback then dropped the existing text index; `$text` queries are also rejected in strict mode. Now strict is off by default (`MONGODB_STABLE_API_STRICT=true` to opt in) and only index-conflict errors (85/86) trigger a drop.
+- Checks run: tests/post-probe-cache.test.ts; integration 10/10 (projections, publishedSlugExists, text index present + $text works). Gate below.
+- Follow-ups: owner can confirm on Atlas that `articles_text_search_v2` exists after this deploys (launch checklist). M8.4 ISR still open.
+
 ### 2026-10-26 14:45 — M7.1 — Sentry gated on SENTRY_DSN
 - Agent: Grok Bot (branch grokbot/work)
 - Commit(s): f733836
