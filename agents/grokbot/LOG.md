@@ -2,4 +2,5 @@
 
 Newest first. Items marked `in progress: Grok Bot` are claimed; other agents skip them.
 
-- in progress: Grok Bot — M2 deps (postcss, tar advisories)
+- done: M2 deps (audit 0 prod advisories)
+

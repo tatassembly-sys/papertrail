@@ -55,6 +55,12 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-10-26 13:45 — M2 deps — clear postcss + tar advisories
+- Agent: Grok Bot (branch grokbot/work)
+- Change: npm `overrides`: `postcss` → `$postcss` (8.5.x, same major; Next pinned 8.4.31) and `@mapbox/node-pre-gyp` → ^2.0.3 (tar 7.5.22; reached via unpdf → canvas). No Next major bump.
+- Checks run: `npm audit --omit=dev --audit-level=high` → found 0 vulnerabilities, exit 0. Gate: lint clean, typecheck pass, `npm test` sandbox all + unit 91/91, build pass.
+- Follow-ups: none.
+
 ## Review 2026-10-26 (08:00 Europe/London)
 
 Reviewer: Grok Bot (owner audit). Range reviewed: 9f011cb..9f011cb (`git log --since="2026-10-25 22:33"`): **0 agent commits**. Agents have stalled since the 2026-10-25 review, so the next-up list below still stands.
