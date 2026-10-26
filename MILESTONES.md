@@ -352,7 +352,7 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 - [x] **M8.2** `[AGENT]` Structured data: `Article`/`ScholarlyArticle` JSON-LD on posts, `BreadcrumbList`; validate with a unit test of the generated object. `(17c69dd`, `f357d0a)`
 - [x] **M8.3** `[AGENT]` Accessibility: run `@axe-core/playwright` in e2e on home/post/register; fix all serious/critical.
 - [ ] **M8.4** `[AGENT]` Caching: ISR/`revalidate` for public pages, `Cache-Control` on `posts/published` API; Mongo projection to avoid sending full text in lists.
-- [ ] **M8.5** `[AGENT]` Images/fonts: `next/font`, OG images cached; no layout shift.
+- [x] **M8.5** `[AGENT]` Images/fonts: `next/font`, OG images cached; no layout shift.
 
 ### Acceptance criteria (all verifiable)
 - `npm run lighthouse` passes assertions locally.
