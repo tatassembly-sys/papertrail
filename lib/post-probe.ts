@@ -1,3 +1,6 @@
+/** Short shared-cache window for the probe: a newly published post shows within a minute. */
+export const PROBE_CACHE_CONTROL = "public, s-maxage=60, stale-while-revalidate=300";
+
 /** 204 when a published note exists, 404 when it does not. */
 export function postProbeStatus(found: boolean): 204 | 404 {
   return found ? 204 : 404;

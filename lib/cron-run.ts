@@ -13,6 +13,34 @@ export const CRON_JOBS = [
 
 export type CronJobName = (typeof CRON_JOBS)[number];
 
+const MINUTE = 60_000;
+const DAY = 24 * 60 * MINUTE;
+
+/** Expected cadence per job (docs/runbooks/cron-job-org.md). */
+export const CRON_CADENCE_MS: Record<CronJobName, number> = {
+  "cron-fetch": DAY,
+  "cron-fetch-pubmed": DAY,
+  "process-queue": 10 * MINUTE,
+  "process-scheduled-posts": 5 * MINUTE,
+  "cron-publish-mix": DAY,
+  "newsletter-digest": 7 * DAY,
+};
+
+/**
+ * A job is stale when its last run is older than 2x its cadence.
+ * Returns null when the job has never run (nothing to judge yet).
+ */
+export function isCronStale(
+  job: CronJobName,
+  at: string | Date | null,
+  now: Date = new Date()
+): boolean | null {
+  if (!at) return null;
+  const ms = at instanceof Date ? at.getTime() : new Date(at).getTime();
+  if (!Number.isFinite(ms)) return null;
+  return now.getTime() - ms > 2 * CRON_CADENCE_MS[job];
+}
+
 export interface CronRunView {
   job: CronJobName;
   status: number | null;
@@ -20,6 +48,8 @@ export interface CronRunView {
   ok: boolean | null;
   error: string | null;
   at: string | null;
+  /** True when the last run is older than 2x cadence; null if never run. */
+  stale: boolean | null;
 }
 
 const MAX_NOTE = 160;
@@ -47,7 +77,7 @@ function isCronJob(value: string): value is CronJobName {
 }
 
 function emptyRun(job: CronJobName): CronRunView {
-  return { job, status: null, durationMs: null, ok: null, error: null, at: null };
+  return { job, status: null, durationMs: null, ok: null, error: null, at: null, stale: null };
 }
 
 function rowTime(value: unknown): number {
@@ -60,7 +90,7 @@ function rowTime(value: unknown): number {
 }
 
 /** Newest stored row per known job. Jobs with no row stay empty. */
-export function latestCronByJob(rows: unknown[]): CronRunView[] {
+export function latestCronByJob(rows: unknown[], now: Date = new Date()): CronRunView[] {
   const newest = new Map<CronJobName, { atMs: number; view: CronRunView }>();
 
   for (const row of rows) {
@@ -82,7 +112,7 @@ export function latestCronByJob(rows: unknown[]): CronRunView[] {
     const at = atMs > 0 ? new Date(atMs).toISOString() : null;
     newest.set(name, {
       atMs,
-      view: { job: name, status, durationMs, ok, error, at },
+      view: { job: name, status, durationMs, ok, error, at, stale: isCronStale(name, at, now) },
     });
   }
 
@@ -148,4 +178,27 @@ export async function runCronJob(
   }
   await persistCronRun(job, response, Date.now() - started);
   return response;
+}
+
+/** Compact cron summary for /api/health: last run time, ok and staleness per job. */
+export async function cronHealthSummary(): Promise<{
+  cron_last_run: Record<string, { at: string | null; ok: boolean | null; stale: boolean | null }>;
+  queue_depth: number;
+}> {
+  const db = await getDb();
+  const [rows, queueDepth] = await Promise.all([
+    db
+      .collection("cron_runs")
+      .aggregate([
+        { $sort: { at: -1 } },
+        { $group: { _id: "$job", status: { $first: "$status" }, ok: { $first: "$ok" }, at: { $first: "$at" } } },
+      ])
+      .toArray(),
+    db.collection("fetch_queue").countDocuments({ status: "pending" }),
+  ]);
+  const cron_last_run: Record<string, { at: string | null; ok: boolean | null; stale: boolean | null }> = {};
+  for (const run of latestCronByJob(rows)) {
+    cron_last_run[run.job] = { at: run.at, ok: run.ok, stale: run.stale };
+  }
+  return { cron_last_run, queue_depth: queueDepth };
 }

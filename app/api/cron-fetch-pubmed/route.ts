@@ -6,6 +6,7 @@ import { PUBMED_TOPICS } from "@/lib/arxivCategories";
 import { assertCronAuthorized } from "@/lib/cron-auth";
 import { runCronJob } from "@/lib/cron-run";
 import { publicErrorMessage } from "@/lib/safe-error";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
 
     for (const result of perTopicResults) {
       if (result.status !== "fulfilled") {
-        console.warn("PubMed topic search failed:", result.reason);
+        log.warn("PubMed topic search failed", result.reason, { route: "/api/cron-fetch-pubmed" });
         continue;
       }
       for (const entry of result.value) {
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
       enqueued: enqueuedCount,
     });
   } catch (err) {
-    console.error("cron-fetch-pubmed:", err);
+    log.error("cron-fetch-pubmed", err, { route: "/api/cron-fetch-pubmed" });
     return NextResponse.json(
       { error: publicErrorMessage(err, "Cron fetch failed.") },
       { status: 500 }

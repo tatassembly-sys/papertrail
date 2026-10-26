@@ -3,6 +3,7 @@ import { assertCronAuthorized } from "@/lib/cron-auth";
 import { runCronJob } from "@/lib/cron-run";
 import { buildWeeklyDigest, sendWeeklyDigest } from "@/lib/newsletter";
 import { requireAdmin } from "@/lib/auth-server";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
         })),
       });
     } catch (err) {
-      console.error("digest preview error:", err);
+      log.error("digest preview error", err, { route: "/api/newsletter/digest" });
       return NextResponse.json({ error: "Preview failed." }, { status: 500 });
     }
   }
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
     const result = await sendWeeklyDigest();
     return NextResponse.json({ success: true, ...result });
   } catch (err) {
-    console.error("digest error:", err);
+    log.error("digest error", err, { route: "/api/newsletter/digest" });
     return NextResponse.json({ error: "Digest failed." }, { status: 500 });
   }
   });
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
     const result = await sendWeeklyDigest();
     return NextResponse.json({ success: true, ...result });
   } catch (err) {
-    console.error("digest POST error:", err);
+    log.error("digest POST error", err, { route: "/api/newsletter/digest" });
     return NextResponse.json({ error: "Digest failed." }, { status: 500 });
   }
   });

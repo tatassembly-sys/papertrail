@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { assertCronAuthorized } from "@/lib/cron-auth";
 import { runCronJob } from "@/lib/cron-run";
 import { publishDailyFieldMix } from "@/lib/publish-mix";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     const result = await publishDailyFieldMix();
     return NextResponse.json({ success: true, ...result });
   } catch (err) {
-    console.error("cron-publish-mix:", err);
+    log.error("cron-publish-mix", err, { route: "/api/cron-publish-mix" });
     return NextResponse.json({ error: "Publish mix failed." }, { status: 500 });
   }
   });

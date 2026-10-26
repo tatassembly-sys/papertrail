@@ -14,3 +14,4 @@ tree.txt
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+coverage

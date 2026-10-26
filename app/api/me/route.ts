@@ -27,6 +27,7 @@ import {
 } from "@/lib/entitlements";
 import { getRateCount, tooManyPublicWrites } from "@/lib/rate-limit";
 import { cancelSubscriptionNow } from "@/lib/stripe";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -147,7 +148,7 @@ export async function DELETE(req: NextRequest) {
     try {
       await cancelSubscriptionNow(existing.stripe_subscription_id);
     } catch (err) {
-      console.error("cancel stripe on account delete:", err);
+      log.error("cancel stripe on account delete", err, { route: "/api/me" });
       return NextResponse.json(
         { error: "Could not cancel billing. Try the billing portal, then delete again." },
         { status: 502 }

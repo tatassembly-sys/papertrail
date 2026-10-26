@@ -72,7 +72,8 @@ export default async function AdminStatusPage() {
                 {run.status === null ? (
                   <span className="text-ink-soft">No run recorded</span>
                 ) : (
-                  <span className={run.ok ? "text-ink" : "text-redpen"}>
+                  <span className={run.ok && !run.stale ? "text-ink" : "text-redpen"}>
+                    {run.stale ? "STALE · " : ""}
                     {run.ok ? "ok" : "failed"} {run.status}
                     {run.durationMs !== null ? ` · ${run.durationMs} ms` : ""}
                     {run.at ? ` · ${run.at}` : ""}

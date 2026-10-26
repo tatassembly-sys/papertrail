@@ -8,6 +8,7 @@ import {
   recordFailedLogin,
 } from "@/lib/loginAttempts";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
     res.cookies.set(USER_SESSION_COOKIE, token, userSessionCookieOptions());
     return res;
   } catch (err) {
-    console.error("user-login error:", err);
+    log.error("user-login error", err, { route: "/api/auth/user-login" });
     return NextResponse.json({ error: "Sign in failed." }, { status: 500 });
   }
 }

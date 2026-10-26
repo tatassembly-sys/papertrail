@@ -14,6 +14,7 @@ import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit, undoRateLimit } from "@/lib/rate-limit";
 import { DAY_MS, PROCESS_PAPER_PER_DAY } from "@/lib/entitlements";
 import { canonicalSourceId } from "@/lib/source-id";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs"; // required for PDF parsing (unpdf), the mongo driver, and larger fetches
 export const maxDuration = 60; // allow time for PDF download + LLM call
@@ -152,7 +153,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ success: true, article: data }, { status: 201 });
   } catch (err) {
-    console.error("process-paper error:", err);
+    log.error("process-paper error", err, { route: "/api/process-paper" });
     return NextResponse.json(
       { error: publicErrorMessage(err, "Could not process that paper. Try again.") },
       { status: 500 }

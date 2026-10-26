@@ -39,7 +39,9 @@ function connectClient(): Promise<MongoClient> {
   if (process.env.MONGODB_STABLE_API !== "false") {
     options.serverApi = {
       version: ServerApiVersion.v1,
-      strict: true,
+      // strict:true rejects text indexes and $text queries (APIStrictError 323),
+      // which search depends on. Opt back in with MONGODB_STABLE_API_STRICT=true.
+      strict: process.env.MONGODB_STABLE_API_STRICT === "true",
       deprecationErrors: true,
     };
   }

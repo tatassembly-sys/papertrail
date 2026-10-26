@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-server";
 import { getAdminOpsStatus } from "@/lib/admin-status";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export async function GET() {
     const status = await getAdminOpsStatus();
     return NextResponse.json({ success: true, ...status });
   } catch (err) {
-    console.error("admin status:", err);
+    log.error("admin status", err, { route: "/api/admin/status" });
     return NextResponse.json({ error: "Status unavailable." }, { status: 500 });
   }
 }

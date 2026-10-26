@@ -54,3 +54,32 @@ test("admin status lists every cron job", () => {
     assert.match(readFileSync("lib/cron-run.ts", "utf8"), new RegExp(job));
   }
 });
+
+import { isCronStale, CRON_CADENCE_MS } from "../lib/cron-run";
+
+test("isCronStale: stale only past 2x cadence; null when never run", () => {
+  const now = new Date("2026-10-26T12:00:00Z");
+  const q = CRON_CADENCE_MS["process-queue"];
+  assert.equal(isCronStale("process-queue", null, now), null);
+  assert.equal(isCronStale("process-queue", "not a date", now), null);
+  assert.equal(isCronStale("process-queue", new Date(now.getTime() - 2 * q), now), false);
+  assert.equal(isCronStale("process-queue", new Date(now.getTime() - 2 * q - 1), now), true);
+  const day = CRON_CADENCE_MS["cron-fetch"];
+  assert.equal(isCronStale("cron-fetch", new Date(now.getTime() - 1.5 * day).toISOString(), now), false);
+  assert.equal(isCronStale("cron-fetch", new Date(now.getTime() - 3 * day).toISOString(), now), true);
+});
+
+test("latestCronByJob marks stale runs", () => {
+  const now = new Date("2026-10-26T12:00:00Z");
+  const runs = latestCronByJob(
+    [
+      { job: "process-queue", status: 200, at: new Date("2026-10-26T11:55:00Z") },
+      { job: "process-scheduled-posts", status: 200, at: new Date("2026-10-26T10:00:00Z") },
+    ],
+    now
+  );
+  const by = Object.fromEntries(runs.map((r) => [r.job, r.stale]));
+  assert.equal(by["process-queue"], false);
+  assert.equal(by["process-scheduled-posts"], true);
+  assert.equal(by["cron-fetch"], null);
+});

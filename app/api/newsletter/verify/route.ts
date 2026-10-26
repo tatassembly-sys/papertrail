@@ -3,6 +3,7 @@ import { confirmSubscription } from "@/lib/newsletter";
 import { getSiteUrl } from "@/lib/site-url";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
 import { tooManyPublicWrites } from "@/lib/rate-limit";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("newsletter verify:", err);
+    log.error("newsletter verify", err, { route: "/api/newsletter/verify" });
     return NextResponse.json({ error: "Confirmation failed." }, { status: 500 });
   }
 }

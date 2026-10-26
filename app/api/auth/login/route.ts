@@ -5,6 +5,7 @@ import { clearLoginAttempts, isLoginRateLimited, recordFailedLogin } from "@/lib
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { publicErrorMessage } from "@/lib/safe-error";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (err) {
-    console.error("login error:", err);
+    log.error("login error", err, { route: "/api/auth/login" });
     return NextResponse.json(
       { error: publicErrorMessage(err, "Sign in failed. Please try again.") },
       { status: 500 }

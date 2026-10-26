@@ -7,6 +7,7 @@ import { acquireCronLock, CRON_FETCH_LOCK_MS, releaseCronLock } from "@/lib/cron
 import { runCronJob } from "@/lib/cron-run";
 import { publicErrorMessage } from "@/lib/safe-error";
 import { canonicalSourceId } from "@/lib/source-id";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs"; // needs the mongo driver's Node TCP APIs
 export const maxDuration = 60; // many field feeds; keep under host maxDuration
@@ -47,7 +48,7 @@ async function fetchRecentArxivLinks(): Promise<FeedEntry[]> {
 
   for (const result of results) {
     if (result.status !== "fulfilled") {
-      console.warn("arXiv category fetch failed:", result.reason);
+      log.warn("arXiv category fetch failed", result.reason, { route: "/api/cron-fetch" });
       continue;
     }
     for (const entry of result.value) {
@@ -115,7 +116,7 @@ export async function GET(req: NextRequest) {
       enqueued: enqueuedCount,
     });
   } catch (err) {
-    console.error("cron-fetch:", err);
+    log.error("cron-fetch", err, { route: "/api/cron-fetch" });
     return NextResponse.json(
       { error: publicErrorMessage(err, "Cron fetch failed.") },
       { status: 500 }
