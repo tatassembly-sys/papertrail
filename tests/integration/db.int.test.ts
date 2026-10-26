@@ -132,3 +132,21 @@ describe("health cron summary (in-memory Mongo)", () => {
     assert.equal(h.cron_last_run["newsletter-digest"].at, null);
   });
 });
+
+describe("article list projections (in-memory Mongo)", () => {
+  it("trending, editor picks and the probe do not load the article body", async () => {
+    const { getDb } = await import("@/lib/mongodb");
+    const a = await import("@/lib/articles");
+    const db = await getDb();
+    await db.collection("articles").insertOne({
+      title: "T", headline: "H", slug: "t-1", status: "published", share_approved: true,
+      plain_explanation: "BODY".repeat(1000), published_at: new Date(), created_at: new Date(),
+    });
+    for (const list of [await a.getTrendingArticles(5), await a.getEditorPicks(3)]) {
+      assert.equal(list.length, 1);
+      assert.ok(!JSON.stringify(list).includes("BODYBODY"));
+    }
+    assert.equal(await a.publishedSlugExists("t-1"), true);
+    assert.equal(await a.publishedSlugExists("nope"), false);
+  });
+});

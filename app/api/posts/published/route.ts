@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getArticleBySlug } from "@/lib/articles";
-import { postProbeStatus } from "@/lib/post-probe";
+import { publishedSlugExists } from "@/lib/articles";
+import { postProbeStatus, PROBE_CACHE_CONTROL } from "@/lib/post-probe";
 import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
@@ -10,13 +10,16 @@ export const runtime = "nodejs";
 export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get("slug")?.trim() || "";
   if (!slug || slug.length > 200 || slug.includes("/")) {
-    return new NextResponse(null, { status: 404 });
+    return new NextResponse(null, { status: 404, headers: { "Cache-Control": PROBE_CACHE_CONTROL } });
   }
   try {
-    const article = await getArticleBySlug(slug);
-    return new NextResponse(null, { status: postProbeStatus(Boolean(article)) });
+    const exists = await publishedSlugExists(slug);
+    return new NextResponse(null, {
+      status: postProbeStatus(exists),
+      headers: { "Cache-Control": PROBE_CACHE_CONTROL },
+    });
   } catch (error) {
     log.error("post probe failed", error, { route: "/api/posts/published" });
-    return new NextResponse(null, { status: 503 });
+    return new NextResponse(null, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
 }

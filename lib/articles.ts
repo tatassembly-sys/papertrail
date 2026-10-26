@@ -368,6 +368,7 @@ export async function getTrendingArticles(limit = 5): Promise<ArticleRow[]> {
       },
       { $sort: { shareCount: -1, published_at: -1, created_at: -1 } },
       { $limit: limit },
+      { $project: LIST_PROJECTION },
     ])
     .toArray();
   return docs.map(toArticleRow);
@@ -376,7 +377,7 @@ export async function getTrendingArticles(limit = 5): Promise<ArticleRow[]> {
 export async function getEditorPicks(limit = 3): Promise<ArticleRow[]> {
   const col = await articlesCollection();
   const docs = await col
-    .find({ status: "published", share_approved: true })
+    .find({ status: "published", share_approved: true }, { projection: LIST_PROJECTION })
     .sort({ published_at: -1 })
     .limit(limit)
     .toArray();
@@ -417,6 +418,13 @@ export async function getArticleBySlug(
   if (publishedOnly) filter.status = "published";
   const doc = await col.findOne(filter);
   return doc ? toArticleRow(doc) : null;
+}
+
+/** Cheap existence check (no article body) for the 404 probe. */
+export async function publishedSlugExists(slug: string): Promise<boolean> {
+  const col = await articlesCollection();
+  const doc = await col.findOne({ slug, status: "published" }, { projection: { _id: 1 } });
+  return doc !== null;
 }
 
 export async function getArticleById(id: string): Promise<ArticleRow | null> {
