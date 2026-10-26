@@ -65,6 +65,13 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-10-26 15:40 — M9.1, M9.5, M8.3, M8.1
+- Agent: Grok Bot (branch grokbot/work)
+- Commit(s): b6eaaa5 (M9.1), 40902f7 (M9.5), be79c9f (M8.3), 4e3e493 (M8.1)
+- Change: M9.1 loading skeletons for /today and /library (not for topics/authors/lists/posts: a loading boundary there would wrap a child route that calls notFound() and break real 404s); test asserts empty states + error/not-found boundaries. M9.5 suggest box was already debounced (180 ms, AbortController) with arrow/enter/escape; added aria-activedescendant and an empty state with topic hints. M8.3 `e2e/a11y.spec.ts` (@axe-core/playwright, wcag2a/aa, GET only). Found and fixed: accent `--redpen` #C63D2F was 4.47:1 on paper → #B03024 (≥5:1 on paper, surface, redpen-soft); inline links underlined (link-in-text-block); category-pill counts lost opacity. M8.1 `npm run lighthouse` (lhci autorun, desktop, ≥0.9 assertions). `npm run db:memory` seeds a throwaway in-memory DB for local e2e/lighthouse.
+- Checks run (local prod build + db:memory, port 3310): `npx playwright test` 7/7 passed (smoke + axe 0 serious/critical). Lighthouse: home perf 1.00, a11y 1.00, best-practices 1.00, SEO 0.92 (meta-description audit flags streamed metadata though the tag is present); post 1.00/1.00/1.00/1.00.
+- Follow-ups: M9.4 dark-mode contrast not yet checked by axe.
+
 ### 2026-10-26 15:05 — M8.4 (partial), M10.1, DB text-index fix
 - Agent: Grok Bot (branch grokbot/work)
 - Commit(s): 20c4951 (M8.4 partial), f1cd6ca (M10.1), 5da1980 (fix db)
