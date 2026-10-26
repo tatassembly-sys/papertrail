@@ -15,3 +15,4 @@ tree.txt
 /blob-report/
 /playwright/.cache/
 coverage
+.lighthouseci
