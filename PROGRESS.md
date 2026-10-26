@@ -65,6 +65,13 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-10-26 14:45 — M7.1 — Sentry gated on SENTRY_DSN
+- Agent: Grok Bot (branch grokbot/work)
+- Commit(s): f733836
+- Change: `lib/sentry.ts` + `instrumentation.ts` (register + onRequestError, nodejs runtime). With `SENTRY_DSN` unset nothing is imported or initialised. When set: `sendDefaultPii: false`, `beforeSend`/`beforeBreadcrumb` scrub user, cookies, headers, body, emails and tokens; `log.error` forwards to Sentry. No client-side SDK (CSP unchanged). Env documented in AGENTS.md §4 and .env.example.
+- Checks run: `tests/sentry.test.ts` (no-op without DSN: loader never called; PII off; scrub). Gate: lint, typecheck, unit 101/101, sandbox 543/543, build.
+- Follow-ups: owner creates a Sentry project and sets SENTRY_DSN in Vercel (M7.5).
+
 ### 2026-10-26 14:20 — M4.2 / M4.3 / M4.4 / M7.2 / M7.3 — tests, coverage, logger, health
 - Agent: Grok Bot (branch grokbot/work)
 - Commit(s): e8e2724 (M4.2), 072dc5a (M4.3), 2f4d57c (M4.4), 12eb9e8 (M7.2), 7fa5da2 (M7.3)
