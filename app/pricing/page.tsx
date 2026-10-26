@@ -195,11 +195,11 @@ export default async function PricingPage() {
 
       <p className="mt-10 text-sm text-ink-soft">
         Paid plans are billed by Stripe. See{" "}
-        <Link href="/terms" className="text-redpen hover:underline">
+        <Link href="/terms" className="text-redpen underline underline-offset-2">
           terms
         </Link>{" "}
         and{" "}
-        <Link href="/privacy" className="text-redpen hover:underline">
+        <Link href="/privacy" className="text-redpen underline underline-offset-2">
           privacy
         </Link>
         . Editorial notes are not advice.

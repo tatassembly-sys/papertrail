@@ -11,7 +11,7 @@
   --ink: 22 33 61; /* #16213D primary text */
   --ink-soft: 61 74 92; /* #3D4A5C secondary text */
   --rule: 199 204 209; /* #C7CCD1 borders */
-  --redpen: 198 61 47; /* #C63D2F accent */
+  --redpen: 176 48 36; /* #B03024 accent (≥4.5:1 on paper, surface and redpen-soft) */
   --redpen-soft: 243 226 223; /* #F3E2DF accent wash */
   --stamp: 91 107 115; /* #5B6B73 meta labels */
   --success: 22 101 52; /* green-800-ish on light */

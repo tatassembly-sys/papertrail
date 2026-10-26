@@ -177,7 +177,7 @@ export default async function HomePage({ searchParams }: PageProps) {
               }`}
             >
               {categoryLabel(code)}
-              <span className={`ml-1 ${selected ? "opacity-70" : "opacity-60"}`}>
+              <span className="ml-1 font-normal">
                 ({count})
               </span>
             </Link>

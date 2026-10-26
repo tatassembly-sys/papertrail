@@ -64,7 +64,7 @@ export default function RegisterPage() {
       <p className="mt-2 text-base leading-relaxed text-ink-soft">
         Save papers, bookmark favorites, follow topics, and keep reading
         history. Upgrade anytime from{" "}
-        <Link href="/pricing" className="text-redpen hover:underline">
+        <Link href="/pricing" className="text-redpen underline underline-offset-2">
           Pro
         </Link>
         .
@@ -121,11 +121,11 @@ export default function RegisterPage() {
         </label>
         <p className="text-xs text-ink-soft">
           By creating an account you agree to the{" "}
-          <Link href="/terms" className="text-redpen hover:underline">
+          <Link href="/terms" className="text-redpen underline underline-offset-2">
             terms
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="text-redpen hover:underline">
+          <Link href="/privacy" className="text-redpen underline underline-offset-2">
             privacy policy
           </Link>
           .

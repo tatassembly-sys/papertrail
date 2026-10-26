@@ -85,7 +85,7 @@ export default function CollectionSave({ slug }: { slug: string }) {
         <div className="absolute z-20 mt-1 w-64 rounded-sm border border-rule bg-paper p-3 shadow-sm">
           {signedIn === false && (
             <p className="text-sm text-ink-soft">
-              <Link href="/user-login?next=/library" className="text-redpen hover:underline">
+              <Link href="/user-login?next=/library" className="text-redpen underline underline-offset-2">
                 Sign in
               </Link>{" "}
               to keep reading lists.
@@ -128,7 +128,7 @@ export default function CollectionSave({ slug }: { slug: string }) {
             <p className="mt-2 text-xs text-ink-soft">
               {msg}{" "}
               {upgrade && (
-                <Link href="/pricing" className="text-redpen hover:underline">
+                <Link href="/pricing" className="text-redpen underline underline-offset-2">
                   See Pro
                 </Link>
               )}

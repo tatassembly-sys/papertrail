@@ -65,7 +65,7 @@ export default async function PublicListPage({ params }: PageProps) {
       )}
       <p className="mt-10 text-sm text-ink-soft">
         Start your own from{" "}
-        <Link href="/library" className="text-redpen hover:underline">
+        <Link href="/library" className="text-redpen underline underline-offset-2">
           Library
         </Link>
         .

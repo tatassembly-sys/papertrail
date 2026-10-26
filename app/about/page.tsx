@@ -32,22 +32,22 @@ export default function AboutPage() {
         </p>
         <p>
           You can follow new notes by{" "}
-          <Link href="/newsletter" className="text-redpen hover:underline">
+          <Link href="/newsletter" className="text-redpen underline underline-offset-2">
             newsletter
           </Link>{" "}
           or{" "}
-          <a href="/feed.xml" className="text-redpen hover:underline">
+          <a href="/feed.xml" className="text-redpen underline underline-offset-2">
             RSS
           </a>
           . Suggest a paper on the{" "}
-          <Link href="/submit" className="text-redpen hover:underline">
+          <Link href="/submit" className="text-redpen underline underline-offset-2">
             suggest
           </Link>{" "}
           page.
         </p>
         <p>
           The notes stay free.{" "}
-          <Link href="/pricing" className="text-redpen hover:underline">
+          <Link href="/pricing" className="text-redpen underline underline-offset-2">
             Paper Trail Pro
           </Link>{" "}
           is how the lights stay on: unlimited questions about a paper, markdown

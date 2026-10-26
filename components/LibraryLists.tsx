@@ -99,7 +99,7 @@ export default function LibraryLists({
         <p className="text-sm text-ink-soft">
           {msg}{" "}
           {upgrade && (
-            <Link href="/pricing" className="text-redpen hover:underline">
+            <Link href="/pricing" className="text-redpen underline underline-offset-2">
               See Pro
             </Link>
           )}
@@ -119,7 +119,7 @@ export default function LibraryLists({
                 {c.public ? "Make private" : "Make public"}
               </button>
               {c.public && (
-                <Link href={`/lists/${c.id}`} className="text-redpen hover:underline">
+                <Link href={`/lists/${c.id}`} className="text-redpen underline underline-offset-2">
                   Share link
                 </Link>
               )}

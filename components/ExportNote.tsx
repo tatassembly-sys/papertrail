@@ -62,12 +62,12 @@ export default function ExportNote({
         <p className="mt-1 text-sm text-ink-soft">
           {msg}{" "}
           {msg.includes("Pro") && (
-            <Link href="/pricing" className="text-redpen hover:underline">
+            <Link href="/pricing" className="text-redpen underline underline-offset-2">
               See Pro →
             </Link>
           )}
           {msg.includes("Sign in") && (
-            <Link href="/user-login?next=/pricing" className="text-redpen hover:underline">
+            <Link href="/user-login?next=/pricing" className="text-redpen underline underline-offset-2">
               Sign in →
             </Link>
           )}

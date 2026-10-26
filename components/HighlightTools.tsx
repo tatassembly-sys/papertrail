@@ -119,7 +119,7 @@ export default function HighlightTools({
         </p>
         {!signedIn && (
           <p className="mt-2 text-sm">
-            <Link href="/user-login" className="text-redpen hover:underline">
+            <Link href="/user-login" className="text-redpen underline underline-offset-2">
               Sign in
             </Link>{" "}
             to keep notes across devices.
@@ -149,7 +149,7 @@ export default function HighlightTools({
           <p className="mt-2 text-sm text-ink-soft">
             {msg}{" "}
             {upgrade && (
-              <Link href="/pricing" className="text-redpen hover:underline">
+              <Link href="/pricing" className="text-redpen underline underline-offset-2">
                 See Pro
               </Link>
             )}
