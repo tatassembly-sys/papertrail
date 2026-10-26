@@ -198,9 +198,9 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 
 ### Tasks
 - [x] **M4.1** `[AGENT]` Add Playwright (`@playwright/test`) with `e2e/` smoke: home loads, post page, register form validation, admin login rejects bad password. `npm run test:e2e` (not in gate until stable). `(e2cd41d)`
-- [ ] **M4.2** `[AGENT]` Integration tests against `mongodb-memory-server` for `lib/users.ts`, `lib/submissions.ts`, rate-limit; `npm run test:integration`.
-- [ ] **M4.3** `[AGENT]` Coverage report (`c8`) for unit tests; record baseline % in PROGRESS.md; target ≥60% of `lib/`.
-- [ ] **M4.4** `[AGENT→OWNER]` Add the new suites to `docs/ci/proposed-ci.yml` (services: none needed with memory server).
+- [x] **M4.2** `[AGENT]` Integration tests against `mongodb-memory-server` for `lib/users.ts`, `lib/submissions.ts`, rate-limit; `npm run test:integration`.
+- [x] **M4.3** `[AGENT]` Coverage report (`c8`) for unit tests; record baseline % in PROGRESS.md; target ≥60% of `lib/`.
+- [x] **M4.4** `[AGENT→OWNER]` Add the new suites to `docs/ci/proposed-ci.yml` (services: none needed with memory server).
 
 ### Acceptance criteria (all verifiable)
 - `npm run test:integration` passes offline.
@@ -311,8 +311,8 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 
 ### Tasks
 - [ ] **M7.1** `[AGENT]` Add Sentry (`@sentry/nextjs`) gated on `SENTRY_DSN` (no-op if unset); scrub PII; document env.
-- [ ] **M7.2** `[AGENT]` Structured JSON logger `lib/log.ts` (level, route, requestId, no PII); replace `console.*` in API routes.
-- [ ] **M7.3** `[AGENT]` `/api/health` adds `cron_last_run` per job and `queue_depth`; `/admin/status` shows stale cron (>2× cadence) in red.
+- [x] **M7.2** `[AGENT]` Structured JSON logger `lib/log.ts` (level, route, requestId, no PII); replace `console.*` in API routes.
+- [x] **M7.3** `[AGENT]` `/api/health` adds `cron_last_run` per job and `queue_depth`; `/admin/status` shows stale cron (>2× cadence) in red.
 - [x] **M7.4** `[AGENT]` `docs/runbooks/incidents.md`: DB down, LLM quota, cron missed, email bounce, how to roll back on Vercel (Promote previous deployment). (`0124051`)
 - [ ] **M7.5** `[OWNER]` UptimeRobot (free) on `/api/health`; Sentry project; Atlas alerting email.
 
