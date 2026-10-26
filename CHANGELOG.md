@@ -10,8 +10,32 @@
 
 ## [Unreleased]
 
+## [v1.0.0] — release candidate (owner sets the date and pushes the tag at launch, M10.5/M10.6)
+
 ### Added
 - Hosting prep for Vercel: confirmed index script, Vercel site-URL order, cron-job.org runbook, read-only `smoke:prod` (M0).
+- Proposed CI with lint, audit, gitleaks, integration and coverage steps in `docs/ci/proposed-ci.yml` (M1.3, M4.4).
+- Integration tests on in-memory MongoDB (`npm run test:integration`) and coverage (`npm run test:coverage`, fails under 60% of `lib/`) (M4.2, M4.3).
+- Playwright smoke plus axe accessibility, dark-mode and 360px checks (`npm run test:e2e`); Lighthouse CI with ≥0.9 assertions (`npm run lighthouse`) (M4.1, M8.1, M8.3, M9.4).
+- Structured JSON logger with PII/token redaction; optional Sentry behind `SENTRY_DSN` (M7.1, M7.2).
+- `/api/health` reports `cron_last_run` per job and `queue_depth`; stale crons shown in red on `/admin/status` (M7.3).
+- Incident runbook and launch checklist (`docs/runbooks/`, `docs/launch-checklist.md`) (M7.4, M10.1).
+- ScholarlyArticle + BreadcrumbList structured data on posts (M8.2).
+- Admin: bulk approve/reject drafts, retry failed queue items, LLM model and cost recorded per draft (M9.3).
+- Onboarding: topic picks personalise `/today`; newsletter prompt from the 2nd article read (M9.2).
+- Search suggestions show topic hints when nothing matches (M9.5).
+
+### Changed
+- Topic and author pages are cached (ISR, 5 minutes); post probe API sends a short shared cache header; list queries skip article bodies (M8.4).
+- Accent colour darkened to #B03024 and inline links underlined for WCAG AA contrast (M8.3).
+- MongoDB Stable API is non-strict by default so the text search index and `$text` work (`MONGODB_STABLE_API_STRICT=true` to opt in).
+
+### Fixed
+- Missing posts, topics, authors and lists return real 404s (M3.1); cron runs are idempotent (M3.2); Europe/London schedule handling across DST (M3.3); email tokens are single-use and expire (M3.5).
+- A failed text-index create no longer drops the existing index.
+
+### Security
+- Production dependency advisories cleared (`npm audit --omit=dev --audit-level=high` exits 0) (M2).
 
 ## History — production hardening and Railway go-live
 
