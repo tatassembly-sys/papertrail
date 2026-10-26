@@ -1,3 +1,4 @@
+import type { LlmUsage } from "./llm-cost";
 export const TRANSLATOR_SYSTEM_PROMPT = `You are an elite scientific communicator and research translator. Your objective is to extract dense academic literature and reframe it for a non-specialist public audience without losing scientific accuracy.
 You must return a raw JSON object matching this schema exactly:
 {
@@ -21,6 +22,8 @@ export interface TranslatedArticle {
   caveats: string;
   keywords?: string[];
   tags?: string[];
+  /** Which model wrote it and what it cost (M9.3). */
+  llm?: LlmUsage | null;
 }
 
 export type PaperSourceKind = "arxiv" | "pubmed" | "manual" | "submission";

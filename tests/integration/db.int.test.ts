@@ -202,3 +202,24 @@ describe("admin bulk review and queue retry (in-memory Mongo)", () => {
     assert.equal(await retryFailedQueueItems(), 1);
   });
 });
+
+describe("draft LLM usage (in-memory Mongo)", () => {
+  it("insertDraftArticle stores model + cost and list rows return it", async () => {
+    const a = await import("@/lib/articles");
+    const { usageFrom } = await import("@/lib/llm-cost");
+    const row = await a.insertDraftArticle(
+      {
+        title: "Cost tracked draft", headline: "h", why_it_matters: [], plain_explanation: "p", caveats: "c",
+        llm: usageFrom("openrouter", "paid/model", { cost: 0.002, prompt_tokens: 9, completion_tokens: 3 }),
+      },
+      "https://arxiv.org/abs/2401.99999",
+      "fallback",
+      null,
+      { source: "arxiv", sourceId: "2401.99999" }
+    );
+    assert.equal(row.llm?.cost_microusd, 2000);
+    const { articles } = await a.getAdminArticles(1, 50, "draft");
+    const listed = articles.find((x) => x.id === row.id);
+    assert.equal(listed?.llm?.model, "paid/model");
+  });
+});
