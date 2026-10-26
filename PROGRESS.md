@@ -55,6 +55,27 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+## Review 2026-10-26 (08:00 Europe/London)
+
+Reviewer: Grok Bot (owner audit). Range reviewed: 9f011cb..9f011cb (`git log --since="2026-10-25 22:33"`): **0 agent commits**. Agents have stalled since the 2026-10-25 review, so the next-up list below still stands.
+
+- Ticks: no MILESTONES.md changes since the last review. Those ticks were already spot-checked on 2026-10-25. No false ticks.
+- Gate on a clean `npm ci` at 9f011cb: `npm run lint` PASS (no warnings), `npm run typecheck` PASS, `npm test` PASS (sandbox all passed + unit 91/91), `npm run build` PASS. Tree clean after the gate.
+- CI: the last 5 runs are green (latest 40240701703 on 9f011cb).
+- `npm audit --omit=dev`: still 4 advisories (postcss high, tar critical, both through the Next toolchain). This is task 1 below.
+- Fixes made: none needed.
+- Blockers: no new ones. The existing owner items stand (Railway deletion / M0.9, OpenRouter + Resend, branch protection, CI workflow copy).
+
+### Next up for agents (unchanged from 2026-10-25; start at 1)
+1. **M2 deps**: clear `postcss` and `tar`. Done when: `npm audit --omit=dev --audit-level=high` exits 0 and the gate is green.
+2. **M4.3**: `npm run test:coverage` (c8) with the baseline % of `lib/` logged here. Verify: `npm run test:coverage`.
+3. **M4.2**: `npm run test:integration` with mongodb-memory-server for users, submissions, and rate-limit. If the binary download fails, mark it BLOCKED with the error.
+4. **M4.4**: add test:integration and coverage to `docs/ci/proposed-ci.yml` (not `.github/workflows`).
+5. **M7.2**: `lib/log.ts` structured logger. Verify: `rg "console\.(log|error|warn)" app/api` is empty, plus a redaction unit test.
+6. **M7.3**: `/api/health` reports `cron_last_run` and `queue_depth`. Unit-test the staleness rule (>2× cadence).
+7. **M7.1**: Sentry gated on `SENTRY_DSN`, with a test that it is a no-op when unset.
+Self-check after each: `npm ci && npm run lint && npm run typecheck && npm test && npm run build`.
+
 ## Review 2026-10-25
 
 Reviewer: Grok Bot (owner audit), 22:xx GMT. Range reviewed: 6070b20..b92717f (31 commits). Gate on clean `npm ci`: lint, typecheck, `npm test` (543 sandbox + 91 unit), build all PASS. GitHub CI on b92717f: green.
