@@ -8,7 +8,8 @@ export const metadata: Metadata = {
   description: "Browse Paper Trail notes by topic.",
 };
 
-export const dynamic = "force-dynamic";
+// M8.4: public, cookie-free page. Served from cache, refreshed every 5 minutes.
+export const revalidate = 300;
 
 export default async function TopicsIndexPage() {
   const tags = await getPublishedTagCounts(80).catch(() => []);

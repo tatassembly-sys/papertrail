@@ -7,7 +7,13 @@ import { topicIsOnFile } from "@/lib/public-route";
 import ArticleCard from "@/components/ArticleCard";
 import FollowTopic from "@/components/FollowTopic";
 
-export const dynamic = "force-dynamic";
+// M8.4: public, cookie-free page. Served from cache, refreshed every 5 minutes.
+export const revalidate = 300;
+
+/** No pages at build time; each is rendered on first request, then cached (ISR). */
+export async function generateStaticParams() {
+  return [];
+}
 
 interface PageProps {
   params: Promise<{ tag: string }>;
