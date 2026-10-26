@@ -29,6 +29,9 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      # In-memory MongoDB (mongodb-memory-server); no service container needed.
+      - run: npm run test:integration
+      - run: npm run test:coverage
       - run: npm run build
       - run: npm audit --omit=dev --audit-level=high
       - name: gitleaks
