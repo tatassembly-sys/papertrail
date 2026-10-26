@@ -199,7 +199,7 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 ### Tasks
 - [x] **M4.1** `[AGENT]` Add Playwright (`@playwright/test`) with `e2e/` smoke: home loads, post page, register form validation, admin login rejects bad password. `npm run test:e2e` (not in gate until stable). `(e2cd41d)`
 - [x] **M4.2** `[AGENT]` Integration tests against `mongodb-memory-server` for `lib/users.ts`, `lib/submissions.ts`, rate-limit; `npm run test:integration`.
-- [x] **M4.3** `[AGENT]` Coverage report (`c8`) for unit tests; record baseline % in PROGRESS.md; target ≥60% of `lib/`. — lines 66.7% of `lib/` (c8 --all, unit+integration), enforced ≥60% by `test:coverage` (bc797fc).
+- [x] **M4.3** `[AGENT]` Coverage report (`c8`) for unit tests; record baseline % in PROGRESS.md; target ≥60% of `lib/`. — lines 66.7% of `lib/` (c8 --all, unit+integration), enforced ≥60% by `test:coverage` (caad5bb, PR #4).
 - [x] **M4.4** `[AGENT→OWNER]` Add the new suites to `docs/ci/proposed-ci.yml` (services: none needed with memory server).
 
 ### Acceptance criteria (all verifiable)

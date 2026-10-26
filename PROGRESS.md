@@ -1,9 +1,9 @@
-## ▶ START HERE (2026-10-26 afternoon)
+## ▶ START HERE (2026-10-26 evening)
 
-- Read **Review 2026-10-26 (afternoon, Europe/London)** below. Take only tasks marked for **your lane** (`grokbot` = Grok Bot workers on `grokbot/work`; `vscode` = VS Code agents on `vscode/work`, PR label `vscode-agent`, never push to `main`).
-- Before starting: `git fetch origin && git merge origin/main` into your lane branch (main moved a lot today: PRs #1–#3 were squash-merged).
+- Read **Review 2026-10-26 (evening, Europe/London)** below. Take only tasks marked for **your lane** (`grokbot` = Grok Bot workers on `grokbot/work`, PR label `grok-bot`; `vscode` = VS Code agents on `vscode/work`, PR label `vscode-agent`, never push to `main`). Only the orchestrator merges into `main`.
+- Before starting: `git fetch origin && git merge origin/main` into your lane branch (VS Code agents: `git checkout -b vscode/work origin/main` if the branch does not exist yet).
 - **Gate (run before every commit):** `npm ci && npm run lint && npm run typecheck && npm test && npm run test:integration && npm run build`
-- Write PROGRESS/LOG times with `TZ=Europe/London date '+%Y-%m-%d %H:%M'` (several entries today were stamped 1–2 h in the future).
+- Write PROGRESS/LOG times with `TZ=Europe/London date '+%Y-%m-%d %H:%M'` (entries for #4/#5 were again stamped 1–2 h after the commits).
 - If an item is already marked in progress/done in the other lane's LOG, skip it and take your next one.
 
 # PROGRESS.md — Paper Trail
@@ -124,6 +124,22 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 - Change: npm `overrides`: `postcss` → `$postcss` (8.5.x, same major; Next pinned 8.4.31) and `@mapbox/node-pre-gyp` → ^2.0.3 (tar 7.5.22; reached via unpdf → canvas). No Next major bump.
 - Checks run: `npm audit --omit=dev --audit-level=high` → found 0 vulnerabilities, exit 0. Gate: lint clean, typecheck pass, `npm test` sandbox all + unit 91/91, build pass.
 - Follow-ups: none.
+
+## Review 2026-10-26 (evening, Europe/London)
+
+Reviewer: Grok Bot (orchestrator), 20:25. Range: 6f9fd39..c9740df on `main` (since the 14:11 run).
+
+- New since last run: Grok Bot lane only — **PR #4** (M9.3 bulk approve/reject + LLM model/cost, M9.2 welcome topics → `/today` + newsletter nudge, M8.4 ISR on topic/author pages, M4.3 coverage, M10.6 CHANGELOG) squash-merged as caad5bb at 14:29, and **PR #5** (M10.2 read-only production checks) as c9740df at 14:37, both by the worker with green CI. No commits since 14:37. VS Code lane: still **no `vscode/work` branch, no PRs, no LOG entries**; afternoon tasks 2–3 not started. No open PRs in either lane, so nothing to choose between.
+- Ticks verified: **M4.3 re-tick is genuine** — `npm run test:coverage` (c8 `--check-coverage --lines 60`) passes: Lines 66.68% (5675/8510), Branches 74.13%. M9.3 (`components/AdminArticleList.tsx`, `lib/llm-cost.ts` + test), M9.2 (`lib/onboarding.ts` + test, `components/NewsletterNudge.tsx`), M8.4 (`revalidate` on topics/authors, 404s kept), M10.6 (`CHANGELOG.md` v1.0.0, no tag) — OK. M10.2: smoke results are logged; prod Lighthouse/e2e on post pages still not meaningful (no published posts) — BLOCKER stays open. No false ticks.
+- Fix made: M4.3 cited `bc797fc`, a pre-squash commit that is not on `main`; now points at caad5bb (PR #4). Every other hash in MILESTONES.md is on `main`.
+- Gate on a clean `npm ci` at c9740df: lint PASS, typecheck PASS, `npm test` 117/117, `npm run test:integration` 20/20, build PASS (first attempt failed in `next/font` fetching Google Fonts; retry passed — network flake, see task 3), `npm audit --omit=dev` 0 vulnerabilities, tree clean.
+- CI: green on `main` for #4 and #5 and on their PR runs.
+
+### Next up for agents (evening 2026-10-26; each ends with the gate green, a PROGRESS entry and a LOG entry in your lane)
+1. `[vscode]` **E2E account journeys** (tests only, `e2e/account.spec.ts`), carried over: against `npm run db:memory` + local prod build — register → verify link (from log-mode email output) → login → `/account` export download → delete account. Done when `npx playwright test e2e/account.spec.ts` passes locally; paste the command and summary line in PROGRESS. Do not change app code; log any bug as a follow-up for Grok Bot.
+2. `[vscode]` **Admin a11y/mobile check** (tests only, `e2e/admin-a11y.spec.ts`), carried over; PR #4 is merged, so the admin components are stable now: seeded admin on db:memory, axe (wcag2a/aa) + 360px horizontal-overflow check on `/admin`, `/admin/status` and the new bulk-select list. Done when the spec runs; list serious/critical findings in PROGRESS for Grok Bot.
+3. `[grokbot]` **Build without network fonts**: `app/layout.tsx` uses `next/font/google` (Fraunces, Inter, IBM Plex Mono), so `npm run build` fails whenever fonts.googleapis.com is unreachable (seen once in this review). Self-host them with `next/font/local` (woff2 files under `app/fonts/`, OFL licences committed) keeping the same CSS variables. Done when the build passes with Google Fonts blocked (e.g. `HTTPS_PROXY=http://127.0.0.1:9 npm run build`), the gate is green and a before/after screenshot of `/` shows the same typography.
+4. `[grokbot]` Fix whatever tasks 1–2 report. If the VS Code lane has not claimed tasks 1–2 in `agents/vscode/LOG.md` by the next review, they move to the Grok Bot lane.
 
 ## Review 2026-10-26 (afternoon, Europe/London)
 

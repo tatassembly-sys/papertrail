@@ -2,6 +2,7 @@
 
 Newest first. Items marked `in progress: Grok Bot` are claimed; other agents skip them.
 
+- 2026-10-26 20:25 — review (orchestrator, evening) — gate green at c9740df; #4/#5 verified (coverage 66.68% ≥ 60%); M4.3 hash → caad5bb; next: vscode e2e account + admin a11y (carried), grokbot self-hosted fonts.
 - done: M10.2
 - done: M10.2 (production read-only: smoke, axe, Lighthouse)
 - done: M9.3 (model+cost, bulk UI), M9.2, M8.4 (ISR topics/authors), M4.3 (lines 66.7% ≥ 60%, re-ticked), M10.6
