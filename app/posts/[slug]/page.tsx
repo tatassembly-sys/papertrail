@@ -6,6 +6,7 @@ import { getArticleBySlug, getRelatedPublishedArticles } from "@/lib/articles";
 import { recordReading } from "@/lib/users";
 import { getCurrentUserSession } from "@/lib/user-auth";
 import ArticleChat from "@/components/ArticleChat";
+import NewsletterNudge from "@/components/NewsletterNudge";
 import SaveActions from "@/components/SaveActions";
 import ExportNote from "@/components/ExportNote";
 import CiteButton from "@/components/CiteButton";
@@ -305,6 +306,8 @@ export default async function PostPage({ params }: PageProps) {
           </ul>
         </section>
       )}
+
+      <NewsletterNudge slug={article.slug} />
 
       {article.id && <ArticleChat articleId={article.id} />}
     </article>

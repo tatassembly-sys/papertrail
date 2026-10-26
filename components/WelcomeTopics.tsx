@@ -40,7 +40,7 @@ export default function WelcomeTopics({
       setError("Could not save topics.");
       return;
     }
-    router.push("/");
+    router.push("/today");
     router.refresh();
   }
 
