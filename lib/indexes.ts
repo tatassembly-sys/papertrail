@@ -277,9 +277,12 @@ async function ensureTextIndex(
       typeof err === "object" && err !== null && "code" in err
         ? (err as { code: number }).code
         : 0;
-    // 85 IndexOptionsConflict, 86 IndexKeySpecsConflict
+    // 85 IndexOptionsConflict, 86 IndexKeySpecsConflict. Only those mean an
+    // older text index is in the way; anything else (e.g. 323 APIStrictError)
+    // must not drop a working index we then cannot recreate.
     if (code !== 85 && code !== 86) {
       console.warn("text index create failed:", err);
+      return;
     }
   }
 

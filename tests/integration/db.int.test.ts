@@ -150,3 +150,15 @@ describe("article list projections (in-memory Mongo)", () => {
     assert.equal(await a.publishedSlugExists("nope"), false);
   });
 });
+
+describe("text search index (in-memory Mongo)", () => {
+  it("is created by ensureIndexes and $text queries work under the default Stable API", async () => {
+    const { getDb } = await import("@/lib/mongodb");
+    const db = await getDb();
+    const names = (await db.collection("articles").indexes()).map((i) => i.name);
+    assert.ok(names.includes("articles_text_search_v2"), names.join(","));
+    await db.collection("articles").insertOne({ title: "Neutrino oscillation results", slug: "nu", status: "published" });
+    const hits = await db.collection("articles").find({ $text: { $search: "neutrino" } }).toArray();
+    assert.ok(hits.length >= 1);
+  });
+});
