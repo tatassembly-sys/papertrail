@@ -65,6 +65,15 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-10-26 14:20 — M4.2 / M4.3 / M4.4 / M7.2 / M7.3 — tests, coverage, logger, health
+- Agent: Grok Bot (branch grokbot/work)
+- Commit(s): e8e2724 (M4.2), 072dc5a (M4.3), 2f4d57c (M4.4), 12eb9e8 (M7.2), 7fa5da2 (M7.3)
+- Change: `npm run test:integration` (tests/integration, mongodb-memory-server, random port): users register/dup/password/verify single-use/reset single-use + token_version bump/delete; submissions create/priority sort/dedupe/IP rate limit; rate-limit window, undo, 10 concurrent hits atomic; cron health summary. `npm run test:coverage` (c8 --all over lib/, unit + integration). Proposed CI runs both. `lib/log.ts` JSON logger (level, msg, route, requestId; redacts emails, bearer, JWT, hex tokens, Stripe keys, secret-looking keys; no stacks); all 33 `console.*` in app/api replaced. `/api/health` adds `cron_last_run` {at, ok, stale} per job and `queue_depth` (pending fetch_queue); failure there never fails health. `isCronStale` = last run older than 2x cadence (cadences from docs/runbooks/cron-job-org.md); /admin/status shows STALE in red.
+- Coverage baseline (lib/, c8 --all, unit+integration): **Statements/Lines 37.91%**, Branches 75.49%, Functions 61.1%. Below 60% (with unit-only numbers): articles 11, auth 44, cron-lock 56, entitlements 51, extract-draft 57, highlight 18, indexes 13, json-body 24, mongodb 23, newsletter 14, openrouter 21, rate-limit 23 (now covered by integration), request-ip 41, search 52, stripe 56, user-auth 30, user-export 59, users 23 (now covered by integration), xai 19, plus files never imported by tests (0%). Target 60% not reached yet.
+- Checks run: `rg "console\.(log|error|warn)" app/api` → empty. unit 98/98, integration 8/8, sandbox 543/543, lint, typecheck, build.
+- Finding: in-memory Mongo logs `text indexes cannot be created with apiStrict: true` from lib/indexes.ts (articles_text_search_v2). With MONGODB_STABLE_API strict (the default) a fresh Atlas DB will not get the text index. Follow-up: create that index with a non-strict client or document MONGODB_STABLE_API=false.
+- Follow-ups: raise lib coverage to 60%.
+
 ### 2026-10-26 13:45 — M2 deps — clear postcss + tar advisories
 - Agent: Grok Bot (branch grokbot/work)
 - Change: npm `overrides`: `postcss` → `$postcss` (8.5.x, same major; Next pinned 8.4.31) and `@mapbox/node-pre-gyp` → ^2.0.3 (tar 7.5.22; reached via unpdf → canvas). No Next major bump.
