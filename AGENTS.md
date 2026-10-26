@@ -1,5 +1,7 @@
 # AGENTS.md — operating manual for coding agents (Paper Trail)
 
+> ▶ **START HERE:** see the [`## ▶ START HERE (2026-10-26)`](PROGRESS.md#-start-here-2026-10-26) block at the top of PROGRESS.md — next task **M2 deps** (done when `npm audit --omit=dev --audit-level=high` exits 0 + gate green); then keep going down the list, committing and pushing after each item.
+
 > Read this whole file before you change anything. It applies to Claude Code, Codex, Cursor, Copilot and any other agent.
 > `CLAUDE.md` and `.cursor/rules/agents.mdc` point here. If they ever disagree, **this file wins**.
 > Work queue: [`MILESTONES.md`](MILESTONES.md). Log: [`PROGRESS.md`](PROGRESS.md). Snapshot for humans: [`STATUS.md`](STATUS.md).

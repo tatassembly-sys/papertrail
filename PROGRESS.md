@@ -1,3 +1,13 @@
+## ▶ START HERE (2026-10-26)
+
+**Agents have stalled since the 2026-10-25 evening review. Do not wait for further instructions — start now.**
+
+- **Next task:** **M2 deps** — clear the remaining `npm audit --omit=dev` advisories (`postcss`, `tar`, via the Next toolchain). Try a Next.js minor/patch bump first.
+- **Done when:** `npm audit --omit=dev --audit-level=high` exits 0 **and** the gate is green.
+- **Gate (run before every commit):** `npm ci && npm run lint && npm run typecheck && npm test && npm run build`
+- **Then continue down the "Next up for agents" list below (M4.3 → M4.2 → M4.4 → M7.2 → M7.3 → M7.1) without stopping.** After each item: gate green → PROGRESS entry → commit → push (per AGENTS.md §0 lanes: VS Code agents push to `vscode/work` and open/update a `vscode-agent` PR). Only stop if an item is BLOCKED; log the error and move to the next one.
+- If an item is already marked in progress/done in `agents/grokbot/LOG.md`, skip it and take the next unclaimed one.
+
 # PROGRESS.md — Paper Trail
 
 Append-only log written by coding agents and the owner. Newest entries at the top of **Log**. Times are Europe/London.
