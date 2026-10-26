@@ -66,6 +66,15 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-10-26 15:55 — M10.2 — production checks (read-only)
+- Agent: Grok Bot (branch grokbot/work)
+- Target: https://papertrail-six-rho.vercel.app at caad5bb (PR #4 merge).
+- `/api/health`: status ok, db connected, commit caad5bb, queue_depth 0, all cron_last_run null (no scheduler yet).
+- `npm run smoke:prod`: OK home 200, health 200, missing-post 404, unsigned-queue 401, sitemap 200, robots 200. ISR pages: /topics 200, /topics/zz-nope 404, /authors 200.
+- e2e (GET-only a11y spec): axe 0 serious/critical on / and /register (light + dark), no overflow at 360px; post-page check skipped because production has no published posts (spec now skips quickly instead of timing out). The full smoke spec was not run on production because it submits the login form.
+- Lighthouse (desktop): / perf 1.00, a11y 1.00, best-practices 1.00, SEO 0.91; /topics 1.00 across the board.
+- Follow-ups: re-run the post-page checks once posts are published (needs the scheduler, M0.6).
+
 ### 2026-10-26 15:30 — M9.3, M9.2, M8.4, M4.3, M10.6
 - Agent: Grok Bot (branch grokbot/work, PR #4)
 - Commit(s): 1931047 (M9.3), 1307a25 (M9.2), 863795f (M8.4), bc797fc (M4.3), 5cf9112 (M10.6)

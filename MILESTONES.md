@@ -425,7 +425,7 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 
 ### Tasks
 - [x] **M10.1** `[AGENT]` Write `docs/launch-checklist.md` with every item below as a checkbox + the command that proves it.
-- [ ] **M10.2** `[AGENT]` Run `npm run smoke:prod -- <url>`, lighthouse, e2e against production (read-only); paste results.
+- [x] **M10.2** `[AGENT]` Run `npm run smoke:prod -- <url>`, lighthouse, e2e against production (read-only); paste results.
 - [ ] **M10.3** `[OWNER]` Custom domain + Resend domain verified (SPF/DKIM/DMARC); update `NEXT_PUBLIC_SITE_URL`.
 - [ ] **M10.4** `[OWNER]` Google Search Console + submit sitemap; X/Reddit app callback URLs updated.
 - [ ] **M10.5** `[OWNER]` Final legal sign-off; flip `PAPERTRAIL_MARKET_READINESS.md` to GO with date.
