@@ -24,6 +24,10 @@ Rules for VS Code agents:
 - Before taking an item, read `agents/grokbot/LOG.md` (and open `grok-bot` PRs); skip any item Grok Bot has marked "in progress" or done. Log your own claim ("in progress: VS Code agent") in `agents/vscode/LOG.md` first.
 - Run the gate before every push. PRs are merged (squash) by Grok Bot or the owner; when two PRs overlap, the better implementation is kept and the decision is noted in `PROGRESS.md`.
 
+
+- **Handover plan:** follow `agents/vscode/HANDOVER.md` milestones (VS1..VSn) for this repo only. Use sub-agents/parallel workers if available. Do not stop until every milestone is complete and verified.
+- **Self-check:** never tick a milestone without passing tests and a commit hash on `vscode/work`. After each milestone (and when finished), push, append a dated note under Handover notes in `agents/vscode/HANDOVER.md`, then open/update the `vscode-agent` PR. Only Grok Bot merges into the default branch.
+
 ## 1. What this project is
 Paper Trail turns research papers (arXiv RSS, PubMed, manual PDF/URL submissions) into plain-English articles using an LLM (OpenRouter free models, xAI fallback, extract-only fallback), publishes them on a public site (posts, topics, authors, lists, library, daily digest), runs a newsletter, optional social posting (X, Reddit, Facebook, Instagram) and an optional "Paper Trail Pro" subscription via Stripe (currently **off**). Admin area under `/admin` (username + bcrypt hash env). Single Next.js 15 App Router app, MongoDB native driver, no ORM.
 

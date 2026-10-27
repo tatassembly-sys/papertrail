@@ -10,3 +10,5 @@ Blocked → `PROGRESS.md` BLOCKERS section, then next task.
 
 
 Agent lanes (AGENTS.md §0): work on branch `vscode/work`, open PRs to `main` labelled `vscode-agent`, log in `agents/vscode/LOG.md`, never push to `main` or `grokbot/*`, check `agents/grokbot/LOG.md` first to avoid duplicate items.
+
+VS Code handover: `agents/vscode/HANDOVER.md`. Branch `vscode/work` only; PRs to `main` labelled `vscode-agent`; log `agents/vscode/LOG.md`. Use sub-agents/parallel workers. Do not stop until VS milestones complete. Self-check with tests + commit on branch. After each milestone: push, Handover note, update PR. Only Grok Bot merges.
