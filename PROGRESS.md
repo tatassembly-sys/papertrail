@@ -1,6 +1,6 @@
-## ▶ START HERE (2026-10-26 evening)
+## ▶ START HERE (2026-10-27 morning)
 
-- Read **Review 2026-10-26 (evening, Europe/London)** below. Take only tasks marked for **your lane** (`grokbot` = Grok Bot workers on `grokbot/work`, PR label `grok-bot`; `vscode` = VS Code agents on `vscode/work`, PR label `vscode-agent`, never push to `main`). Only the orchestrator merges into `main`.
+- Read **Review 2026-10-27 (morning)** below. Take only tasks marked for **your lane** (`grokbot` = Grok Bot workers on `grokbot/work`, PR label `grok-bot`; `vscode` = VS Code agents on `vscode/work`, PR label `vscode-agent`, never push to `main`). Only the orchestrator merges into `main`.
 - Before starting: `git fetch origin && git merge origin/main` into your lane branch (VS Code agents: `git checkout -b vscode/work origin/main` if the branch does not exist yet).
 - **Gate (run before every commit):** `npm ci && npm run lint && npm run typecheck && npm test && npm run test:integration && npm run build`
 - Write PROGRESS/LOG times with `TZ=Europe/London date '+%Y-%m-%d %H:%M'` (entries for #4/#5 were again stamped 1–2 h after the commits).
@@ -124,6 +124,24 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 - Change: npm `overrides`: `postcss` → `$postcss` (8.5.x, same major; Next pinned 8.4.31) and `@mapbox/node-pre-gyp` → ^2.0.3 (tar 7.5.22; reached via unpdf → canvas). No Next major bump.
 - Checks run: `npm audit --omit=dev --audit-level=high` → found 0 vulnerabilities, exit 0. Gate: lint clean, typecheck pass, `npm test` sandbox all + unit 91/91, build pass.
 - Follow-ups: none.
+
+## Review 2026-10-27 (morning)
+
+Reviewer: Grok Bot (orchestrator), 08:20 Europe/London. Range: 99c70bd..77ac5dc on `main` (since the 2026-10-26 20:26 run).
+
+- New since last run: **nothing from either lane** overnight — no commits on `main` after 20:26, no `grokbot/work` activity, still **no `vscode/work` branch, no `vscode-agent` PRs, no entries in `agents/vscode/LOG.md`**. No open PRs, nothing overlapping.
+- This run (Grok Bot lane, evening task 3): **PR #6** https://github.com/tatassembly-sys/papertrail/pull/6 (squash 77ac5dc) — fonts self-hosted with `next/font/local` (Fraunces 500–700, Inter 400–700, IBM Plex Mono 400–500, latin woff2 from @fontsource 5.3.0, OFL licences in `app/fonts/`), same CSS variables, so `npm run build` no longer needs fonts.googleapis.com. `tests/fonts-images.test.ts` now checks the local import, the files and the licences.
+- Gate at the PR head on a clean `npm ci`: lint PASS, typecheck PASS, `npm test` 117/117, `HTTPS_PROXY=http://127.0.0.1:9 npm run build` PASS (no Google Fonts reference in the built CSS). `/about` on `next start`: Fraunces/Inter/Plex Mono load from `/_next/static/media` and the typography is unchanged (screenshot checked). `test:integration` not re-run: no server code changed since 20/20 at c9740df. CI `check` and Vercel preview green on #6.
+- Ticks: MILESTONES.md unchanged since the evening check. No false ticks.
+
+### Next up for agents (morning 2026-10-27; each ends with the gate green, a PROGRESS entry and a LOG entry in your lane)
+Evening tasks 1–2 were offered to the VS Code lane in two reviews and never claimed, so they **move to `[grokbot]`**. A VS Code agent may still take any item not yet marked `in progress` in `agents/grokbot/LOG.md`: claim it in `agents/vscode/LOG.md` first.
+1. `[grokbot]` **E2E account journeys** (tests only, `e2e/account.spec.ts`): on `npm run db:memory` + local prod build, register → verify link (log-mode email output) → login → `/account` export download → delete account. Done when `npx playwright test e2e/account.spec.ts` passes twice in a row.
+2. `[grokbot]` **Admin a11y/mobile check** (`e2e/admin-a11y.spec.ts`): seeded admin, axe (wcag2a/aa) + 360px horizontal-overflow check on `/admin`, `/admin/status` and the bulk-select list. Done when the spec runs; fix serious/critical findings in the same lane.
+3. `[vscode]` **No third-party font requests** (tests only, extend an existing Playwright spec): assert that loading `/` and `/about` makes no request to `fonts.googleapis.com` or `fonts.gstatic.com` and that `document.fonts` reports Fraunces and Inter loaded. Guards PR #6. Done when the spec passes locally.
+4. `[grokbot]` Fix whatever 1–3 report.
+
+Otherwise papertrail is code-complete; what is left is the owner work in BLOCKERS.
 
 ## Review 2026-10-26 (evening, Europe/London)
 
