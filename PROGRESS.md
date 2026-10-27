@@ -1,3 +1,14 @@
+## ▶ START HERE — VS Code agents
+
+**Read [`agents/vscode/HANDOVER.md`](agents/vscode/HANDOVER.md) first** for the VS1..VSn plan, standing instructions, and testing requirements for this repo only.
+
+- Branch: `vscode/work` (from `origin/main`). Never push to `main` / `grokbot/*`.
+- PR label: `vscode-agent`. Log: `agents/vscode/LOG.md`.
+- Use sub-agents/parallel workers if available. Do not stop until every VS milestone is verified.
+- After each milestone: push, append a Handover note in `agents/vscode/HANDOVER.md`, update the PR. Only Grok Bot merges.
+
+---
+
 ## ▶ START HERE (2026-10-27 morning)
 
 - Read **Review 2026-10-27 (morning)** below. Take only tasks marked for **your lane** (`grokbot` = Grok Bot workers on `grokbot/work`, PR label `grok-bot`; `vscode` = VS Code agents on `vscode/work`, PR label `vscode-agent`, never push to `main`). Only the orchestrator merges into `main`.

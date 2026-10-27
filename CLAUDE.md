@@ -13,3 +13,5 @@ Essentials (duplicated so they are never missed):
 - Loop: sync (`git pull --rebase origin main`) → implement → gate → self-review diff → fix → tick checkbox + `PROGRESS.md` entry → small Conventional Commit → `git push origin HEAD:vscode/work` + PR labelled `vscode-agent` → next task.
 - Never: commit secrets, force-push, edit `.github/workflows/*` (put YAML in `docs/ci/`), run destructive DB ops, touch production or hosting dashboards, enable live payments, touch other repos.
 - Blocked? Log it under `## BLOCKERS` in `PROGRESS.md`, mark the task `— BLOCKED`, move on.
+
+**VS Code handover:** read `agents/vscode/HANDOVER.md` (VS1..VSn). Work on `vscode/work` only; never push to `main` or `grokbot/*`; label PRs `vscode-agent`; log in `agents/vscode/LOG.md`. Use sub-agents if available. Do not stop until all milestones are verified. After each milestone, push, append a Handover note, update the PR. Only Grok Bot merges.
