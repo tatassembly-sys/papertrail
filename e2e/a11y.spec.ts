@@ -21,7 +21,7 @@ async function seriousViolations(page: import("@playwright/test").Page) {
     .map((v) => `${v.impact} ${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(" | ")}`);
 }
 
-for (const path of ["/", "/register"]) {
+for (const path of ["/", "/register", "/about"]) {
   test(`axe: ${path} has no serious/critical violations`, async ({ page }) => {
     await page.goto(path);
     expect(await seriousViolations(page)).toEqual([]);
@@ -38,7 +38,7 @@ test("axe: a post page has no serious/critical violations", async ({ page }) => 
 });
 
 // M9.4: dark mode contrast, and no horizontal overflow at 360px.
-for (const path of ["/", "/register"]) {
+for (const path of ["/", "/register", "/about"]) {
   test(`axe dark mode: ${path} has no serious/critical violations`, async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("pt-theme", "dark"));
     await page.goto(path);

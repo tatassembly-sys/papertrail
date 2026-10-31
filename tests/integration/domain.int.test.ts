@@ -6,7 +6,7 @@ import type { MongoClient } from "mongodb";
 
 let mongod: MongoMemoryServer;
 before(async () => {
-  mongod = await MongoMemoryServer.create();
+  mongod = await MongoMemoryServer.create({ instance: { launchTimeout: 60_000 } });
   process.env.MONGODB_URI = mongod.getUri();
   process.env.MONGODB_DB = "papertrail_domain";
   delete process.env.RESEND_API_KEY;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPasswordResetToken } from "@/lib/users";
 import { getSiteUrl } from "@/lib/site-url";
+import { exposeDevMailLink } from "@/lib/dev-mail-link";
 import { sendEmail, isEmailConfigured } from "@/lib/mail";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
       note: isEmailConfigured()
         ? "If that email exists, a reset link was sent."
         : "If that email exists, a reset link was generated.",
-      ...(process.env.NODE_ENV !== "production" && resetUrl ? { resetUrl } : {}),
+      ...(exposeDevMailLink() && resetUrl ? { resetUrl } : {}),
     });
   } catch (err) {
     log.error("forgot-password", err, { route: "/api/auth/forgot-password" });

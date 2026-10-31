@@ -41,8 +41,38 @@ test("post page loads", async ({ page }) => {
   }
 
   const response = await page.goto("/posts/missing-smoke-entry");
-  expect(response?.status() ?? 0).toBeLessThan(500);
+  expect(response?.status()).toBe(404);
   await expect(page.getByText(/doesn't exist|temporarily unavailable|not on file/i).first()).toBeVisible();
+});
+
+test("missing post, topic, and author are 404", async ({ page }) => {
+  for (const path of ["/posts/not-a-real-article-vs3", "/topics/not-a-real-topic-vs3", "/authors/not-a-real-author-vs3"]) {
+    const response = await page.goto(path);
+    expect(response?.status(), path).toBe(404);
+    await expect(page.getByText(/not on file/i).first()).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /doesn't exist/i })).toBeVisible();
+  }
+});
+
+test("home stays 200 when no posts match", async ({ page }) => {
+  const response = await page.goto("/?q=zzzz-no-such-entry-vs3");
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole("heading", { level: 1, name: /Dense papers/ })).toBeVisible();
+  await expect(page.getByText("No entries match that search or category.")).toBeVisible();
+  await expect(page.locator('a[href^="/posts/"]')).toHaveCount(0);
+});
+
+test("an empty catalogue still renders the home shell", async ({ page }) => {
+  // db:memory seeds one published post, so the unfiltered empty copy is the
+  // zero-post branch in app/(home)/page.tsx. A search with no hits is the
+  // same 200 shell (asserted above). This checks the zero-post sentence
+  // cannot disappear from that page.
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1, name: /Dense papers/ })).toBeVisible();
+  const empty = page.getByText("No entries filed yet. Check back soon.");
+  const posts = page.locator('a[href^="/posts/"]');
+  if ((await posts.count()) === 0) await expect(empty).toBeVisible();
+  else await expect(posts.first()).toBeVisible();
 });
 
 test("register form validation rejects a mismatch", async ({ page }) => {

@@ -166,6 +166,20 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 - Risks: …
 ```
 
+### 2026-10-31 22:20 Europe/London — after VS1–VS5
+- Done: local account lifecycle (register, verify link from `E2E_EXPOSE_MAIL_LINKS`, sign in, export download, delete, plus unverified login, bad reset token, delete cancel, unsigned export/delete 401). Admin axe on `/admin` and `/admin/status` at 1280 and 360×640 with bulk-select. Public axe includes `/about`. Font spec asserts no Google font requests and Fraunces/Inter loaded. Smoke covers missing post/topic/author 404 and a 200 home with zero matches. Unit and integration cover invalid/duplicate newsletter subscribe, suggest misses, unsigned `/api/me`, and unsigned cron auth.
+- Tests:
+  - `npx playwright test e2e/account.spec.ts` → 5 passed, then 5 passed again (56.3s, 31.2s).
+  - `npx playwright test` twice with `E2E_REQUIRE=1` → 25 passed, then 25 passed.
+  - `npm run smoke:prod -- http://127.0.0.1:3000` → home 200, health 200, missing-post 404, unsigned-queue 401, sitemap 200, robots 200.
+  - `npm run test:sandbox` → 543/543. `npm run test:unit` → 121 passed, fail 0. `npm run test:integration` → 23 passed, fail 0.
+  - `npm run lint` → no ESLint warnings or errors. `npm run typecheck` → exit 0. `npm run build` → exit 0 (Next 15.5.28, 40/40 pages). `npm audit --omit=dev --audit-level=high` → exit 0 (5 moderate, none high).
+  - Offline font build log: `next build` compiled and generated 40/40 pages with `HTTPS_PROXY`/`HTTP_PROXY` at `http://127.0.0.1:9` (no error in the log).
+  - `npm run test:coverage` → lines 68.5% (5838/8522), threshold 60, exit 0.
+- Commit(s) on vscode/work: filled in the final note.
+- Left: owner items already in PROGRESS BLOCKERS (Sentry, cron-job.org, live key rotation, branch protection, workflow copy, v1.0.0 tag). Launch-checklist Quality boxes stay `[ ]`.
+- Risks: do not set `E2E_EXPOSE_MAIL_LINKS` on Vercel. Local `next start` must override `.env.local` API keys with non-empty dummy values or Next may load the real keys. `db:memory` launch timeout is 60s on Windows.
+
 ### 2026-10-27 20:18 Europe/London — plan published (Grok Bot)
 - Published VS1–VS5 plan for Paper Trail only. No VS Code implementation yet in this commit.
 - Baseline tip: `origin/main` at publish time. Recent merges #1–#6 as summarised above.
