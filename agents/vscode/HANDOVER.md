@@ -176,7 +176,7 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
   - `npm run lint` → no ESLint warnings or errors. `npm run typecheck` → exit 0. `npm run build` → exit 0 (Next 15.5.28, 40/40 pages). `npm audit --omit=dev --audit-level=high` → exit 0 (5 moderate, none high).
   - Offline font build log: `next build` compiled and generated 40/40 pages with `HTTPS_PROXY`/`HTTP_PROXY` at `http://127.0.0.1:9` (no error in the log).
   - `npm run test:coverage` → lines 68.5% (5838/8522), threshold 60, exit 0.
-- Commit(s) on vscode/work: `a5ba474`.
+- Commit(s) on vscode/work: `a5ba474` (specs) and `fd97cd6` (this note). PR: https://github.com/tatassembly-sys/papertrail/pull/8 labelled `vscode-agent`. Not merged.
 - Left: owner items already in PROGRESS BLOCKERS (Sentry, cron-job.org, live key rotation, branch protection, workflow copy, v1.0.0 tag). Launch-checklist Quality boxes stay `[ ]`.
 - Risks: do not set `E2E_EXPOSE_MAIL_LINKS` on Vercel. Local `next start` must override `.env.local` API keys with non-empty dummy values or Next may load the real keys. `db:memory` launch timeout is 60s on Windows.
 

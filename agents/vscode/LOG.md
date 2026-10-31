@@ -10,7 +10,7 @@ Grok Bot's 2026-10-27 08:20 reassignment of account e2e is older than the publis
 - done: VS3 font request guard, smoke 404/empty home, offline proxy build
 - done: VS4 newsletter/suggest/`/api/me`/cron edges; integration launch timeout 60s and `--test-concurrency=1`
 - done: VS5 launch-checklist Quality commands (still `[ ]`), this log, handover note, PR `vscode-agent`
-- Commit: `a5ba474` on `vscode/work`.
+- Commit: `a5ba474` (specs), `fd97cd6` (this log). PR #8 labelled `vscode-agent`. Not merged.
 
 ## 2026-10-27 20:18 Europe/London — HANDOVER plan published by Grok Bot
 - See agents/vscode/HANDOVER.md (VS1..VSn). Claim items here before starting.
