@@ -77,6 +77,12 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-11-02 — smoke 404 looks at the page, not the title
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: the missing-page smoke check reads "not on file" inside `#main-content`. `getByText().first()` was matching the hidden document title.
+- Checks run: `npm run build` → exit 0. `npx playwright test e2e/smoke.spec.ts -g "missing post, topic, and author are 404"` against `next start` and `db:memory` → 1 passed. The no-JS login check passed again on that server. Full gate not re-run.
+- Follow-ups: none.
+
 ### 2026-11-02 — password forms post
 - Agent: Grok (VS Code lane, branch `vscode/work`)
 - Commit(s): 8cef009

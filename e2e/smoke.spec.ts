@@ -44,14 +44,14 @@ test("post page loads", async ({ page }) => {
 
   const response = await page.goto("/posts/missing-smoke-entry");
   expect(response?.status()).toBe(404);
-  await expect(page.getByText(/doesn't exist|temporarily unavailable|not on file/i).first()).toBeVisible();
+  await expect(page.locator("#main-content").getByText(/doesn't exist|temporarily unavailable|not on file/i).first()).toBeVisible();
 });
 
 test("missing post, topic, and author are 404", async ({ page }) => {
   for (const path of ["/posts/not-a-real-article-vs3", "/topics/not-a-real-topic-vs3", "/authors/not-a-real-author-vs3"]) {
     const response = await page.goto(path);
     expect(response?.status(), path).toBe(404);
-    await expect(page.getByText(/not on file/i).first()).toBeVisible();
+    await expect(page.locator("#main-content").getByText(/not on file/i)).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: /doesn't exist/i })).toBeVisible();
   }
 });

@@ -2,6 +2,9 @@
 
 Newest first. Claim an item here (`in progress: VS Code agent`) before starting it. Check agents/grokbot/LOG.md first.
 
+## 2026-11-02 Europe/London — smoke 404 targets the visible copy
+- Done on `vscode/work`: missing post, topic, and author checks look for "not on file" inside `#main-content`, not the document title. Passed on `next start`.
+
 ## 2026-11-02 Europe/London — password forms post
 - Done on `vscode/work` (`8cef009`): secret forms use `method="post"`, so a submit before JavaScript runs cannot place the password or email token in the URL. Smoke covers admin login with JavaScript disabled.
 
