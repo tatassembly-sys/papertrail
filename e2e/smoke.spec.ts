@@ -102,6 +102,25 @@ test("register form validation rejects a mismatch", async ({ page }) => {
   await expect(page).toHaveURL(/\/register/);
 });
 
+test("a login submit without JavaScript keeps the password out of the URL", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  let sawSecretInUrl = false;
+  page.on("request", (request) => {
+    const url = request.url().toLowerCase();
+    if (url.includes("password=") || url.includes("not-the-admin-password")) sawSecretInUrl = true;
+  });
+  await page.goto("/login");
+  await page.getByLabel("Email", { exact: true }).fill("admin@example.com");
+  await page.getByLabel("Password", { exact: true }).fill("not-the-admin-password");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForLoadState("domcontentloaded");
+  expect(sawSecretInUrl).toBe(false);
+  expect(page.url().toLowerCase()).not.toContain("password=");
+  expect(page.url()).not.toContain("not-the-admin-password");
+  await context.close();
+});
+
 test("admin login rejects a bad password", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill("admin@example.com");

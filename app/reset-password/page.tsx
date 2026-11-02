@@ -48,7 +48,7 @@ function ResetForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
+    <form method="post" onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
       <label className="text-sm font-medium text-ink">
         New password
         <input

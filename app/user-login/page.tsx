@@ -55,7 +55,7 @@ export default function UserLoginPage() {
         Access your saved papers, bookmarks, and history.
       </p>
 
-      <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
+      <form method="post" onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
         <label className="text-sm font-medium text-ink">
           Email
           <input

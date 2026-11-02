@@ -2,6 +2,9 @@
 
 Newest first. Claim an item here (`in progress: VS Code agent`) before starting it. Check agents/grokbot/LOG.md first.
 
+## 2026-11-02 Europe/London — password forms post
+- Done on `vscode/work`: secret forms use `method="post"`, so a submit before JavaScript runs cannot place the password or email token in the URL. Smoke covers admin login with JavaScript disabled.
+
 ## 2026-11-02 Europe/London — past-the-end catalogue link
 - Done on `vscode/work` (`a890b9b`): an empty later page uses the blank-catalogue sentence when `total` is 0. When earlier entries exist, the page says "No more entries." and links to the latest entries. Smoke follows that link when the catalogue has posts.
 

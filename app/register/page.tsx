@@ -70,7 +70,7 @@ export default function RegisterPage() {
         .
       </p>
 
-      <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
+      <form method="post" onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
         <label className="text-sm font-medium text-ink">
           Name
           <input
