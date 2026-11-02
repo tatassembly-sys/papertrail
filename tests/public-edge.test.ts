@@ -36,6 +36,9 @@ test("exposeDevMailLink stays off on Vercel production", () => {
   withEnv({ NODE_ENV: "production", VERCEL_ENV: undefined, E2E_EXPOSE_MAIL_LINKS: undefined }, () => {
     assert.equal(exposeDevMailLink(), false);
   });
+  withEnv({ NODE_ENV: "production", VERCEL_ENV: "preview", E2E_EXPOSE_MAIL_LINKS: "1" }, () => {
+    assert.equal(exposeDevMailLink(), false);
+  });
   withEnv({ NODE_ENV: "production", VERCEL_ENV: undefined, E2E_EXPOSE_MAIL_LINKS: "1" }, () => {
     assert.equal(exposeDevMailLink(), true);
   });

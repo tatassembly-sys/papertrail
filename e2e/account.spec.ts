@@ -3,7 +3,7 @@
  * with `npm run db:memory`. Included in `npm run test:e2e` (playwright testDir is e2e).
  *
  * The server must set E2E_EXPOSE_MAIL_LINKS=1 so a log-mode verify link is returned.
- * That flag does nothing when VERCEL_ENV=production. Leave RESEND_API_KEY unset.
+ * That flag does nothing when VERCEL_ENV is set. Leave RESEND_API_KEY unset.
  * Offline font build check: HTTPS_PROXY=http://127.0.0.1:9 npm run build
  *
  * Runs only against localhost. Set E2E_REQUIRE=1 to fail instead of skip when

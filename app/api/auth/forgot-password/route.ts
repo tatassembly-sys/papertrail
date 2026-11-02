@@ -20,7 +20,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (process.env.NODE_ENV === "production" && !isEmailConfigured()) {
+    // Local `next start` is production but log-mode. The e2e flag is the only
+    // way that process may continue and return the reset link. Hosted Vercel
+    // never sets the flag as true (see exposeDevMailLink).
+    if (process.env.NODE_ENV === "production" && !isEmailConfigured() && !exposeDevMailLink()) {
       return NextResponse.json(
         { error: "Email delivery is not configured." },
         { status: 503 }

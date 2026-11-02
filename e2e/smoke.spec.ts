@@ -19,6 +19,7 @@ test.beforeEach(async ({ request }) => {
   } catch {
     up = false;
   }
+  if (!up && process.env.E2E_REQUIRE === "1") throw new Error(SKIP_REASON);
   if (!up) console.log(SKIP_REASON);
   test.skip(!up, SKIP_REASON);
 });

@@ -117,6 +117,59 @@ describe("search suggest misses", () => {
   });
 });
 
+describe("forgot-password on a production process", () => {
+  it("stays 503 on a host and returns the reset link only for local e2e", async () => {
+    const users = await import("../../lib/users");
+    const { POST } = await import("../../app/api/auth/forgot-password/route");
+    const email = `reset-${Date.now()}@example.com`;
+    const created = await users.registerUser(email, "Correct-horse-battery-9", "Reset Reader");
+    assert.equal("error" in created, false);
+
+    const env = process.env as {
+      NODE_ENV?: string;
+      VERCEL_ENV?: string;
+      E2E_EXPOSE_MAIL_LINKS?: string;
+    };
+    const previous = {
+      NODE_ENV: env.NODE_ENV,
+      VERCEL_ENV: env.VERCEL_ENV,
+      E2E_EXPOSE_MAIL_LINKS: env.E2E_EXPOSE_MAIL_LINKS,
+    };
+    const ask = (ip: string) =>
+      POST(jsonRequest("/api/auth/forgot-password", "POST", { email }, ip));
+
+    try {
+      env.NODE_ENV = "production";
+      delete env.VERCEL_ENV;
+      delete env.E2E_EXPOSE_MAIL_LINKS;
+      const blocked = await ask("203.0.113.40");
+      assert.equal(blocked.status, 503);
+      assert.equal(JSON.stringify(await blocked.json()).includes("resetUrl"), false);
+
+      env.E2E_EXPOSE_MAIL_LINKS = "1";
+      const local = await ask("203.0.113.41");
+      assert.equal(local.status, 200);
+      const localBody = (await local.json()) as { resetUrl?: string };
+      assert.match(localBody.resetUrl || "", /\/reset-password\?token=/);
+
+      env.VERCEL_ENV = "preview";
+      const preview = await ask("203.0.113.42");
+      assert.equal(preview.status, 503);
+
+      env.VERCEL_ENV = "production";
+      const hosted = await ask("203.0.113.43");
+      assert.equal(hosted.status, 503);
+    } finally {
+      if (previous.NODE_ENV === undefined) delete env.NODE_ENV;
+      else env.NODE_ENV = previous.NODE_ENV;
+      if (previous.VERCEL_ENV === undefined) delete env.VERCEL_ENV;
+      else env.VERCEL_ENV = previous.VERCEL_ENV;
+      if (previous.E2E_EXPOSE_MAIL_LINKS === undefined) delete env.E2E_EXPOSE_MAIL_LINKS;
+      else env.E2E_EXPOSE_MAIL_LINKS = previous.E2E_EXPOSE_MAIL_LINKS;
+    }
+  });
+});
+
 describe("unauthenticated /api/me", () => {
   it("GET returns a null user; export and delete are 401", async () => {
     const { GET, DELETE } = await import("../../app/api/me/route");

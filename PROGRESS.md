@@ -77,6 +77,12 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-11-02 — VS1 — mail links stay off hosted Vercel
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: `exposeDevMailLink()` is false for every `VERCEL_ENV`, not only production. Local `next start` with `E2E_EXPOSE_MAIL_LINKS=1` can return a reset link; preview and production stay 503 when email is not configured. Smoke specs fail closed when `E2E_REQUIRE=1` and nothing is listening.
+- Checks run: `node --import tsx --test tests/public-edge.test.ts` → 4 passed. `node --experimental-test-module-mocks --import tsx --test tests/integration/public-http.int.test.ts` → 4 passed.
+- Follow-ups: none.
+
 ### 2026-10-31 22:20 — VS1–VS5 — VS Code handover
 - Agent: Grok (VS Code lane, branch `vscode/work`)
 - Commit(s): a5ba474, fd97cd6. PR: https://github.com/tatassembly-sys/papertrail/pull/8 (`vscode-agent`, not merged).

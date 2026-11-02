@@ -4,7 +4,7 @@ export const SERVER_HELP =
   "No local server at baseURL. Start with: npm run db:memory, then " +
   "HTTPS_PROXY=http://127.0.0.1:9 npm run build && npm start. " +
   "Set E2E_EXPOSE_MAIL_LINKS=1 on that server so log-mode verify links are returned. " +
-  "The flag is ignored when VERCEL_ENV=production. " +
+  "The flag is ignored when VERCEL_ENV is set. " +
   "Do not point account or admin specs at a public host. " +
   "Install the browser with: npx playwright install chromium";
 
