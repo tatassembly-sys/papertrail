@@ -8,6 +8,7 @@ const SKIP_REASON =
 test.beforeEach(async ({ request }) => {
   if (process.env.E2E_SERVER_UP === "1") return;
   if (process.env.E2E_SERVER_UP === "0") {
+    if (process.env.E2E_REQUIRE === "1") throw new Error(SKIP_REASON);
     test.skip(true, SKIP_REASON);
     return;
   }

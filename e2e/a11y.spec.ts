@@ -11,6 +11,9 @@ test.beforeEach(async ({ request }) => {
   } catch {
     up = false;
   }
+  if (!up && process.env.E2E_REQUIRE === "1") {
+    throw new Error("No server at baseURL. Start with: npm run build && npm start.");
+  }
   test.skip(!up, "No server at baseURL");
 });
 

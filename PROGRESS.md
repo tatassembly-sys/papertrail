@@ -77,6 +77,12 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-11-02 — VS3 — e2e require no longer skips
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: `E2E_REQUIRE=1` fails global setup and the smoke spec when nothing is listening. `E2E_SERVER_UP=0` was skipping smoke before that check. Default `npm run test:e2e` still skips.
+- Checks run: `E2E_REQUIRE=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:9 npx playwright test e2e/smoke.spec.ts` → exit 1. Same command without `E2E_REQUIRE` → 7 skipped, exit 0.
+- Follow-ups: none.
+
 ### 2026-11-02 — VS1 — mail links stay off hosted Vercel
 - Agent: Grok (VS Code lane, branch `vscode/work`)
 - Change: `exposeDevMailLink()` is false for every `VERCEL_ENV`, not only production. Local `next start` with `E2E_EXPOSE_MAIL_LINKS=1` can return a reset link; preview and production stay 503 when email is not configured. Smoke specs fail closed when `E2E_REQUIRE=1` and nothing is listening.
