@@ -2,6 +2,9 @@
 
 Newest first. Claim an item here (`in progress: VS Code agent`) before starting it. Check agents/grokbot/LOG.md first.
 
+## 2026-11-02 Europe/London — home empty catalogue copy
+- Done on `vscode/work`: `catalogueEmptyCopy` for the three empty home sentences. Smoke `/?page=99` expects "No more entries."
+
 ## 2026-11-02 Europe/London — proposed CI actions v7
 - Done on `vscode/work`: `docs/ci/proposed-ci.yml` uses `actions/checkout@v7` and `actions/setup-node@v7` so an owner copy drops the Node.js 20 action warning. Live workflow not edited.
 

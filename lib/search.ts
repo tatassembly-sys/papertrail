@@ -75,6 +75,13 @@ export function hasActiveFilters(f: SearchFilters): boolean {
   );
 }
 
+/** Copy for an empty published list. Filtered wins over pagination. */
+export function catalogueEmptyCopy(filtered: boolean, page: number): string {
+  if (filtered) return "No entries match that search or category.";
+  if (page > 1) return "No more entries.";
+  return "No entries filed yet. Check back soon.";
+}
+
 /** Mongo filter for published article search. */
 export function buildArticleMongoFilter(
   base: Filter<Record<string, unknown>>,

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildArticleMongoFilter, parseSearchParams } from "../lib/search";
+import { readFileSync } from "node:fs";
+import { buildArticleMongoFilter, catalogueEmptyCopy, parseSearchParams } from "../lib/search";
 
 type Range = { $gte?: Date; $lte?: Date };
 
@@ -31,6 +32,15 @@ test("regex metacharacters in author are escaped", () => {
   const f = buildArticleMongoFilter({}, { author: "a.*(b" });
   const and = f.$and as Array<{ authors?: { $regex: string } }>;
   assert.equal(and[0].authors?.$regex, "a\\.\\*\\(b");
+});
+
+test("catalogue empty copy covers a blank list, a later page, and a filter", () => {
+  assert.equal(catalogueEmptyCopy(false, 1), "No entries filed yet. Check back soon.");
+  assert.equal(catalogueEmptyCopy(false, 2), "No more entries.");
+  assert.equal(catalogueEmptyCopy(true, 1), "No entries match that search or category.");
+  assert.equal(catalogueEmptyCopy(true, 9), "No entries match that search or category.");
+  const page = readFileSync("app/(home)/page.tsx", "utf8");
+  assert.match(page, /catalogueEmptyCopy\(isFiltered, page\)/);
 });
 
 test("parseSearchParams drops unknown source/sort", () => {

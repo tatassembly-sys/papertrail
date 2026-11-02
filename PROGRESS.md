@@ -77,6 +77,12 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-11-02 — home empty catalogue copy
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: empty home states go through `catalogueEmptyCopy`. The smoke spec now opens `/?page=99` and expects "No more entries." instead of skipping the empty sentence when a post exists.
+- Checks run: `node --import tsx --test tests/search.test.ts tests/search-hints.test.ts` → 8 passed, fail 0. Playwright was not re-run (no local server).
+- Follow-ups: none.
+
 ### 2026-11-02 — M1.3 — proposed CI actions on Node 24
 - Agent: Grok (VS Code lane, branch `vscode/work`)
 - Change: `docs/ci/proposed-ci.yml` moves `actions/checkout` and `actions/setup-node` from v4 to v7. The live `.github/workflows/ci.yml` is unchanged. The Node 22 test matrix stays.

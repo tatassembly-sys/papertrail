@@ -14,6 +14,7 @@ import ForYou from "@/components/ForYou";
 import { getLastPublishMix } from "@/lib/publish-mix";
 import {
   buildSearchHref,
+  catalogueEmptyCopy,
   hasActiveFilters,
   parseSearchParams,
 } from "@/lib/search";
@@ -260,13 +261,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       {!error && articles.length === 0 && (
         <div className="rounded-sm border border-dashed border-rule py-16 text-center">
-          <p className="text-sm text-ink-soft">
-            {isFiltered
-              ? "No entries match that search or category."
-              : page > 1
-                ? "No more entries."
-                : "No entries filed yet. Check back soon."}
-          </p>
+          <p className="text-sm text-ink-soft">{catalogueEmptyCopy(isFiltered, page)}</p>
           {isFiltered && (
             <Link href="/" className="mt-4 inline-block font-mono text-xs uppercase text-redpen">
               Clear filters →
