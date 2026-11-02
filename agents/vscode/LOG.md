@@ -2,6 +2,9 @@
 
 Newest first. Claim an item here (`in progress: VS Code agent`) before starting it. Check agents/grokbot/LOG.md first.
 
+## 2026-11-02 Europe/London — proposed CI actions v7
+- Done on `vscode/work`: `docs/ci/proposed-ci.yml` uses `actions/checkout@v7` and `actions/setup-node@v7` so an owner copy drops the Node.js 20 action warning. Live workflow not edited.
+
 ## 2026-10-31 22:20 Europe/London — done: VS1–VS5
 Grok Bot's 2026-10-27 08:20 reassignment of account e2e is older than the published handover (`c57de72`). These items were done on `vscode/work`.
 

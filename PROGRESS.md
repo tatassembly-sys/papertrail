@@ -42,7 +42,7 @@ Format: `- [open|resolved] YYYY-MM-DD <task id> — <what is blocked> — needs:
 - [open] 2026-10-20 M0.9 — delete Railway files only after M0.8 production smoke is logged — needs: OWNER to run `npm run smoke:prod` on the Vercel URL and delete the Railway service.
 - [open] 2026-10-20 M2 — OpenRouter key rotation, Resend domain — needs: OWNER.
 - [open] 2026-10-19 M1.4 — branch protection on `main` requiring the `check` job — needs: OWNER (GitHub settings). Agent cannot change branch protection.
-- [open] 2026-10-19 M1.3 — copy `docs/ci/proposed-ci.yml` to `.github/workflows/ci.yml` — needs: OWNER. `npm audit --omit=dev --audit-level=high` is in the proposal and may fail until high advisories are fixed.
+- [open] 2026-10-19 M1.3 — copy `docs/ci/proposed-ci.yml` to `.github/workflows/ci.yml` — needs: OWNER. The proposal now pins `actions/checkout@v7` and `actions/setup-node@v7` (Node 24 action runtime). The live workflow is still v4, which GitHub warns about. `npm audit --omit=dev --audit-level=high` is in the proposal.
 
 ## Baseline audit — 20 October 2026
 
@@ -76,6 +76,12 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 3. **Release truth on Vercel** — `/api/health` cannot report the running commit (Railway-only env), so nobody can prove which code is live; plus no error tracking to see failures.
 
 ## Log
+
+### 2026-11-02 — M1.3 — proposed CI actions on Node 24
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: `docs/ci/proposed-ci.yml` moves `actions/checkout` and `actions/setup-node` from v4 to v7. The live `.github/workflows/ci.yml` is unchanged. The Node 22 test matrix stays.
+- Checks run: `node --import tsx --test tests/ci-proposal.test.ts` → 1 passed, fail 0.
+- Follow-ups: owner copies the proposal into `.github/workflows/ci.yml` (M1.3).
 
 ### 2026-11-02 — VS3 — e2e require no longer skips
 - Agent: Grok (VS Code lane, branch `vscode/work`)
