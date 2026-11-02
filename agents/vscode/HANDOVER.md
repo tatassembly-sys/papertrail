@@ -169,7 +169,7 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 ### 2026-11-02 Europe/London — follow-ups after VS1–VS5
 - Done: `E2E_REQUIRE=1` fails closed when nothing is listening (`1a23e86`). Mail links stay off when `VERCEL_ENV` is set (`58c4405`). Proposed CI pins `actions/checkout@v7` and `actions/setup-node@v7` (`e103892`); live workflow not edited. Empty home copy is `catalogueEmptyCopy` (`8860b16`, pushed). A later page with earlier entries says "No more entries." and links "Latest entries"; a later page of an empty catalogue still says "No entries filed yet."
 - Tests: search unit tests 8 passed. Playwright "a page past the catalogue stays 200" passed on `next dev` + `db:memory` (click back to a post). Full `e2e/smoke.spec.ts` on that dev server was 4 passed / 3 failed because CSP blocks `unsafe-eval`, so dev client JS does not run. Those three were not re-run on `next start`. Full gate not re-run for these follow-ups.
-- Commit(s) on vscode/work: `58c4405`, `1a23e86`, `e103892`, `8860b16`, plus the past-the-end link commit. PR: https://github.com/tatassembly-sys/papertrail/pull/8 labelled `vscode-agent`. Not merged.
+- Commit(s) on vscode/work: `58c4405`, `1a23e86`, `e103892`, `8860b16`, `a890b9b`. PR: https://github.com/tatassembly-sys/papertrail/pull/8 labelled `vscode-agent`. Not merged.
 - Left: owner blockers in PROGRESS (Sentry, cron-job.org, key rotation, branch protection, workflow copy, v1.0.0 tag, M0.9 until M0.8). Launch-checklist Quality boxes stay `[ ]`.
 - Risks: do not set `E2E_EXPOSE_MAIL_LINKS` on Vercel. Do not add `unsafe-eval` to CSP to make `next dev` e2e pass. Run Playwright against `next start`.
 

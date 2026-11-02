@@ -3,7 +3,7 @@
 Newest first. Claim an item here (`in progress: VS Code agent`) before starting it. Check agents/grokbot/LOG.md first.
 
 ## 2026-11-02 Europe/London — past-the-end catalogue link
-- Done on `vscode/work`: an empty later page uses the blank-catalogue sentence when `total` is 0. When earlier entries exist, the page says "No more entries." and links to the latest entries. Smoke follows that link when the catalogue has posts.
+- Done on `vscode/work` (`a890b9b`): an empty later page uses the blank-catalogue sentence when `total` is 0. When earlier entries exist, the page says "No more entries." and links to the latest entries. Smoke follows that link when the catalogue has posts.
 
 ## 2026-11-02 Europe/London — home empty catalogue copy
 - Done on `vscode/work`: `catalogueEmptyCopy` for the three empty home sentences. Smoke `/?page=99` expects "No more entries."
