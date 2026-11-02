@@ -79,6 +79,7 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ### 2026-11-02 — password forms post
 - Agent: Grok (VS Code lane, branch `vscode/work`)
+- Commit(s): 8cef009
 - Change: admin login, reader login, register, reset, and the token form use `method="post"`. A submit before hydration no longer puts the password or token in the query string. Admin login still names the password field for autofill.
 - Checks run: `node --import tsx --test tests/password-forms.test.ts` → 1 passed. `npx playwright test e2e/smoke.spec.ts -g "keeps the password out of the URL"` with JavaScript disabled against `next dev` → 1 passed. Dev log showed `POST /login` and no password in the URL. `/user-login`, `/register`, and `/reset-password` HTML included `method="post"`. Full gate not re-run.
 - Follow-ups: none.
