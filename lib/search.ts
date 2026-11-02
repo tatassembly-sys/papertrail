@@ -75,10 +75,15 @@ export function hasActiveFilters(f: SearchFilters): boolean {
   );
 }
 
+/** True when this page is past a catalogue that has earlier entries. */
+export function cataloguePastEnd(filtered: boolean, page: number, total: number): boolean {
+  return !filtered && page > 1 && total > 0;
+}
+
 /** Copy for an empty published list. Filtered wins over pagination. */
-export function catalogueEmptyCopy(filtered: boolean, page: number): string {
+export function catalogueEmptyCopy(filtered: boolean, page: number, total: number): string {
   if (filtered) return "No entries match that search or category.";
-  if (page > 1) return "No more entries.";
+  if (cataloguePastEnd(filtered, page, total)) return "No more entries.";
   return "No entries filed yet. Check back soon.";
 }
 

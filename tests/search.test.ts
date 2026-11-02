@@ -1,7 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { buildArticleMongoFilter, catalogueEmptyCopy, parseSearchParams } from "../lib/search";
+import {
+  buildArticleMongoFilter,
+  catalogueEmptyCopy,
+  cataloguePastEnd,
+  parseSearchParams,
+} from "../lib/search";
 
 type Range = { $gte?: Date; $lte?: Date };
 
@@ -35,12 +40,18 @@ test("regex metacharacters in author are escaped", () => {
 });
 
 test("catalogue empty copy covers a blank list, a later page, and a filter", () => {
-  assert.equal(catalogueEmptyCopy(false, 1), "No entries filed yet. Check back soon.");
-  assert.equal(catalogueEmptyCopy(false, 2), "No more entries.");
-  assert.equal(catalogueEmptyCopy(true, 1), "No entries match that search or category.");
-  assert.equal(catalogueEmptyCopy(true, 9), "No entries match that search or category.");
+  assert.equal(catalogueEmptyCopy(false, 1, 0), "No entries filed yet. Check back soon.");
+  assert.equal(catalogueEmptyCopy(false, 2, 0), "No entries filed yet. Check back soon.");
+  assert.equal(catalogueEmptyCopy(false, 2, 3), "No more entries.");
+  assert.equal(cataloguePastEnd(false, 2, 3), true);
+  assert.equal(cataloguePastEnd(false, 2, 0), false);
+  assert.equal(cataloguePastEnd(true, 9, 4), false);
+  assert.equal(catalogueEmptyCopy(true, 1, 0), "No entries match that search or category.");
+  assert.equal(catalogueEmptyCopy(true, 9, 4), "No entries match that search or category.");
   const page = readFileSync("app/(home)/page.tsx", "utf8");
-  assert.match(page, /catalogueEmptyCopy\(isFiltered, page\)/);
+  assert.match(page, /catalogueEmptyCopy\(isFiltered, page, total\)/);
+  assert.match(page, /cataloguePastEnd\(isFiltered, page, total\)/);
+  assert.match(page, /Latest entries →/);
 });
 
 test("parseSearchParams drops unknown source/sort", () => {

@@ -77,6 +77,12 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-11-02 — home past-the-end recovery
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: `catalogueEmptyCopy` takes the result total, so a later page of an empty catalogue still says "No entries filed yet." A page past real entries says "No more entries." and links to "Latest entries".
+- Checks run: `node --import tsx --test tests/search.test.ts tests/search-hints.test.ts` → 8 passed, fail 0. Against `npm run dev` plus `db:memory`: `/?page=99` was 200 with "No more entries." and "Latest entries"; `/` included the seeded post; `/?q=zzzz-no-such-entry-vs3` showed the filter sentence. `npx playwright test e2e/smoke.spec.ts -g "page past the catalogue"` passed (the full smoke file was 4 passed, 3 failed). The three failures are `next dev` under the CSP that blocks `unsafe-eval`: the 404 shell does not paint, and register/login submit as document GETs before hydration. Not re-run on `next start`. Full gate not re-run.
+- Follow-ups: none.
+
 ### 2026-11-02 — home empty catalogue copy
 - Agent: Grok (VS Code lane, branch `vscode/work`)
 - Change: empty home states go through `catalogueEmptyCopy`. The smoke spec now opens `/?page=99` and expects "No more entries." instead of skipping the empty sentence when a post exists.

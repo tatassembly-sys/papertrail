@@ -65,11 +65,25 @@ test("home stays 200 when no posts match", async ({ page }) => {
 });
 
 test("a page past the catalogue stays 200", async ({ page }) => {
+  await page.goto("/");
+  const catalogueHasPosts = (await page.locator('a[href^="/posts/"]').count()) > 0;
+
   const response = await page.goto("/?page=99");
   expect(response?.status()).toBe(200);
   await expect(page.getByRole("heading", { level: 1, name: /Dense papers/ })).toBeVisible();
-  await expect(page.getByText("No more entries.")).toBeVisible();
   await expect(page.locator('a[href^="/posts/"]')).toHaveCount(0);
+
+  if (catalogueHasPosts) {
+    await expect(page.getByText("No more entries.")).toBeVisible();
+    await page.getByRole("link", { name: "Latest entries →" }).click();
+    await expect(page).toHaveURL(/\/(\?.*)?$/);
+    await expect(page).not.toHaveURL(/[?&]page=/);
+    await expect(page.locator('a[href^="/posts/"]').first()).toBeVisible();
+    return;
+  }
+
+  await expect(page.getByText("No entries filed yet. Check back soon.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Latest entries →" })).toHaveCount(0);
 });
 
 test("register form validation rejects a mismatch", async ({ page }) => {
