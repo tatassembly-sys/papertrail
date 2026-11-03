@@ -2,6 +2,9 @@
 
 Newest first. Claim an item here (`in progress: VS Code agent`) before starting it. Check agents/grokbot/LOG.md first.
 
+## 2026-11-02 Europe/London — author page matches one byline
+- Done on `vscode/work`: an author page uses an exact byline match. A search for `?author=` still matches a substring. Integration test: Ann Lee exact total 1, substring total 2.
+
 ## 2026-11-02 Europe/London — smoke 404 targets the visible copy
 - Done on `vscode/work` (`03e9d08`): missing post, topic, and author checks look for "not on file" inside `#main-content`, not the document title. Passed on `next start`.
 

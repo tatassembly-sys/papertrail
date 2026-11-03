@@ -77,6 +77,12 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-11-02 — author page matches one byline
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: `/authors/[slug]` lists papers with `authorExact`, so "Ann Lee" does not include "JoAnn Lee". `?author=` search stays a substring.
+- Checks run: `node --import tsx --test tests/search.test.ts` → 7 passed. `node --experimental-test-module-mocks --test-concurrency=1 --import tsx --test tests/integration/domain.int.test.ts` → 7 passed. The integration case published both bylines: exact total 1, substring total 2. Full gate not re-run. The author page was not opened in a browser.
+- Follow-ups: none.
+
 ### 2026-11-02 — smoke 404 looks at the page, not the title
 - Agent: Grok (VS Code lane, branch `vscode/work`)
 - Commit(s): 03e9d08

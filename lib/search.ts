@@ -15,6 +15,8 @@ export interface SearchFilters {
   query?: string;
   category?: string;
   author?: string;
+  /** Match one full byline. Public search URLs stay substring matches. */
+  authorExact?: boolean;
   institution?: string;
   tag?: string;
   source?: PaperSourceKind | "";
@@ -116,7 +118,13 @@ export function buildArticleMongoFilter(
     });
   }
   if (filters.author) {
-    and.push({ authors: { $regex: escapeRegex(filters.author), $options: "i" } });
+    const escaped = escapeRegex(filters.author);
+    and.push({
+      authors: {
+        $regex: filters.authorExact ? `^${escaped}$` : escaped,
+        $options: "i",
+      },
+    });
   }
   if (filters.institution) {
     and.push({

@@ -39,6 +39,17 @@ test("regex metacharacters in author are escaped", () => {
   assert.equal(and[0].authors?.$regex, "a\\.\\*\\(b");
 });
 
+test("exact author match is one byline, search stays a substring", () => {
+  const partial = buildArticleMongoFilter({}, { author: "Ann Lee" });
+  const exact = buildArticleMongoFilter({}, { author: "a.*(b", authorExact: true });
+  const partialAnd = partial.$and as Array<{ authors?: { $regex: string } }>;
+  const exactAnd = exact.$and as Array<{ authors?: { $regex: string } }>;
+  assert.equal(partialAnd[0].authors?.$regex, "Ann Lee");
+  assert.equal(exactAnd[0].authors?.$regex, "^a\\.\\*\\(b$");
+  const page = readFileSync("app/authors/[slug]/page.tsx", "utf8");
+  assert.match(page, /authorExact:\s*true/);
+});
+
 test("catalogue empty copy covers a blank list, a later page, and a filter", () => {
   assert.equal(catalogueEmptyCopy(false, 1, 0), "No entries filed yet. Check back soon.");
   assert.equal(catalogueEmptyCopy(false, 2, 0), "No entries filed yet. Check back soon.");
