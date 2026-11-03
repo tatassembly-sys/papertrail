@@ -60,10 +60,10 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 
 | ID | Task | Acceptance | Verify |
 |---|---|---|---|
-| VS1.1 | Add `e2e/account.spec.ts`: register a unique user, capture verify link from log-mode mail (or seeded token helper), login, open `/account`, download export, delete account. Prefer extending helpers in `e2e/`; do not add live email. | Spec exists; uses unique email per run; cleans up. | `npx playwright test e2e/account.spec.ts` |
-| VS1.2 | Wire the account journey into `npm run test:e2e` (or document the exact Playwright project invocation in the spec header). | `package.json` / config runs it with the other e2e suite. | `npm run test:e2e` (or documented subset) exits 0 |
-| VS1.3 | Flake hunt: run the account spec **twice in a row** on a cold `npm run build` + `db:memory`. Fix waits/selectors; no `waitForTimeout` longer than needed. | Two consecutive green runs logged in PROGRESS. | `npx playwright test e2e/account.spec.ts && npx playwright test e2e/account.spec.ts` |
-| VS1.4 | Error states: unverified login, bad reset token, delete confirmation cancel — assert user-visible messages, no stack traces. | Specs cover at least those three negatives. | `npx playwright test e2e/account.spec.ts` |
+| VS1.1 [x] | Add `e2e/account.spec.ts`: register a unique user, capture verify link from log-mode mail (or seeded token helper), login, open `/account`, download export, delete account. Prefer extending helpers in `e2e/`; do not add live email. | Spec exists; uses unique email per run; cleans up. | `npx playwright test e2e/account.spec.ts` |
+| VS1.2 [x] | Wire the account journey into `npm run test:e2e` (or document the exact Playwright project invocation in the spec header). | `package.json` / config runs it with the other e2e suite. | `npm run test:e2e` (or documented subset) exits 0 |
+| VS1.3 [x] | Flake hunt: run the account spec **twice in a row** on a cold `npm run build` + `db:memory`. Fix waits/selectors; no `waitForTimeout` longer than needed. | Two consecutive green runs logged in PROGRESS. | `npx playwright test e2e/account.spec.ts && npx playwright test e2e/account.spec.ts` |
+| VS1.4 [x] | Error states: unverified login, bad reset token, delete confirmation cancel — assert user-visible messages, no stack traces. | Specs cover at least those three negatives. | `npx playwright test e2e/account.spec.ts` |
 
 **Testing section (VS1)**
 - **Unit:** none required unless you extract a mail-link parser — then `npm run test:unit`.
@@ -84,10 +84,10 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 
 | ID | Task | Acceptance | Verify |
 |---|---|---|---|
-| VS2.1 | Add `e2e/admin-a11y.spec.ts`: seeded admin session; axe wcag2a/aa on `/admin`, `/admin/status`, and the bulk-select article list; assert no serious/critical. | Spec green. | `npx playwright test e2e/admin-a11y.spec.ts` |
-| VS2.2 | Same pages: viewport 360×640, assert `document.documentElement.scrollWidth <= viewport width` (no horizontal overflow). | Assertions pass. | `npx playwright test e2e/admin-a11y.spec.ts` |
-| VS2.3 | Extend public `e2e/a11y.spec.ts` if needed so `/`, `/register`, `/about` stay clean after font self-host. | Existing + new checks green. | `npx playwright test e2e/a11y.spec.ts` |
-| VS2.4 | If serious/critical axe failures need component fixes, fix them on `vscode/work` with the smallest change and a unit/smoke assertion. | Gate green; no serious/critical left. | `npm run test:e2e` |
+| VS2.1 [x] | Add `e2e/admin-a11y.spec.ts`: seeded admin session; axe wcag2a/aa on `/admin`, `/admin/status`, and the bulk-select article list; assert no serious/critical. | Spec green. | `npx playwright test e2e/admin-a11y.spec.ts` |
+| VS2.2 [x] | Same pages: viewport 360×640, assert `document.documentElement.scrollWidth <= viewport width` (no horizontal overflow). | Assertions pass. | `npx playwright test e2e/admin-a11y.spec.ts` |
+| VS2.3 [x] | Extend public `e2e/a11y.spec.ts` if needed so `/`, `/register`, `/about` stay clean after font self-host. | Existing + new checks green. | `npx playwright test e2e/a11y.spec.ts` |
+| VS2.4 [x] | If serious/critical axe failures need component fixes, fix them on `vscode/work` with the smallest change and a unit/smoke assertion. | Gate green; no serious/critical left. | `npm run test:e2e` |
 
 **Testing section (VS2)**
 - **Unit:** contrast/helpers if extracted → `npm run test:unit`.
@@ -105,10 +105,10 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 
 | ID | Task | Acceptance | Verify |
 |---|---|---|---|
-| VS3.1 | Playwright (or extend smoke/a11y): loading `/` and `/about` makes **no** request to `fonts.googleapis.com` / `fonts.gstatic.com`; `document.fonts` reports Fraunces and Inter loaded. | Spec green. | `npx playwright test e2e/a11y.spec.ts` (or dedicated `e2e/fonts.spec.ts`) |
-| VS3.2 | Document offline build check in spec header / HANDOVER note. | Comment includes the proxy command. | `rg -n "fonts.googleapis\|HTTPS_PROXY" e2e agents/vscode/HANDOVER.md` |
-| VS3.3 | Smoke: missing post/topic/author still 404; home 200 with zero posts. Extend `e2e/smoke.spec.ts` if gaps. | Spec green on db:memory. | `npx playwright test e2e/smoke.spec.ts` |
-| VS3.4 | Build with Google Fonts blocked still succeeds (regression of #6). | Exit 0. | `HTTPS_PROXY=http://127.0.0.1:9 npm run build` |
+| VS3.1 [x] | Playwright (or extend smoke/a11y): loading `/` and `/about` makes **no** request to `fonts.googleapis.com` / `fonts.gstatic.com`; `document.fonts` reports Fraunces and Inter loaded. | Spec green. | `npx playwright test e2e/a11y.spec.ts` (or dedicated `e2e/fonts.spec.ts`) |
+| VS3.2 [x] | Document offline build check in spec header / HANDOVER note. | Comment includes the proxy command. | `rg -n "fonts.googleapis\|HTTPS_PROXY" e2e agents/vscode/HANDOVER.md` |
+| VS3.3 [x] | Smoke: missing post/topic/author still 404; home 200 with zero posts. Extend `e2e/smoke.spec.ts` if gaps. | Spec green on db:memory. | `npx playwright test e2e/smoke.spec.ts` |
+| VS3.4 [x] | Build with Google Fonts blocked still succeeds (regression of #6). | Exit 0. | `HTTPS_PROXY=http://127.0.0.1:9 npm run build` |
 
 **Testing section (VS3)**
 - **Unit:** `tests/fonts-images.test.ts` stays green → `npm run test:unit`.
@@ -125,10 +125,10 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 
 | ID | Task | Acceptance | Verify |
 |---|---|---|---|
-| VS4.1 | Unit/integration: newsletter subscribe with invalid email; duplicate subscribe; unauthenticated `/api/me`. Prefer `tests/*.test.ts` or integration. | New/extended tests pass. | `npm run test:unit && npm run test:integration` |
-| VS4.2 | Search suggest empty query / no-match topic hints (M9.5 behaviour) have a stable unit or e2e assertion. | Assertion exists and passes. | `npm run test:unit` or targeted Playwright |
-| VS4.3 | Cron/admin unsigned calls remain 401 — keep or extend smoke/`smoke:prod` local run. | Exit 0. | `npm run smoke:prod -- http://127.0.0.1:3000` (against local `next start`) **or** existing unit covering auth gate |
-| VS4.4 | Eliminate known flakes: no shared mutable clocks without freeze; unique emails; no reliance on production having posts. | Two full `npm run test:e2e` runs green. | `npm run test:e2e && npm run test:e2e` |
+| VS4.1 [x] | Unit/integration: newsletter subscribe with invalid email; duplicate subscribe; unauthenticated `/api/me`. Prefer `tests/*.test.ts` or integration. | New/extended tests pass. | `npm run test:unit && npm run test:integration` |
+| VS4.2 [x] | Search suggest empty query / no-match topic hints (M9.5 behaviour) have a stable unit or e2e assertion. | Assertion exists and passes. | `npm run test:unit` or targeted Playwright |
+| VS4.3 [x] | Cron/admin unsigned calls remain 401 — keep or extend smoke/`smoke:prod` local run. | Exit 0. | `npm run smoke:prod -- http://127.0.0.1:3000` (against local `next start`) **or** existing unit covering auth gate |
+| VS4.4 [x] | Eliminate known flakes: no shared mutable clocks without freeze; unique emails; no reliance on production having posts. | Two full `npm run test:e2e` runs green. | `npm run test:e2e && npm run test:e2e` |
 
 **Testing section (VS4)**
 - **Unit / integration / e2e:** as above.
@@ -143,9 +143,9 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 
 | ID | Task | Acceptance | Verify |
 |---|---|---|---|
-| VS5.1 | Update `docs/launch-checklist.md` Quality section with the exact e2e commands added in VS1–VS3 (still `[ ]` until evidence exists). | Commands match package scripts. | `rg -n "account.spec\|admin-a11y\|fonts" docs/launch-checklist.md` |
-| VS5.2 | Ensure `agents/vscode/LOG.md` lists every VS task claim/done with hash. | Log complete for finished work. | `rg -n "VS[0-9]" agents/vscode/LOG.md` |
-| VS5.3 | Final gate + tree clean; append final Handover note; push; ensure PR labelled `vscode-agent`. | Gate 0; PR open. | Gate command above; `gh pr view --json labels,url` |
+| VS5.1 [x] | Update `docs/launch-checklist.md` Quality section with the exact e2e commands added in VS1–VS3 (still `[ ]` until evidence exists). | Commands match package scripts. | `rg -n "account.spec\|admin-a11y\|fonts" docs/launch-checklist.md` |
+| VS5.2 [x] | Ensure `agents/vscode/LOG.md` lists every VS task claim/done with hash. | Log complete for finished work. | `rg -n "VS[0-9]" agents/vscode/LOG.md` |
+| VS5.3 [x] | Final gate + tree clean; append final Handover note; push; ensure PR labelled `vscode-agent`. | Gate 0; PR open. | Gate command above; `gh pr view --json labels,url` |
 
 **Testing section (VS5)**
 - Full gate + `npm audit --omit=dev --audit-level=high` (exit 0 expected on mainline deps).
@@ -165,6 +165,12 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 - Left: …
 - Risks: …
 ```
+
+### 2026-11-03 23:16 Europe/London — Grok Bot verified and merged VS1–VS5
+- Done: Reviewed `vscode/work` PR #8. Local gate: lint, typecheck, sandbox+unit, integration, build exit 0. Playwright `E2E_REQUIRE=1` 26/26 twice. Squash-merged #8 → `main` (`486294c`).
+- Ticked: VS1.1–VS5.3 after verification.
+- Left: OWNER blockers only (Sentry, cron-job.org, key rotation, branch protection, workflow copy, v1.0.0 tag, M0.9). No further agent-doable VS milestones.
+- Risks: keep `E2E_EXPOSE_MAIL_LINKS` off Vercel; run Playwright against `next start`.
 
 ### 2026-11-02 Europe/London — follow-ups after VS1–VS5
 - Done: `E2E_REQUIRE=1` fails closed when nothing is listening (`1a23e86`). Mail links stay off when `VERCEL_ENV` is set (`58c4405`). Proposed CI pins `actions/checkout@v7` and `actions/setup-node@v7` (`e103892`); live workflow not edited. Empty home copy is `catalogueEmptyCopy` (`8860b16`, pushed). A later page with earlier entries says "No more entries." and links "Latest entries"; a later page of an empty catalogue still says "No entries filed yet."
