@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserSession } from "@/lib/user-auth";
 import { getUserPublic, issueEmailVerifyToken } from "@/lib/users";
 import { getSiteUrl } from "@/lib/site-url";
-import { sendEmail, isEmailConfigured } from "@/lib/mail";
+import { exposeDevMailLink } from "@/lib/dev-mail-link";
+import { sendEmail } from "@/lib/mail";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
 
@@ -54,6 +55,6 @@ export async function POST(req: NextRequest) {
       mail.mode === "resend"
         ? "Check your inbox for a verification link."
         : "A verification link was generated.",
-    ...(process.env.NODE_ENV !== "production" ? { verifyUrl } : {}),
+    ...(exposeDevMailLink() ? { verifyUrl } : {}),
   });
 }

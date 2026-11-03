@@ -39,6 +39,12 @@ Owner-only items are marked `[OWNER]`.
 - [ ] Lighthouse ≥0.9 on home and a post — `npm run lighthouse` (M8.1)
 - [ ] No serious/critical axe issues — `npm run test:e2e` with axe (M8.3)
 - [ ] e2e smoke against production (read-only) — `PLAYWRIGHT_BASE_URL=$URL npm run test:e2e` (M10.2)
+- [ ] Account journey (local prod build + `npm run db:memory`, `E2E_EXPOSE_MAIL_LINKS=1`) — `npx playwright test e2e/account.spec.ts` twice (VS1)
+- [ ] Admin axe and 360×640 overflow — `npx playwright test e2e/admin-a11y.spec.ts` (VS2)
+- [ ] Public axe including `/about` — `npx playwright test e2e/a11y.spec.ts` (VS2)
+- [ ] No Google font requests; Fraunces and Inter load — `npx playwright test e2e/fonts.spec.ts` (VS3)
+- [ ] Offline font build — `HTTPS_PROXY=http://127.0.0.1:9 npm run build` (VS3)
+- [ ] Empty-content smoke — `npx playwright test e2e/smoke.spec.ts` (VS3)
 
 ## Legal, payments, discovery
 - [ ] `[OWNER]` Legal review of privacy/terms/cookies; ICO decision; business details in footer (M5.7, M10.5)

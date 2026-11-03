@@ -36,7 +36,10 @@ export default async function AuthorPage({ params }: PageProps) {
   const name = await resolveAuthorNameFromSlug(slug);
   if (!authorIsOnFile(name)) notFound();
 
-  const { articles, total } = await getPublishedArticles(1, 16, { author: name });
+  const { articles, total } = await getPublishedArticles(1, 16, {
+    author: name,
+    authorExact: true,
+  });
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",

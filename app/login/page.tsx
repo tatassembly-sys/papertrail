@@ -58,7 +58,7 @@ export default function LoginPage() {
       </p>
       <h1 className="mb-6 font-display text-2xl font-medium text-ink">Sign in</h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form method="post" onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <label htmlFor="email" className="font-mono text-xs uppercase tracking-wide text-ink-soft">
             Email

@@ -9,6 +9,16 @@
 
 ---
 
+
+## Review 2026-11-03 23:16 Europe/London — VS Code lane VS1–VS5
+
+Reviewer: Grok Bot. Source: `vscode/work` PR https://github.com/tatassembly-sys/papertrail/pull/8 (squash-merged as `486294c`).
+
+- **Verified real:** VS1 account e2e, VS2 admin/public axe + 360px, VS3 fonts/smoke/offline-build docs, VS4 newsletter/suggest/unsigned edges, VS5 checklist+log+PR. Local: lint/typecheck/unit/integration/build green; Playwright 26/26 twice with `E2E_REQUIRE=1`.
+- **Merged:** #8 squash → main. Valuable product fixes kept (password forms POST, author exact byline, past-the-end catalogue link, mail-link Vercel guard, proposed CI action pins).
+- **Dropped:** nothing material; false-tick check: no falsely ticked MILESTONES owner items.
+- **Left:** OWNER blockers unchanged. Agent-doable VS plan complete.
+
 ## ▶ START HERE (2026-10-27 morning)
 
 - Read **Review 2026-10-27 (morning)** below. Take only tasks marked for **your lane** (`grokbot` = Grok Bot workers on `grokbot/work`, PR label `grok-bot`; `vscode` = VS Code agents on `vscode/work`, PR label `vscode-agent`, never push to `main`). Only the orchestrator merges into `main`.
@@ -42,7 +52,7 @@ Format: `- [open|resolved] YYYY-MM-DD <task id> — <what is blocked> — needs:
 - [open] 2026-10-20 M0.9 — delete Railway files only after M0.8 production smoke is logged — needs: OWNER to run `npm run smoke:prod` on the Vercel URL and delete the Railway service.
 - [open] 2026-10-20 M2 — OpenRouter key rotation, Resend domain — needs: OWNER.
 - [open] 2026-10-19 M1.4 — branch protection on `main` requiring the `check` job — needs: OWNER (GitHub settings). Agent cannot change branch protection.
-- [open] 2026-10-19 M1.3 — copy `docs/ci/proposed-ci.yml` to `.github/workflows/ci.yml` — needs: OWNER. `npm audit --omit=dev --audit-level=high` is in the proposal and may fail until high advisories are fixed.
+- [open] 2026-10-19 M1.3 — copy `docs/ci/proposed-ci.yml` to `.github/workflows/ci.yml` — needs: OWNER. The proposal now pins `actions/checkout@v7` and `actions/setup-node@v7` (Node 24 action runtime). The live workflow is still v4, which GitHub warns about. `npm audit --omit=dev --audit-level=high` is in the proposal.
 
 ## Baseline audit — 20 October 2026
 
@@ -76,6 +86,66 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 3. **Release truth on Vercel** — `/api/health` cannot report the running commit (Railway-only env), so nobody can prove which code is live; plus no error tracking to see failures.
 
 ## Log
+
+### 2026-11-02 — author page matches one byline
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Commit(s): b2d3b3d
+- Change: `/authors/[slug]` lists papers with `authorExact`, so "Ann Lee" does not include "JoAnn Lee". `?author=` search stays a substring.
+- Checks run: `node --import tsx --test tests/search.test.ts` → 7 passed. `node --experimental-test-module-mocks --test-concurrency=1 --import tsx --test tests/integration/domain.int.test.ts` → 7 passed. The integration case published both bylines: exact total 1, substring total 2. Full gate not re-run. The author page was not opened in a browser.
+- Follow-ups: none.
+
+### 2026-11-02 — smoke 404 looks at the page, not the title
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Commit(s): 03e9d08
+- Change: the missing-page smoke check reads "not on file" inside `#main-content`. `getByText().first()` was matching the hidden document title.
+- Checks run: `npm run build` → exit 0. `npx playwright test e2e/smoke.spec.ts -g "missing post, topic, and author are 404"` against `next start` and `db:memory` → 1 passed. The no-JS login check passed again on that server. Full gate not re-run.
+- Follow-ups: none.
+
+### 2026-11-02 — password forms post
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Commit(s): 8cef009
+- Change: admin login, reader login, register, reset, and the token form use `method="post"`. A submit before hydration no longer puts the password or token in the query string. Admin login still names the password field for autofill.
+- Checks run: `node --import tsx --test tests/password-forms.test.ts` → 1 passed. `npx playwright test e2e/smoke.spec.ts -g "keeps the password out of the URL"` with JavaScript disabled against `next dev` → 1 passed. Dev log showed `POST /login` and no password in the URL. `/user-login`, `/register`, and `/reset-password` HTML included `method="post"`. Full gate not re-run.
+- Follow-ups: none.
+
+### 2026-11-02 — home past-the-end recovery
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Commit(s): a890b9b
+- Change: `catalogueEmptyCopy` takes the result total, so a later page of an empty catalogue still says "No entries filed yet." A page past real entries says "No more entries." and links to "Latest entries".
+- Checks run: `node --import tsx --test tests/search.test.ts tests/search-hints.test.ts` → 8 passed, fail 0. Against `npm run dev` plus `db:memory`: `/?page=99` was 200 with "No more entries." and "Latest entries"; `/` included the seeded post; `/?q=zzzz-no-such-entry-vs3` showed the filter sentence. `npx playwright test e2e/smoke.spec.ts -g "page past the catalogue"` passed (the full smoke file was 4 passed, 3 failed). The three failures are `next dev` under the CSP that blocks `unsafe-eval`: the 404 shell does not paint, and register/login submit as document GETs before hydration. Not re-run on `next start`. Full gate not re-run.
+- Follow-ups: none.
+
+### 2026-11-02 — home empty catalogue copy
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: empty home states go through `catalogueEmptyCopy`. The smoke spec now opens `/?page=99` and expects "No more entries." instead of skipping the empty sentence when a post exists.
+- Checks run: `node --import tsx --test tests/search.test.ts tests/search-hints.test.ts` → 8 passed, fail 0. Playwright was not re-run (no local server).
+- Follow-ups: none.
+
+### 2026-11-02 — M1.3 — proposed CI actions on Node 24
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: `docs/ci/proposed-ci.yml` moves `actions/checkout` and `actions/setup-node` from v4 to v7. The live `.github/workflows/ci.yml` is unchanged. The Node 22 test matrix stays.
+- Checks run: `node --import tsx --test tests/ci-proposal.test.ts` → 1 passed, fail 0.
+- Follow-ups: owner copies the proposal into `.github/workflows/ci.yml` (M1.3).
+
+### 2026-11-02 — VS3 — e2e require no longer skips
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: `E2E_REQUIRE=1` fails global setup and the smoke spec when nothing is listening. `E2E_SERVER_UP=0` was skipping smoke before that check. Default `npm run test:e2e` still skips.
+- Checks run: `E2E_REQUIRE=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:9 npx playwright test e2e/smoke.spec.ts` → exit 1. Same command without `E2E_REQUIRE` → 7 skipped, exit 0.
+- Follow-ups: none.
+
+### 2026-11-02 — VS1 — mail links stay off hosted Vercel
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Change: `exposeDevMailLink()` is false for every `VERCEL_ENV`, not only production. Local `next start` with `E2E_EXPOSE_MAIL_LINKS=1` can return a reset link; preview and production stay 503 when email is not configured. Smoke specs fail closed when `E2E_REQUIRE=1` and nothing is listening.
+- Checks run: `node --import tsx --test tests/public-edge.test.ts` → 4 passed. `node --experimental-test-module-mocks --import tsx --test tests/integration/public-http.int.test.ts` → 4 passed.
+- Follow-ups: none.
+
+### 2026-10-31 22:20 — VS1–VS5 — VS Code handover
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Commit(s): a5ba474, fd97cd6. PR: https://github.com/tatassembly-sys/papertrail/pull/8 (`vscode-agent`, not merged).
+- Change: local verify-link gate for `next start`, account/admin/font/smoke Playwright specs, newsletter and suggest and unsigned-me integration coverage, memory-db draft seed and 60s launch timeout.
+- Checks run: `npx playwright test` twice → 25 passed, 25 passed. `npm run test:sandbox` → 543/543. `npm run test:unit` → fail 0. `npm run test:integration` → fail 0. `npm run test:coverage` → lines 68.5% (exit 0). `npm run lint`, `npm run typecheck`, and `npm run build` → exit 0. `npm audit --omit=dev --audit-level=high` → exit 0. `npm run smoke:prod -- http://127.0.0.1:3000` → all six OK.
+- Evidence: account spec 5 passed on two consecutive runs. Admin axe and 360×640 overflow passed with no CSS change. Font spec saw no `fonts.googleapis.com` / `fonts.gstatic.com` requests.
+- Follow-ups: none for the agent lane. Owner blockers in this file are unchanged. `npm ci` was already exit 0 earlier this session; not repeated before commit.
 
 ### 2026-10-26 15:55 — M10.2 — production checks (read-only)
 - Agent: Grok Bot (branch grokbot/work)

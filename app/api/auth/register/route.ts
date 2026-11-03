@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { registerUser } from "@/lib/users";
 import { signUserToken, USER_SESSION_COOKIE, userSessionCookieOptions } from "@/lib/user-auth";
 import { getSiteUrl } from "@/lib/site-url";
+import { exposeDevMailLink } from "@/lib/dev-mail-link";
 import { sendEmail } from "@/lib/mail";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
       success: true,
       user: result.user,
       emailSent,
-      ...(process.env.NODE_ENV !== "production" && !emailSent ? { verifyUrl } : {}),
+      ...(exposeDevMailLink() && !emailSent ? { verifyUrl } : {}),
       note: emailSent
         ? "Check your inbox to verify your email."
         : mail.mode === "log"

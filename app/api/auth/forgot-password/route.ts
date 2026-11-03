@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPasswordResetToken } from "@/lib/users";
 import { getSiteUrl } from "@/lib/site-url";
+import { exposeDevMailLink } from "@/lib/dev-mail-link";
 import { sendEmail, isEmailConfigured } from "@/lib/mail";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
@@ -19,7 +20,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (process.env.NODE_ENV === "production" && !isEmailConfigured()) {
+    // Local `next start` is production but log-mode. The e2e flag is the only
+    // way that process may continue and return the reset link. Hosted Vercel
+    // never sets the flag as true (see exposeDevMailLink).
+    if (process.env.NODE_ENV === "production" && !isEmailConfigured() && !exposeDevMailLink()) {
       return NextResponse.json(
         { error: "Email delivery is not configured." },
         { status: 503 }
@@ -59,7 +63,7 @@ export async function POST(req: NextRequest) {
       note: isEmailConfigured()
         ? "If that email exists, a reset link was sent."
         : "If that email exists, a reset link was generated.",
-      ...(process.env.NODE_ENV !== "production" && resetUrl ? { resetUrl } : {}),
+      ...(exposeDevMailLink() && resetUrl ? { resetUrl } : {}),
     });
   } catch (err) {
     log.error("forgot-password", err, { route: "/api/auth/forgot-password" });
