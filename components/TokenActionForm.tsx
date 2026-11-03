@@ -74,7 +74,7 @@ function TokenActionInner({
         </p>
       )}
 
-      <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
+      <form method="post" onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
         {tokenFromUrl ? (
           <input type="hidden" name="token" value={token} />
         ) : (

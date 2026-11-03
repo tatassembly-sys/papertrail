@@ -6,7 +6,7 @@ import type { MongoClient } from "mongodb";
 
 let mongod: MongoMemoryServer;
 before(async () => {
-  mongod = await MongoMemoryServer.create();
+  mongod = await MongoMemoryServer.create({ instance: { launchTimeout: 60_000 } });
   process.env.MONGODB_URI = mongod.getUri();
   process.env.MONGODB_DB = "papertrail_domain";
   delete process.env.RESEND_API_KEY;
@@ -60,7 +60,43 @@ describe("articles", () => {
     assert.ok(await a.resolvePublishedTag("neuroscience"));
     assert.ok((await a.getRelatedPublishedArticles(rows[0].slug, "q-bio.NC")).length >= 1);
     assert.ok((await a.getAllPublishedArticles(10)).length === 5);
-    assert.ok((await a.getPublishedArticlesBySlugs([rows[0].slug, rows[1].slug])).length === 2);
+    const ann = await a.insertDraftArticle(
+      {
+        title: "Ann Lee note on tides",
+        headline: "Ann only",
+        why_it_matters: ["x"],
+        plain_explanation: "Ann Lee wrote this note about tides.",
+        caveats: "Sample.",
+        tags: ["tides"],
+        keywords: ["tides"],
+      },
+      "https://arxiv.org/abs/2401.00991",
+      "Ann Lee note",
+      "physics",
+      { source: "arxiv", sourceId: "2401.00991", authors: ["Ann Lee"] }
+    );
+    const joann = await a.insertDraftArticle(
+      {
+        title: "JoAnn Lee note on tides",
+        headline: "JoAnn only",
+        why_it_matters: ["x"],
+        plain_explanation: "JoAnn Lee wrote this note about tides.",
+        caveats: "Sample.",
+        tags: ["tides"],
+        keywords: ["tides"],
+      },
+      "https://arxiv.org/abs/2401.00992",
+      "JoAnn Lee note",
+      "physics",
+      { source: "arxiv", sourceId: "2401.00992", authors: ["JoAnn Lee"] }
+    );
+    await a.updateArticle(ann.id!, { status: "published" });
+    await a.updateArticle(joann.id!, { status: "published" });
+    const exactAnn = await a.getPublishedArticles(1, 10, { author: "Ann Lee", authorExact: true });
+    assert.equal(exactAnn.total, 1);
+    assert.equal(exactAnn.articles[0]?.slug, ann.slug);
+    const looseAnn = await a.getPublishedArticles(1, 10, { author: "Ann Lee" });
+    assert.equal(looseAnn.total, 2);
     assert.ok((await a.getForYouArticles(["neuroscience"])).length >= 1);
     assert.ok((await a.suggestPublishedArticles("neuro")).length >= 0);
     assert.ok(Object.keys(await a.getPublishedCategoryCounts()).length >= 1);

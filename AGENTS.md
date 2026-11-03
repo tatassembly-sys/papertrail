@@ -57,7 +57,7 @@ Paper Trail turns research papers (arXiv RSS, PubMed, manual PDF/URL submissions
 | All tests | `npm test` | sandbox (543 scenarios) + unit (91 tests). No DB needed. |
 | Unit only | `npm run test:unit` | `node --import tsx --test tests/*.test.ts` |
 | Browser smoke | `npm run test:e2e` | Playwright. Not part of `npm test`. Skips when nothing is listening. |
-| Local DB for e2e | `npm run db:memory` | in-memory Mongo (random port) seeded with one post; prints `MONGODB_URI`. |
+| Local DB for e2e | `npm run db:memory` | in-memory Mongo (random port) seeded with one published post and one draft; prints `MONGODB_URI`. |
 | Integration | `npm run test:integration` | mongodb-memory-server; not part of `npm test`. |
 | Coverage | `npm run test:coverage` | c8 over `lib/`. |
 | Build | `npm run build` | `next build`; works without a live DB. |
@@ -82,6 +82,7 @@ Social (optional): `ENABLE_X_API_POSTING`, `REDDIT_*`, `FACEBOOK_PAGE_ID`, `FACE
 Observability (optional): `SENTRY_DSN` (Sentry off when unset), `SENTRY_TRACES_SAMPLE_RATE`, `LOG_LEVEL` (`debug` enables debug lines).
 Mongo tuning: `MONGODB_MAX_POOL_SIZE`, `MONGODB_MIN_POOL_SIZE`, `MONGODB_SERVER_SELECTION_TIMEOUT_MS`, `MONGODB_STABLE_API`, `MONGODB_STABLE_API_STRICT` (default off: strict mode blocks the text search index and `$text`).
 Legacy Railway (remove in M0/M1): `RAILWAY_GIT_COMMIT_SHA`, `RAILWAY_PUBLIC_DOMAIN`, `RAILWAY_STATIC_URL`. Vercel provides `VERCEL_GIT_COMMIT_SHA`, `VERCEL_URL`, `VERCEL_ENV`.
+Local e2e only: `E2E_EXPOSE_MAIL_LINKS` (`1` on a local `next start` so log-mode verify/reset links are returned). Ignored when `VERCEL_ENV` is set. Never set it on a public host. Read via `exposeDevMailLink()` in `lib/dev-mail-link.ts`.
 
 If you add a new variable: add it to the example env file with a safe placeholder, to the list above, and to the hosting section of `MILESTONES.md` M0. Read it through the existing config module, not with scattered `process.env` calls.
 

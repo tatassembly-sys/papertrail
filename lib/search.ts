@@ -15,6 +15,8 @@ export interface SearchFilters {
   query?: string;
   category?: string;
   author?: string;
+  /** Match one full byline. Public search URLs stay substring matches. */
+  authorExact?: boolean;
   institution?: string;
   tag?: string;
   source?: PaperSourceKind | "";
@@ -75,6 +77,18 @@ export function hasActiveFilters(f: SearchFilters): boolean {
   );
 }
 
+/** True when this page is past a catalogue that has earlier entries. */
+export function cataloguePastEnd(filtered: boolean, page: number, total: number): boolean {
+  return !filtered && page > 1 && total > 0;
+}
+
+/** Copy for an empty published list. Filtered wins over pagination. */
+export function catalogueEmptyCopy(filtered: boolean, page: number, total: number): string {
+  if (filtered) return "No entries match that search or category.";
+  if (cataloguePastEnd(filtered, page, total)) return "No more entries.";
+  return "No entries filed yet. Check back soon.";
+}
+
 /** Mongo filter for published article search. */
 export function buildArticleMongoFilter(
   base: Filter<Record<string, unknown>>,
@@ -104,7 +118,13 @@ export function buildArticleMongoFilter(
     });
   }
   if (filters.author) {
-    and.push({ authors: { $regex: escapeRegex(filters.author), $options: "i" } });
+    const escaped = escapeRegex(filters.author);
+    and.push({
+      authors: {
+        $regex: filters.authorExact ? `^${escaped}$` : escaped,
+        $options: "i",
+      },
+    });
   }
   if (filters.institution) {
     and.push({

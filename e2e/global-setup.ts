@@ -22,5 +22,6 @@ export default async function globalSetup(): Promise<void> {
   }
 
   process.env.E2E_SERVER_UP = "0";
+  if (process.env.E2E_REQUIRE === "1") throw new Error(reason);
   console.log(reason);
 }

@@ -1,6 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildArticleMongoFilter, parseSearchParams } from "../lib/search";
+import { readFileSync } from "node:fs";
+import {
+  buildArticleMongoFilter,
+  catalogueEmptyCopy,
+  cataloguePastEnd,
+  parseSearchParams,
+} from "../lib/search";
 
 type Range = { $gte?: Date; $lte?: Date };
 
@@ -31,6 +37,32 @@ test("regex metacharacters in author are escaped", () => {
   const f = buildArticleMongoFilter({}, { author: "a.*(b" });
   const and = f.$and as Array<{ authors?: { $regex: string } }>;
   assert.equal(and[0].authors?.$regex, "a\\.\\*\\(b");
+});
+
+test("exact author match is one byline, search stays a substring", () => {
+  const partial = buildArticleMongoFilter({}, { author: "Ann Lee" });
+  const exact = buildArticleMongoFilter({}, { author: "a.*(b", authorExact: true });
+  const partialAnd = partial.$and as Array<{ authors?: { $regex: string } }>;
+  const exactAnd = exact.$and as Array<{ authors?: { $regex: string } }>;
+  assert.equal(partialAnd[0].authors?.$regex, "Ann Lee");
+  assert.equal(exactAnd[0].authors?.$regex, "^a\\.\\*\\(b$");
+  const page = readFileSync("app/authors/[slug]/page.tsx", "utf8");
+  assert.match(page, /authorExact:\s*true/);
+});
+
+test("catalogue empty copy covers a blank list, a later page, and a filter", () => {
+  assert.equal(catalogueEmptyCopy(false, 1, 0), "No entries filed yet. Check back soon.");
+  assert.equal(catalogueEmptyCopy(false, 2, 0), "No entries filed yet. Check back soon.");
+  assert.equal(catalogueEmptyCopy(false, 2, 3), "No more entries.");
+  assert.equal(cataloguePastEnd(false, 2, 3), true);
+  assert.equal(cataloguePastEnd(false, 2, 0), false);
+  assert.equal(cataloguePastEnd(true, 9, 4), false);
+  assert.equal(catalogueEmptyCopy(true, 1, 0), "No entries match that search or category.");
+  assert.equal(catalogueEmptyCopy(true, 9, 4), "No entries match that search or category.");
+  const page = readFileSync("app/(home)/page.tsx", "utf8");
+  assert.match(page, /catalogueEmptyCopy\(isFiltered, page, total\)/);
+  assert.match(page, /cataloguePastEnd\(isFiltered, page, total\)/);
+  assert.match(page, /Latest entries →/);
 });
 
 test("parseSearchParams drops unknown source/sort", () => {

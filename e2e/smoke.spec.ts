@@ -8,6 +8,7 @@ const SKIP_REASON =
 test.beforeEach(async ({ request }) => {
   if (process.env.E2E_SERVER_UP === "1") return;
   if (process.env.E2E_SERVER_UP === "0") {
+    if (process.env.E2E_REQUIRE === "1") throw new Error(SKIP_REASON);
     test.skip(true, SKIP_REASON);
     return;
   }
@@ -19,6 +20,7 @@ test.beforeEach(async ({ request }) => {
   } catch {
     up = false;
   }
+  if (!up && process.env.E2E_REQUIRE === "1") throw new Error(SKIP_REASON);
   if (!up) console.log(SKIP_REASON);
   test.skip(!up, SKIP_REASON);
 });
@@ -41,8 +43,47 @@ test("post page loads", async ({ page }) => {
   }
 
   const response = await page.goto("/posts/missing-smoke-entry");
-  expect(response?.status() ?? 0).toBeLessThan(500);
-  await expect(page.getByText(/doesn't exist|temporarily unavailable|not on file/i).first()).toBeVisible();
+  expect(response?.status()).toBe(404);
+  await expect(page.locator("#main-content").getByText(/doesn't exist|temporarily unavailable|not on file/i).first()).toBeVisible();
+});
+
+test("missing post, topic, and author are 404", async ({ page }) => {
+  for (const path of ["/posts/not-a-real-article-vs3", "/topics/not-a-real-topic-vs3", "/authors/not-a-real-author-vs3"]) {
+    const response = await page.goto(path);
+    expect(response?.status(), path).toBe(404);
+    await expect(page.locator("#main-content").getByText(/not on file/i)).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /doesn't exist/i })).toBeVisible();
+  }
+});
+
+test("home stays 200 when no posts match", async ({ page }) => {
+  const response = await page.goto("/?q=zzzz-no-such-entry-vs3");
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole("heading", { level: 1, name: /Dense papers/ })).toBeVisible();
+  await expect(page.getByText("No entries match that search or category.")).toBeVisible();
+  await expect(page.locator('a[href^="/posts/"]')).toHaveCount(0);
+});
+
+test("a page past the catalogue stays 200", async ({ page }) => {
+  await page.goto("/");
+  const catalogueHasPosts = (await page.locator('a[href^="/posts/"]').count()) > 0;
+
+  const response = await page.goto("/?page=99");
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole("heading", { level: 1, name: /Dense papers/ })).toBeVisible();
+  await expect(page.locator('a[href^="/posts/"]')).toHaveCount(0);
+
+  if (catalogueHasPosts) {
+    await expect(page.getByText("No more entries.")).toBeVisible();
+    await page.getByRole("link", { name: "Latest entries →" }).click();
+    await expect(page).toHaveURL(/\/(\?.*)?$/);
+    await expect(page).not.toHaveURL(/[?&]page=/);
+    await expect(page.locator('a[href^="/posts/"]').first()).toBeVisible();
+    return;
+  }
+
+  await expect(page.getByText("No entries filed yet. Check back soon.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Latest entries →" })).toHaveCount(0);
 });
 
 test("register form validation rejects a mismatch", async ({ page }) => {
@@ -59,6 +100,25 @@ test("register form validation rejects a mismatch", async ({ page }) => {
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByLabel("Password", { exact: true })).toHaveJSProperty("validity.valid", false);
   await expect(page).toHaveURL(/\/register/);
+});
+
+test("a login submit without JavaScript keeps the password out of the URL", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  let sawSecretInUrl = false;
+  page.on("request", (request) => {
+    const url = request.url().toLowerCase();
+    if (url.includes("password=") || url.includes("not-the-admin-password")) sawSecretInUrl = true;
+  });
+  await page.goto("/login");
+  await page.getByLabel("Email", { exact: true }).fill("admin@example.com");
+  await page.getByLabel("Password", { exact: true }).fill("not-the-admin-password");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForLoadState("domcontentloaded");
+  expect(sawSecretInUrl).toBe(false);
+  expect(page.url().toLowerCase()).not.toContain("password=");
+  expect(page.url()).not.toContain("not-the-admin-password");
+  await context.close();
 });
 
 test("admin login rejects a bad password", async ({ page }) => {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { exposeDevMailLink } from "@/lib/dev-mail-link";
 import { subscribeEmail } from "@/lib/newsletter";
-import { isEmailConfigured } from "@/lib/mail";
 import { getClientIp, hashIp } from "@/lib/request-ip";
 import { hitRateLimit } from "@/lib/rate-limit";
 import { JSON_LIMIT_AUTH, asRecord, readJsonBody } from "@/lib/json-body";
@@ -46,9 +46,7 @@ export async function POST(req: NextRequest) {
       note: result.emailSent
         ? "Check your inbox for a confirmation link."
         : "You're on the list.",
-      ...(process.env.NODE_ENV !== "production" && result.verifyUrl
-        ? { verifyUrl: result.verifyUrl }
-        : {}),
+      ...(exposeDevMailLink() && result.verifyUrl ? { verifyUrl: result.verifyUrl } : {}),
     });
   } catch (err) {
     log.error("newsletter subscribe", err, { route: "/api/newsletter/subscribe" });

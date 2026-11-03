@@ -17,4 +17,5 @@ test("SearchBar is debounced, keyboard accessible and has an empty state", () =>
   for (const key of ["ArrowDown", "ArrowUp", "Enter", "Escape"]) assert.ok(src.includes(`"${key}"`), key);
   assert.match(src, /aria-activedescendant/);
   assert.match(src, /emptyStateHints\(/);
+  assert.match(src, /No quick matches/);
 });

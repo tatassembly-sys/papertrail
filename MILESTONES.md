@@ -478,6 +478,8 @@ Report: tasks completed (with hashes), tasks blocked (why), and the gate output.
 ### Env vars (names only)
 `MONGODB_URI`, `MONGODB_DB`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`, `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `OPENROUTER_API_KEY`, plus any Twitter/X, Resend and Stripe keys already used on Railway (copy the full Railway variable list; never commit values).
 
+Do not set `E2E_EXPOSE_MAIL_LINKS` in Vercel. It is local e2e only. `exposeDevMailLink()` ignores it when `VERCEL_ENV` is set.
+
 ### Verification / exit criteria
 - `GET https://<vercel-domain>/api/health` → `status ok`, `db connected`.
 - Unsigned `GET /api/process-queue` → 401; signed (bearer) → 200.
