@@ -9,6 +9,8 @@ import {
   catalogueSliceNote,
   feedChannelTitle,
   parseSearchParams,
+  PUBLIC_INDEX_CAP,
+  visibleIndex,
 } from "../lib/search";
 
 type Range = { $gte?: Date; $lte?: Date };
@@ -88,6 +90,25 @@ test("a byline or topic page names a truncated slice and the feed names the filt
   assert.match(topic, /catalogueSliceNote\(articles\.length, total\)/);
   const feed = readFileSync("app/feed/route.ts", "utf8");
   assert.match(feed, /escapeXml\(feedChannelTitle\(filters\)\)/);
+});
+
+test("public indexes keep one cap and say when the rest is omitted", () => {
+  assert.equal(PUBLIC_INDEX_CAP, 80);
+  const exact = visibleIndex(["a", "b"], 2);
+  assert.deepEqual(exact.visible, ["a", "b"]);
+  assert.equal(exact.truncated, false);
+  const over = visibleIndex(["a", "b", "c"], 2);
+  assert.deepEqual(over.visible, ["a", "b"]);
+  assert.equal(over.truncated, true);
+  assert.deepEqual(visibleIndex(["a"], 0).visible, []);
+  const authors = readFileSync("app/authors/page.tsx", "utf8");
+  const topics = readFileSync("app/topics/page.tsx", "utf8");
+  for (const src of [authors, topics]) {
+    assert.match(src, /getPublished\w+\(PUBLIC_INDEX_CAP \+ 1\)/);
+    assert.match(src, /visibleIndex\(loaded, PUBLIC_INDEX_CAP\)/);
+  }
+  assert.match(authors, /Showing the \$\{PUBLIC_INDEX_CAP\} busiest bylines/);
+  assert.match(topics, /Showing the \$\{PUBLIC_INDEX_CAP\} busiest topics/);
 });
 
 test("catalogue empty copy covers a blank list, a later page, and a filter", () => {
