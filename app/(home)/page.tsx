@@ -132,6 +132,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         preserve={{
           category: activeCategory || undefined,
           author: filters.author || undefined,
+          authorExact: filters.authorExact ? "1" : undefined,
           institution: filters.institution || undefined,
           tag: filters.tag || undefined,
           source: filters.source || undefined,

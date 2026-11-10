@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getPublishedArticles, resolveAuthorNameFromSlug } from "@/lib/articles";
 import ArticleCard from "@/components/ArticleCard";
 import { authorIsOnFile } from "@/lib/public-route";
+import { buildSearchHref } from "@/lib/search";
 import { getSiteUrl } from "@/lib/site-url";
 import { jsonLdScript } from "@/lib/json-ld";
 
@@ -62,7 +63,16 @@ export default async function AuthorPage({ params }: PageProps) {
         {name}
       </h1>
       <p className="mt-2 text-sm text-ink-soft">
-        {total} {total === 1 ? "note" : "notes"} on this byline.
+        {total} {total === 1 ? "note" : "notes"} on this byline.{" "}
+        <Link
+          href={buildSearchHref("/", { author: name, authorExact: true })}
+          className="text-redpen underline underline-offset-2"
+        >
+          Open in search
+        </Link>
+        {articles.length > 0 && total > articles.length
+          ? ` Showing the latest ${articles.length}.`
+          : ""}
       </p>
       {articles.length === 0 ? (
         <p className="mt-8 text-sm text-ink-soft">No published notes for this author yet.</p>

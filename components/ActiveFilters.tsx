@@ -31,7 +31,10 @@ export default function ActiveFilters({ filters }: { filters: SearchFilters }) {
   }
   if (filters.author) {
     chips.push(
-      chip(`Author: ${filters.author}`, buildSearchHref("/", { ...filters, author: undefined, page: 1 }))
+      chip(
+        `Author: ${filters.author}`,
+        buildSearchHref("/", { ...filters, author: undefined, authorExact: undefined, page: 1 })
+      )
     );
   }
   if (filters.institution) {
