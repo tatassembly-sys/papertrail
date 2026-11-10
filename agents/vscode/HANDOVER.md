@@ -166,6 +166,13 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 - Risks: …
 ```
 
+### 2026-11-10 20:57 Europe/London — author feed
+- Done: author pages link RSS with `authorExact=1`. The feed title names the category, then the topic, then the byline. Author and topic pages say "Showing the latest N." only when the page is shorter than the total (`cfb663a`).
+- Tests: search unit 8 passed. Sandbox 545/545. `next dev` + `db:memory`: author page 200 with the exact feed href; topic page 200 with the seeded post; exact author feed 200 XML with the sleep item and without the draft; a byline containing `&` was escaped once and returned no items. Full gate not re-run.
+- Commit(s) on vscode/work: `cfb663a`. PR: https://github.com/tatassembly-sys/papertrail/pull/8 labelled `vscode-agent`. Not merged.
+- Left: owner blockers in PROGRESS. Launch-checklist Quality boxes stay `[ ]`.
+- Risks: the feed still ignores `q` unless a category, topic, or author is also set.
+
 ### 2026-11-10 20:53 Europe/London — follow-ups after VS1–VS5
 - Done: password forms post so a pre-hydration submit cannot put a password or token in the URL (`8cef009`). Missing-page smoke reads "not on file" inside `#main-content` (`03e9d08`). Author pages match one full byline (`b2d3b3d`). "Open in search" from an author page keeps `authorExact=1`, and a stray flag without an author is ignored (`df95a1c`).
 - Tests: password-forms unit 1 passed. Search unit 7 passed. Domain integration 7 passed (Ann Lee exact total 1, substring total 2). Sandbox 544/544 includes the exact-author href scenario. Playwright missing post/topic/author on `next start` → 1 passed. No-JS admin login on `next dev` and again on `next start` → 1 passed. `GET /authors/a-researcher` on `next dev` + `db:memory` was 200 with the exact-search href and the seeded post. Full gate not re-run for these follow-ups.

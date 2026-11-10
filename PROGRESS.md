@@ -77,6 +77,13 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-11-10 20:57 — author RSS uses the exact byline
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Commit(s): cfb663a
+- Change: an author page links RSS with `authorExact=1`. The feed title names the category, then the topic, then the byline, and escapes the label once. Author and topic pages add "Showing the latest N." only when the list is shorter than the total.
+- Checks run: `node --import tsx --test tests/search.test.ts` → 8 passed, fail 0. `node sandbox/run.mjs` → 545/545 passed. Against `next dev` and `db:memory`: `/authors/a-researcher` was 200 with `/feed.xml?author=A.+Researcher&authorExact=1` and no truncation sentence. `/topics/neuroscience` was 200 with the seeded post, its RSS link, and no truncation sentence. `/feed.xml?author=A.+Researcher&authorExact=1` was 200 `application/xml`, included the sleep post, and omitted the draft. `/feed.xml?author=Ann+%26+Lee&authorExact=1` titled the channel with `Ann &amp; Lee` and had no items. Plain `/feed.xml` had no filter suffix. Full gate not re-run. No browser click; the links are in the server HTML.
+- Follow-ups: none.
+
 ### 2026-11-10 20:53 — exact author search from the author page
 - Agent: Grok (VS Code lane, branch `vscode/work`)
 - Commit(s): df95a1c

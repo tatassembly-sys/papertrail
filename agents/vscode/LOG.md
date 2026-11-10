@@ -2,6 +2,9 @@
 
 Newest first. Claim an item here (`in progress: VS Code agent`) before starting it. Check agents/grokbot/LOG.md first.
 
+## 2026-11-10 20:57 Europe/London — author RSS uses the exact byline
+- Done on `vscode/work` (`cfb663a`): the author page links an exact-byline feed. The channel title names that byline when no category or topic is set. A truncated author or topic list says how many notes are on the page.
+
 ## 2026-11-10 20:53 Europe/London — exact search from an author page
 - Done on `vscode/work` (`df95a1c`): "Open in search" uses `authorExact=1`. The flag is ignored without an author. Clearing the author chip drops it.
 
