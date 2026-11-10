@@ -166,6 +166,13 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 - Risks: …
 ```
 
+### 2026-11-10 20:53 Europe/London — follow-ups after VS1–VS5
+- Done: password forms post so a pre-hydration submit cannot put a password or token in the URL (`8cef009`). Missing-page smoke reads "not on file" inside `#main-content` (`03e9d08`). Author pages match one full byline (`b2d3b3d`). "Open in search" from an author page keeps `authorExact=1`, and a stray flag without an author is ignored (`df95a1c`).
+- Tests: password-forms unit 1 passed. Search unit 7 passed. Domain integration 7 passed (Ann Lee exact total 1, substring total 2). Sandbox 544/544 includes the exact-author href scenario. Playwright missing post/topic/author on `next start` → 1 passed. No-JS admin login on `next dev` and again on `next start` → 1 passed. `GET /authors/a-researcher` on `next dev` + `db:memory` was 200 with the exact-search href and the seeded post. Full gate not re-run for these follow-ups.
+- Commit(s) on vscode/work: `8cef009`, `03e9d08`, `b2d3b3d`, `df95a1c`. PR: https://github.com/tatassembly-sys/papertrail/pull/8 labelled `vscode-agent`. Not merged.
+- Left: owner blockers in PROGRESS (Sentry, cron-job.org, key rotation, branch protection, workflow copy, v1.0.0 tag, M0.9 until M0.8). Launch-checklist Quality boxes stay `[ ]`.
+- Risks: do not add `unsafe-eval` to CSP. Run Playwright against `next start`. Do not turn every `?author=` search into an exact match.
+
 ### 2026-11-02 Europe/London — follow-ups after VS1–VS5
 - Done: `E2E_REQUIRE=1` fails closed when nothing is listening (`1a23e86`). Mail links stay off when `VERCEL_ENV` is set (`58c4405`). Proposed CI pins `actions/checkout@v7` and `actions/setup-node@v7` (`e103892`); live workflow not edited. Empty home copy is `catalogueEmptyCopy` (`8860b16`, pushed). A later page with earlier entries says "No more entries." and links "Latest entries"; a later page of an empty catalogue still says "No entries filed yet."
 - Tests: search unit tests 8 passed. Playwright "a page past the catalogue stays 200" passed on `next dev` + `db:memory` (click back to a post). Full `e2e/smoke.spec.ts` on that dev server was 4 passed / 3 failed because CSP blocks `unsafe-eval`, so dev client JS does not run. Those three were not re-run on `next start`. Full gate not re-run for these follow-ups.

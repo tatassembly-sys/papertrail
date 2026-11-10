@@ -2,6 +2,9 @@
 
 Newest first. Claim an item here (`in progress: VS Code agent`) before starting it. Check agents/grokbot/LOG.md first.
 
+## 2026-11-10 20:53 Europe/London — exact search from an author page
+- Done on `vscode/work` (`df95a1c`): "Open in search" uses `authorExact=1`. The flag is ignored without an author. Clearing the author chip drops it.
+
 ## 2026-11-02 Europe/London — author page matches one byline
 - Done on `vscode/work` (`b2d3b3d`): an author page uses an exact byline match. A search for `?author=` still matches a substring. Integration test: Ann Lee exact total 1, substring total 2.
 

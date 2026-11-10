@@ -77,6 +77,13 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-11-10 20:53 — exact author search from the author page
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Commit(s): df95a1c
+- Change: an author page links "Open in search" with `authorExact=1`. Search keeps that flag only when an author is set, the home search bar preserves it, and removing the author chip clears it. A stray `authorExact=1` does not filter.
+- Checks run: `node --import tsx --test tests/search.test.ts` → 7 passed, fail 0. `node sandbox/run.mjs` was 544/544 before this commit (the new scenario is in that commit). Against `next dev` and `db:memory`: `GET /authors/a-researcher` was 200 with `href="/?author=A.+Researcher&authorExact=1"` and `/posts/how-sleep-clears-the-brain`. `GET /?author=A.+Researcher&authorExact=1` was 200 and included that post plus an Author chip. `GET /?authorExact=1` was 200, still listed the post, and had no Author chip. Full gate not re-run. No browser click; the links are in the server HTML.
+- Follow-ups: none.
+
 ### 2026-11-02 — author page matches one byline
 - Agent: Grok (VS Code lane, branch `vscode/work`)
 - Commit(s): b2d3b3d
