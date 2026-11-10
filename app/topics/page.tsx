@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getPublishedTagCounts } from "@/lib/articles";
 import { slugifyLabel } from "@/lib/name-slug";
+import { PUBLIC_INDEX_CAP, visibleIndex } from "@/lib/search";
 
 export const metadata: Metadata = {
   title: "Topics",
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function TopicsIndexPage() {
-  const tags = await getPublishedTagCounts(80).catch(() => []);
+  const loaded = await getPublishedTagCounts(PUBLIC_INDEX_CAP + 1).catch(() => []);
+  const { visible: tags, truncated } = visibleIndex(loaded, PUBLIC_INDEX_CAP);
 
   return (
     <article className="mx-auto max-w-2xl">
@@ -23,9 +25,9 @@ export default async function TopicsIndexPage() {
         Topics
       </h1>
       <p className="mt-3 text-base leading-relaxed text-ink-soft">
-        Like The Conversation&apos;s topic pages — a public index of every label
-        we&apos;ve filed, so search engines and curious readers can start from a
-        field instead of a homepage.
+        {truncated
+          ? `Showing the ${PUBLIC_INDEX_CAP} busiest topics filed so far.`
+          : "Like The Conversation's topic pages — a public index of every label we've filed, so search engines and curious readers can start from a field instead of a homepage."}
       </p>
       {tags.length === 0 ? (
         <p className="mt-8 text-sm text-ink-soft">No topics yet.</p>

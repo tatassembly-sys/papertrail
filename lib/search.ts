@@ -98,6 +98,16 @@ export function catalogueSliceNote(shown: number, total: number): string {
   return "";
 }
 
+/** How many bylines or topics the public index lists before it says the rest are omitted. */
+export const PUBLIC_INDEX_CAP = 80;
+
+/** Keep the first `cap` rows and say so when the query returned one extra. */
+export function visibleIndex<T>(rows: readonly T[], cap: number): { visible: T[]; truncated: boolean } {
+  if (cap < 1) return { visible: [], truncated: rows.length > 0 };
+  if (rows.length > cap) return { visible: rows.slice(0, cap), truncated: true };
+  return { visible: rows.slice(), truncated: false };
+}
+
 /** RSS channel title. Category wins, then topic, then byline. */
 export function feedChannelTitle(filters: Pick<SearchFilters, "category" | "tag" | "author">): string {
   const base = "Paper Trail — Research, Translated";
