@@ -204,8 +204,9 @@ export function escapeXml(str) {
     .replace(/'/g, "&apos;");
 }
 
-export function rssChannelTitle(category, tag) {
-  const extra = category ? ` · ${escapeXml(category)}` : tag ? ` · ${escapeXml(tag)}` : "";
+export function rssChannelTitle(category, tag, author) {
+  const label = category || tag || author || "";
+  const extra = label ? ` · ${escapeXml(label)}` : "";
   return `Paper Trail — Research, Translated${extra}`;
 }
 

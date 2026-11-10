@@ -92,6 +92,19 @@ export function catalogueEmptyCopy(filtered: boolean, page: number, total: numbe
   return "No entries filed yet. Check back soon.";
 }
 
+/** Extra sentence when a byline or topic page shows only the latest slice. */
+export function catalogueSliceNote(shown: number, total: number): string {
+  if (shown > 0 && total > shown) return ` Showing the latest ${shown}.`;
+  return "";
+}
+
+/** RSS channel title. Category wins, then topic, then byline. */
+export function feedChannelTitle(filters: Pick<SearchFilters, "category" | "tag" | "author">): string {
+  const base = "Paper Trail — Research, Translated";
+  const label = filters.category || filters.tag || filters.author || "";
+  return label ? `${base} · ${label}` : base;
+}
+
 /** Mongo filter for published article search. */
 export function buildArticleMongoFilter(
   base: Filter<Record<string, unknown>>,
