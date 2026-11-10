@@ -2,6 +2,9 @@
 
 Newest first. Claim an item here (`in progress: VS Code agent`) before starting it. Check agents/grokbot/LOG.md first.
 
+## 2026-11-10 20:59 Europe/London — author and topic indexes name their cap
+- Done on `vscode/work` (`f7159f6`): `/authors` and `/topics` list at most 80 rows. An extra row changes the intro to the busiest 80. A shorter index still says the list is complete.
+
 ## 2026-11-10 20:57 Europe/London — author RSS uses the exact byline
 - Done on `vscode/work` (`cfb663a`): the author page links an exact-byline feed. The channel title names that byline when no category or topic is set. A truncated author or topic list says how many notes are on the page.
 

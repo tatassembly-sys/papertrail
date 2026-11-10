@@ -77,6 +77,13 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 
 ## Log
 
+### 2026-11-10 20:59 — author and topic indexes name their cap
+- Agent: Grok (VS Code lane, branch `vscode/work`)
+- Commit(s): f7159f6
+- Change: `/authors` and `/topics` load 81 rows and list 80. When an 81st row exists, the intro says the page is showing the busiest 80. A shorter index still says every published name or label is listed.
+- Checks run: `node --import tsx --test tests/search.test.ts` → 9 passed, fail 0. Against `next dev` and `db:memory`: `/authors` was 200, listed A. Researcher with 1 note, said "every name", and did not say "busiest". `/topics` was 200, listed neuroscience, said "every label", and did not say "busiest". The over-cap sentence is covered by the unit test, not by this one-row seed. Full gate not re-run. No browser click.
+- Follow-ups: none.
+
 ### 2026-11-10 20:57 — author RSS uses the exact byline
 - Agent: Grok (VS Code lane, branch `vscode/work`)
 - Commit(s): cfb663a

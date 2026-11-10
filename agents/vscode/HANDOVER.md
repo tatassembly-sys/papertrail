@@ -166,6 +166,13 @@ Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 - Risks: …
 ```
 
+### 2026-11-10 20:59 Europe/London — index cap
+- Done: author and topic indexes load one row past 80 and, when that row exists, say they are showing the busiest 80 (`f7159f6`).
+- Tests: search unit 9 passed. `next dev` + `db:memory`: `/authors` and `/topics` were 200 with the seeded name and topic, the complete-list sentence, and no "busiest" sentence. Full gate not re-run.
+- Commit(s) on vscode/work: `f7159f6`. PR: https://github.com/tatassembly-sys/papertrail/pull/8 labelled `vscode-agent`. Not merged.
+- Left: owner blockers in PROGRESS. Launch-checklist Quality boxes stay `[ ]`.
+- Risks: the over-cap sentence was not rendered against a database with more than 80 names.
+
 ### 2026-11-10 20:57 Europe/London — author feed
 - Done: author pages link RSS with `authorExact=1`. The feed title names the category, then the topic, then the byline. Author and topic pages say "Showing the latest N." only when the page is shorter than the total (`cfb663a`).
 - Tests: search unit 8 passed. Sandbox 545/545. `next dev` + `db:memory`: author page 200 with the exact feed href; topic page 200 with the seeded post; exact author feed 200 XML with the sleep item and without the draft; a byline containing `&` was escaped once and returned no items. Full gate not re-run.
