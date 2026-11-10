@@ -15,7 +15,7 @@ export interface SearchFilters {
   query?: string;
   category?: string;
   author?: string;
-  /** Match one full byline. Public search URLs stay substring matches. */
+  /** True when the search URL says authorExact=1 and an author is set. */
   authorExact?: boolean;
   institution?: string;
   tag?: string;
@@ -35,10 +35,12 @@ export function parseSearchParams(
   };
   const sort = one("sort");
   const source = one("source");
+  const author = one("author");
   return {
     query: one("q") || one("query"),
     category: one("category"),
-    author: one("author"),
+    author,
+    authorExact: Boolean(author) && one("authorExact") === "1",
     institution: one("institution"),
     tag: one("tag") || one("tags"),
     source:
@@ -60,6 +62,7 @@ export function buildSearchHref(
   if (filters.query) usp.set("q", filters.query);
   if (filters.category) usp.set("category", filters.category);
   if (filters.author) usp.set("author", filters.author);
+  if (filters.author && filters.authorExact) usp.set("authorExact", "1");
   if (filters.institution) usp.set("institution", filters.institution);
   if (filters.tag) usp.set("tag", filters.tag);
   if (filters.source) usp.set("source", filters.source);

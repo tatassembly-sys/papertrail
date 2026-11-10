@@ -1709,6 +1709,16 @@ test("search href keeps author", () => {
   includes(P.buildSearchHref("/", { author: "Smith" }), "author=Smith");
 });
 
+test("exact author href is explicit", () => {
+  const href = P.buildSearchHref("/", { author: "Ann Lee", authorExact: true });
+  includes(href, "authorExact=1");
+  includes(href, "author=Ann+Lee");
+  eq(P.buildSearchHref("/", { authorExact: true }), "/");
+  assert(P.parseSearchParams({ author: "Ann Lee", authorExact: "1" }).authorExact);
+  assert(!P.parseSearchParams({ authorExact: "1" }).authorExact);
+  assert(!P.parseSearchParams({ author: "Ann Lee" }).authorExact);
+});
+
 test("from/to count as active filters", () => {
   assert(P.hasActiveFilters({ from: "2024-01-01" }));
 });

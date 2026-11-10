@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   buildArticleMongoFilter,
+  buildSearchHref,
   catalogueEmptyCopy,
   cataloguePastEnd,
   parseSearchParams,
@@ -48,6 +49,20 @@ test("exact author match is one byline, search stays a substring", () => {
   assert.equal(exactAnd[0].authors?.$regex, "^a\\.\\*\\(b$");
   const page = readFileSync("app/authors/[slug]/page.tsx", "utf8");
   assert.match(page, /authorExact:\s*true/);
+  assert.match(page, /Open in search/);
+  const href = buildSearchHref("/", { author: "Ann Lee", authorExact: true });
+  assert.match(href, /author=Ann(?:\+|%20)Lee/);
+  assert.match(href, /authorExact=1/);
+  assert.equal(buildSearchHref("/", { authorExact: true }), "/");
+  const parsed = parseSearchParams({ author: "Ann Lee", authorExact: "1" });
+  assert.equal(parsed.author, "Ann Lee");
+  assert.equal(parsed.authorExact, true);
+  assert.equal(parseSearchParams({ authorExact: "1" }).authorExact, false);
+  assert.equal(parseSearchParams({ author: "Ann Lee", authorExact: "yes" }).authorExact, false);
+  const home = readFileSync("app/(home)/page.tsx", "utf8");
+  assert.match(home, /authorExact: filters\.authorExact \? "1"/);
+  const chips = readFileSync("components/ActiveFilters.tsx", "utf8");
+  assert.match(chips, /author: undefined, authorExact: undefined/);
 });
 
 test("catalogue empty copy covers a blank list, a later page, and a filter", () => {
