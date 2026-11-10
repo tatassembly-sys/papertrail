@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getPublishedArticles, resolveAuthorNameFromSlug } from "@/lib/articles";
 import ArticleCard from "@/components/ArticleCard";
 import { authorIsOnFile } from "@/lib/public-route";
-import { buildSearchHref } from "@/lib/search";
+import { buildSearchHref, catalogueSliceNote } from "@/lib/search";
 import { getSiteUrl } from "@/lib/site-url";
 import { jsonLdScript } from "@/lib/json-ld";
 
@@ -70,9 +70,14 @@ export default async function AuthorPage({ params }: PageProps) {
         >
           Open in search
         </Link>
-        {articles.length > 0 && total > articles.length
-          ? ` Showing the latest ${articles.length}.`
-          : ""}
+        {" · "}
+        <a
+          href={buildSearchHref("/feed.xml", { author: name, authorExact: true })}
+          className="text-redpen underline underline-offset-2"
+        >
+          RSS
+        </a>
+        {catalogueSliceNote(articles.length, total)}
       </p>
       {articles.length === 0 ? (
         <p className="mt-8 text-sm text-ink-soft">No published notes for this author yet.</p>

@@ -2239,6 +2239,15 @@ test("rss category is xml-escaped", () => {
   assert(!P.rssChannelTitle("</title><script>", null).includes("</title><script>"));
 });
 
+test("rss byline is used when category and tag are empty", () => {
+  eq(
+    P.rssChannelTitle(null, null, "Ann & Lee"),
+    "Paper Trail — Research, Translated · Ann &amp; Lee"
+  );
+  eq(P.rssChannelTitle("q-bio", null, "Ann Lee"), "Paper Trail — Research, Translated · q-bio");
+  eq(P.rssChannelTitle(null, "sleep", "Ann Lee"), "Paper Trail — Research, Translated · sleep");
+});
+
 test("rss tag quote escaped", () => {
   includes(P.escapeXml(`foo"bar`), "&quot;");
 });

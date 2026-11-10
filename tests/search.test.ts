@@ -6,6 +6,8 @@ import {
   buildSearchHref,
   catalogueEmptyCopy,
   cataloguePastEnd,
+  catalogueSliceNote,
+  feedChannelTitle,
   parseSearchParams,
 } from "../lib/search";
 
@@ -63,6 +65,29 @@ test("exact author match is one byline, search stays a substring", () => {
   assert.match(home, /authorExact: filters\.authorExact \? "1"/);
   const chips = readFileSync("components/ActiveFilters.tsx", "utf8");
   assert.match(chips, /author: undefined, authorExact: undefined/);
+});
+
+test("a byline or topic page names a truncated slice and the feed names the filter", () => {
+  assert.equal(catalogueSliceNote(16, 20), " Showing the latest 16.");
+  assert.equal(catalogueSliceNote(3, 3), "");
+  assert.equal(catalogueSliceNote(0, 4), "");
+  assert.equal(feedChannelTitle({}), "Paper Trail — Research, Translated");
+  assert.equal(
+    feedChannelTitle({ author: "Ann & Lee" }),
+    "Paper Trail — Research, Translated · Ann & Lee"
+  );
+  assert.equal(
+    feedChannelTitle({ category: "q-bio", author: "Ann Lee" }),
+    "Paper Trail — Research, Translated · q-bio"
+  );
+  assert.equal(feedChannelTitle({ tag: "sleep", author: "Ann Lee" }), "Paper Trail — Research, Translated · sleep");
+  const author = readFileSync("app/authors/[slug]/page.tsx", "utf8");
+  assert.match(author, /catalogueSliceNote\(articles\.length, total\)/);
+  assert.match(author, /buildSearchHref\("\/feed\.xml", \{ author: name, authorExact: true \}\)/);
+  const topic = readFileSync("app/topics/[tag]/page.tsx", "utf8");
+  assert.match(topic, /catalogueSliceNote\(articles\.length, total\)/);
+  const feed = readFileSync("app/feed/route.ts", "utf8");
+  assert.match(feed, /escapeXml\(feedChannelTitle\(filters\)\)/);
 });
 
 test("catalogue empty copy covers a blank list, a later page, and a filter", () => {
