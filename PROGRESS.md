@@ -10,6 +10,15 @@
 ---
 
 
+## Review 2026-11-16 11:55 Europe/London — vscode author-search and RSS fixes
+
+Reviewer: Grok Bot. Source: `vscode/work` commits `df95a1c`, `cfb663a`, `f7159f6` (10 Nov). Brought onto a fresh `grokbot/author-search-rss` branch from `main` so already-merged VS1–VS5 work was not re-applied.
+
+- **Kept:** exact-author search (`authorExact=1` is parsed and survives in links; ignored unless an author is set; clearing the author chip drops it), author RSS channel titles use the byline, topic/author pages note a truncated latest slice, public author/topic indexes cap at 80 and say so when more exist.
+- **Conflicts:** `lib/search.ts`, `tests/search.test.ts`, and the log docs conflicted if `vscode/work` was merged whole (that branch still contains the pre-squash VS1–VS5 history). Cherry-pick onto current `main` applied cleanly; main's existing exact-byline Mongo filter and catalogue copy were kept and extended.
+- **Dropped:** nothing from the three fixes. No open `vscode-agent` PR to close.
+- **Checks:** `npm ci` + `npm run lint` (no warnings or errors) + `npm run typecheck` + `npm test` (sandbox 545/545, unit 127/127) + `npm run test:integration` (24/24, in-memory Mongo) + `npm run build` — all exit 0.
+
 ## Review 2026-11-03 23:16 Europe/London — VS Code lane VS1–VS5
 
 Reviewer: Grok Bot. Source: `vscode/work` PR https://github.com/tatassembly-sys/papertrail/pull/8 (squash-merged as `486294c`).
@@ -86,6 +95,12 @@ Audited tip: `d1045eb` on `main`. Environment: Linux box, Node 22, clean `npm ci
 3. **Release truth on Vercel** — `/api/health` cannot report the running commit (Railway-only env), so nobody can prove which code is live; plus no error tracking to see failures.
 
 ## Log
+
+### 2026-11-16 11:55 — author search, RSS byline, index cap
+- Agent: Grok Bot (branch `grokbot/author-search-rss`; vscode commits df95a1c, cfb663a, f7159f6)
+- Change: exact-author search URLs, author RSS titles, and a public index cap of 80 with a truncated-slice note.
+- Checks run: lint, typecheck, `npm test` (545 sandbox + 127 unit), `test:integration` 24/24, `next build` — all pass.
+- Follow-ups: none for this work. Owner blockers unchanged.
 
 ### 2026-11-02 — author page matches one byline
 - Agent: Grok (VS Code lane, branch `vscode/work`)
