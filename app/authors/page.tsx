@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getPublishedAuthorCounts } from "@/lib/articles";
 import { slugifyLabel } from "@/lib/name-slug";
+import { PUBLIC_INDEX_CAP, visibleIndex } from "@/lib/search";
 
 export const metadata: Metadata = {
   title: "Authors",
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function AuthorsIndexPage() {
-  const authors = await getPublishedAuthorCounts(80).catch(() => []);
+  const loaded = await getPublishedAuthorCounts(PUBLIC_INDEX_CAP + 1).catch(() => []);
+  const { visible: authors, truncated } = visibleIndex(loaded, PUBLIC_INDEX_CAP);
 
   return (
     <article className="mx-auto max-w-2xl">
@@ -23,8 +25,9 @@ export default async function AuthorsIndexPage() {
         Authors
       </h1>
       <p className="mt-3 text-base leading-relaxed text-ink-soft">
-        Semantic Scholar-style author pages, but for the plain-language notes —
-        every name we&apos;ve printed, with the papers behind them.
+        {truncated
+          ? `Semantic Scholar-style author pages, but for the plain-language notes. Showing the ${PUBLIC_INDEX_CAP} busiest bylines.`
+          : "Semantic Scholar-style author pages, but for the plain-language notes — every name we've printed, with the papers behind them."}
       </p>
       {authors.length === 0 ? (
         <p className="mt-8 text-sm text-ink-soft">No authors indexed yet.</p>

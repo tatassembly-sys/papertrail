@@ -1709,6 +1709,16 @@ test("search href keeps author", () => {
   includes(P.buildSearchHref("/", { author: "Smith" }), "author=Smith");
 });
 
+test("exact author href is explicit", () => {
+  const href = P.buildSearchHref("/", { author: "Ann Lee", authorExact: true });
+  includes(href, "authorExact=1");
+  includes(href, "author=Ann+Lee");
+  eq(P.buildSearchHref("/", { authorExact: true }), "/");
+  assert(P.parseSearchParams({ author: "Ann Lee", authorExact: "1" }).authorExact);
+  assert(!P.parseSearchParams({ authorExact: "1" }).authorExact);
+  assert(!P.parseSearchParams({ author: "Ann Lee" }).authorExact);
+});
+
 test("from/to count as active filters", () => {
   assert(P.hasActiveFilters({ from: "2024-01-01" }));
 });
@@ -2227,6 +2237,15 @@ test("wrong newsletter token fails", () => {
 test("rss category is xml-escaped", () => {
   includes(P.rssChannelTitle("</title><script>", null), "&lt;/title&gt;");
   assert(!P.rssChannelTitle("</title><script>", null).includes("</title><script>"));
+});
+
+test("rss byline is used when category and tag are empty", () => {
+  eq(
+    P.rssChannelTitle(null, null, "Ann & Lee"),
+    "Paper Trail — Research, Translated · Ann &amp; Lee"
+  );
+  eq(P.rssChannelTitle("q-bio", null, "Ann Lee"), "Paper Trail — Research, Translated · q-bio");
+  eq(P.rssChannelTitle(null, "sleep", "Ann Lee"), "Paper Trail — Research, Translated · sleep");
 });
 
 test("rss tag quote escaped", () => {

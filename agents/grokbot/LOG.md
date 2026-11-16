@@ -2,6 +2,7 @@
 
 Newest first. Items marked `in progress: Grok Bot` are claimed; other agents skip them.
 
+- 2026-11-16 11:55 — review+merge — kept vscode author-search/RSS/index-cap fixes (df95a1c, cfb663a, f7159f6) on a fresh branch from main; cherry-pick applied cleanly. Gate: lint/typecheck/sandbox 545/unit 127/integration 24/build green. No open vscode PR to close.
 - 2026-11-03 23:16 — review+merge — verified vscode PR #8 (VS1–VS5): gate green, e2e 26/26 ×2; squash-merged → main `486294c`. Ticked VS1–VS5 in HANDOVER. No remaining agent-doable VS work; OWNER blockers stand.
 - 2026-10-27 08:20 — review (orchestrator, morning) — no lane activity overnight; FONTS-LOCAL merged (#6, 77ac5dc); account e2e + admin a11y reassigned to grokbot; vscode gets the font-request guard spec.
 - 2026-10-27 08:25 — done: FONTS-LOCAL — `next/font/google` → `next/font/local` (Fraunces 500–700, Inter 400–700, IBM Plex Mono 400–500 latin woff2 from @fontsource 5.3.0, OFL licences in `app/fonts/`), same CSS variables; build passes with proxy pointed at 127.0.0.1:9; fonts test asserts files + licences exist.

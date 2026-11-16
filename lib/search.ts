@@ -15,7 +15,7 @@ export interface SearchFilters {
   query?: string;
   category?: string;
   author?: string;
-  /** Match one full byline. Public search URLs stay substring matches. */
+  /** True when the search URL says authorExact=1 and an author is set. */
   authorExact?: boolean;
   institution?: string;
   tag?: string;
@@ -35,10 +35,12 @@ export function parseSearchParams(
   };
   const sort = one("sort");
   const source = one("source");
+  const author = one("author");
   return {
     query: one("q") || one("query"),
     category: one("category"),
-    author: one("author"),
+    author,
+    authorExact: Boolean(author) && one("authorExact") === "1",
     institution: one("institution"),
     tag: one("tag") || one("tags"),
     source:
@@ -60,6 +62,7 @@ export function buildSearchHref(
   if (filters.query) usp.set("q", filters.query);
   if (filters.category) usp.set("category", filters.category);
   if (filters.author) usp.set("author", filters.author);
+  if (filters.author && filters.authorExact) usp.set("authorExact", "1");
   if (filters.institution) usp.set("institution", filters.institution);
   if (filters.tag) usp.set("tag", filters.tag);
   if (filters.source) usp.set("source", filters.source);
@@ -87,6 +90,29 @@ export function catalogueEmptyCopy(filtered: boolean, page: number, total: numbe
   if (filtered) return "No entries match that search or category.";
   if (cataloguePastEnd(filtered, page, total)) return "No more entries.";
   return "No entries filed yet. Check back soon.";
+}
+
+/** Extra sentence when a byline or topic page shows only the latest slice. */
+export function catalogueSliceNote(shown: number, total: number): string {
+  if (shown > 0 && total > shown) return ` Showing the latest ${shown}.`;
+  return "";
+}
+
+/** How many bylines or topics the public index lists before it says the rest are omitted. */
+export const PUBLIC_INDEX_CAP = 80;
+
+/** Keep the first `cap` rows and say so when the query returned one extra. */
+export function visibleIndex<T>(rows: readonly T[], cap: number): { visible: T[]; truncated: boolean } {
+  if (cap < 1) return { visible: [], truncated: rows.length > 0 };
+  if (rows.length > cap) return { visible: rows.slice(0, cap), truncated: true };
+  return { visible: rows.slice(), truncated: false };
+}
+
+/** RSS channel title. Category wins, then topic, then byline. */
+export function feedChannelTitle(filters: Pick<SearchFilters, "category" | "tag" | "author">): string {
+  const base = "Paper Trail — Research, Translated";
+  const label = filters.category || filters.tag || filters.author || "";
+  return label ? `${base} · ${label}` : base;
 }
 
 /** Mongo filter for published article search. */

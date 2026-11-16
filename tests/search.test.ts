@@ -3,9 +3,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   buildArticleMongoFilter,
+  buildSearchHref,
   catalogueEmptyCopy,
   cataloguePastEnd,
+  catalogueSliceNote,
+  feedChannelTitle,
   parseSearchParams,
+  PUBLIC_INDEX_CAP,
+  visibleIndex,
 } from "../lib/search";
 
 type Range = { $gte?: Date; $lte?: Date };
@@ -48,6 +53,62 @@ test("exact author match is one byline, search stays a substring", () => {
   assert.equal(exactAnd[0].authors?.$regex, "^a\\.\\*\\(b$");
   const page = readFileSync("app/authors/[slug]/page.tsx", "utf8");
   assert.match(page, /authorExact:\s*true/);
+  assert.match(page, /Open in search/);
+  const href = buildSearchHref("/", { author: "Ann Lee", authorExact: true });
+  assert.match(href, /author=Ann(?:\+|%20)Lee/);
+  assert.match(href, /authorExact=1/);
+  assert.equal(buildSearchHref("/", { authorExact: true }), "/");
+  const parsed = parseSearchParams({ author: "Ann Lee", authorExact: "1" });
+  assert.equal(parsed.author, "Ann Lee");
+  assert.equal(parsed.authorExact, true);
+  assert.equal(parseSearchParams({ authorExact: "1" }).authorExact, false);
+  assert.equal(parseSearchParams({ author: "Ann Lee", authorExact: "yes" }).authorExact, false);
+  const home = readFileSync("app/(home)/page.tsx", "utf8");
+  assert.match(home, /authorExact: filters\.authorExact \? "1"/);
+  const chips = readFileSync("components/ActiveFilters.tsx", "utf8");
+  assert.match(chips, /author: undefined, authorExact: undefined/);
+});
+
+test("a byline or topic page names a truncated slice and the feed names the filter", () => {
+  assert.equal(catalogueSliceNote(16, 20), " Showing the latest 16.");
+  assert.equal(catalogueSliceNote(3, 3), "");
+  assert.equal(catalogueSliceNote(0, 4), "");
+  assert.equal(feedChannelTitle({}), "Paper Trail — Research, Translated");
+  assert.equal(
+    feedChannelTitle({ author: "Ann & Lee" }),
+    "Paper Trail — Research, Translated · Ann & Lee"
+  );
+  assert.equal(
+    feedChannelTitle({ category: "q-bio", author: "Ann Lee" }),
+    "Paper Trail — Research, Translated · q-bio"
+  );
+  assert.equal(feedChannelTitle({ tag: "sleep", author: "Ann Lee" }), "Paper Trail — Research, Translated · sleep");
+  const author = readFileSync("app/authors/[slug]/page.tsx", "utf8");
+  assert.match(author, /catalogueSliceNote\(articles\.length, total\)/);
+  assert.match(author, /buildSearchHref\("\/feed\.xml", \{ author: name, authorExact: true \}\)/);
+  const topic = readFileSync("app/topics/[tag]/page.tsx", "utf8");
+  assert.match(topic, /catalogueSliceNote\(articles\.length, total\)/);
+  const feed = readFileSync("app/feed/route.ts", "utf8");
+  assert.match(feed, /escapeXml\(feedChannelTitle\(filters\)\)/);
+});
+
+test("public indexes keep one cap and say when the rest is omitted", () => {
+  assert.equal(PUBLIC_INDEX_CAP, 80);
+  const exact = visibleIndex(["a", "b"], 2);
+  assert.deepEqual(exact.visible, ["a", "b"]);
+  assert.equal(exact.truncated, false);
+  const over = visibleIndex(["a", "b", "c"], 2);
+  assert.deepEqual(over.visible, ["a", "b"]);
+  assert.equal(over.truncated, true);
+  assert.deepEqual(visibleIndex(["a"], 0).visible, []);
+  const authors = readFileSync("app/authors/page.tsx", "utf8");
+  const topics = readFileSync("app/topics/page.tsx", "utf8");
+  for (const src of [authors, topics]) {
+    assert.match(src, /getPublished\w+\(PUBLIC_INDEX_CAP \+ 1\)/);
+    assert.match(src, /visibleIndex\(loaded, PUBLIC_INDEX_CAP\)/);
+  }
+  assert.match(authors, /Showing the \$\{PUBLIC_INDEX_CAP\} busiest bylines/);
+  assert.match(topics, /Showing the \$\{PUBLIC_INDEX_CAP\} busiest topics/);
 });
 
 test("catalogue empty copy covers a blank list, a later page, and a filter", () => {

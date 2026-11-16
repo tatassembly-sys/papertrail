@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublishedArticles, resolvePublishedTag } from "@/lib/articles";
 import { slugifyLabel } from "@/lib/name-slug";
+import { catalogueSliceNote } from "@/lib/search";
 import { topicIsOnFile } from "@/lib/public-route";
 import ArticleCard from "@/components/ArticleCard";
 import FollowTopic from "@/components/FollowTopic";
@@ -58,6 +59,7 @@ export default async function TopicPage({ params }: PageProps) {
         <a href={`/feed.xml?tag=${encodeURIComponent(label)}`} className="text-redpen underline underline-offset-2">
           RSS
         </a>
+        {catalogueSliceNote(articles.length, total)}
       </p>
       <FollowTopic topic={label} nextPath={`/topics/${encodeURIComponent(slugifyLabel(label))}`} />
       {articles.length === 0 ? (
