@@ -8,10 +8,16 @@ import { emptyStateHints } from "../../lib/search-hints";
 
 // next/headers cookies() only works inside a request. The integration script
 // passes --experimental-test-module-mocks so this stub is visible to the routes.
+// Other integration tests can plant a cookie via globalThis.__ptTestCookies.
+// When the jar is unset, get() stays undefined, matching a signed-out request.
 mock.module("next/headers", {
   namedExports: {
     cookies: async () => ({
-      get: () => undefined,
+      get: (name: string) => {
+        const jar = (globalThis as { __ptTestCookies?: Record<string, string> }).__ptTestCookies;
+        const value = jar?.[name];
+        return value === undefined ? undefined : { value };
+      },
     }),
   },
 });
