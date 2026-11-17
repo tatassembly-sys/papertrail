@@ -31,6 +31,10 @@ npm run dev
 hardening, see [`SETUP.md`](./SETUP.md).** That file has a numbered deployment
 checklist at the top; start there when you're ready to ship.
 
+Local checks: `npm test`, `npm run test:integration`, `npm run test:coverage`
+(line gate 70%), and `npm run test:e2e` against `npm run db:memory` plus
+`npm start`. The owner launch list is [`docs/launch-checklist.md`](./docs/launch-checklist.md).
+
 ## What's here
 
 - **Public site**: home feed with search + category filtering, article pages,
