@@ -14,7 +14,7 @@ Branch `vscode/next-tasks` (from `origin/main` `998a3b2`). Grok Bot's log only p
 - in progress: none.
 - not started: none of PX1–PX6. Owner-only items in NEXT_TASKS section 5 were not attempted.
 - Tests this save: `npm test` sandbox 545/545; unit 149/150 under parallel load because `ensure-indexes` took 2016ms (limit 2000ms). Re-run alone: 1 pass, exit 0. Integration 37/37 exit 0.
-- Not merged. Draft PR to `main` labelled `vscode-agent`.
+- Not merged. Draft PR https://github.com/tatassembly-sys/papertrail/pull/12 to `main`, label `vscode-agent`.
 
 ## 2026-11-02 Europe/London — author page matches one byline
 - Done on `vscode/work` (`b2d3b3d`): an author page uses an exact byline match. A search for `?author=` still matches a substring. Integration test: Ann Lee exact total 1, substring total 2.
