@@ -23,7 +23,7 @@
     "lighthouse": "lhci autorun"
   },
   "dependencies": {
-    "@sentry/nextjs": "^10.76.2",
+    "@sentry/nextjs": "^10.78.0",
     "bcryptjs": "^2.4.3",
     "jose": "^5.9.6",
     "mongodb": "^6.10.0",
@@ -54,6 +54,9 @@
   },
   "overrides": {
     "postcss": "$postcss",
-    "@mapbox/node-pre-gyp": "^2.0.3"
+    "@mapbox/node-pre-gyp": "^2.0.3",
+    "@sentry/bundler-plugins": {
+      "glob": "14.0.6"
+    }
   }
 }
