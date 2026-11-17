@@ -1,0 +1,4 @@
+{
+  "choices": [{ "message": { "content": "From the model" } }],
+  "model": "openrouter/free"
+}

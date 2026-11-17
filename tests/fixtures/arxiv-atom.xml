@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed>
+  <title>arXiv query</title>
+  <entry>
+    <title>Night signals and memory</title>
+    <summary>A short abstract about how sleep sorts the day.</summary>
+    <author>
+      <name>Ann Lee</name>
+      <arxiv:affiliation>Example Lab</arxiv:affiliation>
+    </author>
+    <primary_category term="q-bio.NC"/>
+  </entry>
+</feed>
