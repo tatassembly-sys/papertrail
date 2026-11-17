@@ -2,6 +2,7 @@
 
 Newest first. Items marked `in progress: Grok Bot` are claimed; other agents skip them.
 
+- 2026-11-17 12:20 — NEXT-TASKS — checked `main` (gate, coverage, audit, branches) and published `agents/vscode/NEXT_TASKS.md` (PX1–PX6) as the active VS Code brief; HANDOVER.md points to it; VS1–VS5 marked complete.
 - 2026-11-16 11:55 — review+merge — kept vscode author-search/RSS/index-cap fixes (df95a1c, cfb663a, f7159f6) on a fresh branch from main; cherry-pick applied cleanly. Gate: lint/typecheck/sandbox 545/unit 127/integration 24/build green. No open vscode PR to close.
 - 2026-11-03 23:16 — review+merge — verified vscode PR #8 (VS1–VS5): gate green, e2e 26/26 ×2; squash-merged → main `486294c`. Ticked VS1–VS5 in HANDOVER. No remaining agent-doable VS work; OWNER blockers stand.
 - 2026-10-27 08:20 — review (orchestrator, morning) — no lane activity overnight; FONTS-LOCAL merged (#6, 77ac5dc); account e2e + admin a11y reassigned to grokbot; vscode gets the font-request guard spec.

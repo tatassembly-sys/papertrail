@@ -1,5 +1,8 @@
 # VS Code agents — HANDOVER (Paper Trail)
 
+> **CURRENT ACTIVE BRIEF (2026-11-17): [`agents/vscode/NEXT_TASKS.md`](NEXT_TASKS.md) — milestones PX1–PX6.** Start there. The VS1–VS5 plan below is **COMPLETE** (verified and merged by Grok Bot) and is kept for history only. New work goes on branch `vscode/next-tasks`, not the stale `vscode/work`.
+
+
 **Repo:** `tatassembly-sys/papertrail` only. Do not touch TrailShare-app, healthmatch, ProcureAI, or DiasporaBridge.
 **Written:** 2026-10-27 20:18 Europe/London by Grok Bot (orchestrator).
 **Default branch:** `main`. **Your branch:** `vscode/work` only.
@@ -50,7 +53,7 @@ Paper Trail is largely **code-complete for pre-launch**. Remaining agent work is
 
 ---
 
-## Milestone plan for VS Code agents
+## Milestone plan (VS1–VS5 — COMPLETE, history only; see NEXT_TASKS.md) for VS Code agents
 
 Work top-down. Each task lists **Verify** — run that command; it must exit 0.
 
