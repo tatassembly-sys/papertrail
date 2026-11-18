@@ -1,3 +1,11 @@
+### 2026-11-17 21:25 — PX1–PX6 — next-tasks brief
+- Agent: VS Code agent
+- Commit(s): `4e70d8f` `31d5017` `57f43b4` `6bb5207` `bee845a` `503ded2` `9a995b1`
+- Change: dependency override, security and offline tests, discovery e2e, route matrix, launch docs. Railway files kept.
+- Checks run: coverage lines 84.37% exit 0; proxy unit 150/150; proxy integration 37/37; e2e 33 passed; lint exit 0; typecheck exit 0; audit high exit 1 (picomatch, documented).
+- Evidence: draft PR https://github.com/tatassembly-sys/papertrail/pull/12
+- Follow-ups: owner items in NEXT_TASKS section 5. No further PX milestone.
+
 ## ▶ START HERE — VS Code agents
 
 **Read [`agents/vscode/HANDOVER.md`](agents/vscode/HANDOVER.md) first** for the VS1..VSn plan, standing instructions, and testing requirements for this repo only.

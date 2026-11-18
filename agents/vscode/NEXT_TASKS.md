@@ -301,3 +301,11 @@ node -e "const s=require('./package.json').scripts;const t=require('fs').readFil
 - Open issues / risks: …
 - PR: <url> (label vscode-agent, not merged)
 ```
+
+### 2026-11-17 21:25 Europe/London — after PX1–PX6
+- Done: PX1 glob/minimatch cleared, picomatch high accepted; PX2 security tests and 70% line gate; PX3 offline clients and queue; PX4 discovery e2e; PX5 route matrix 46/46; PX6 launch docs and Railway runbook (files not deleted).
+- Commits on vscode/next-tasks: `4e70d8f`, `31d5017`, `57f43b4`, `6bb5207`, `bee845a`, `503ded2`, `9a995b1`.
+- Tests: `npm run test:coverage` → lines 84.37% (7230/8569), exit 0; `HTTPS_PROXY=http://127.0.0.1:9` unit 150/150 and integration 37/37; discovery spec 7 passed twice; `E2E_REQUIRE=1 npm run test:e2e` → 33 passed; sandbox 545/545; `npm run lint` exit 0; `npm run typecheck` exit 0; `npm audit --omit=dev --audit-level=high` → exit 1, 5 high picomatch.
+- Blocked (owner): Atlas, Vercel env, cron-job.org, M0.8 smoke, branch protection, copying proposed CI, secret rotation, Resend, DNS, Stripe, Sentry/uptime, legal, v1.0.0. M0.9 deletion stays blocked.
+- Open issues / risks: picomatch 4.0.7 has no patched release (revisit 2026-12-17). `ensure-indexes` must refuse in under 2000ms; one loaded run took 2016ms and passed on a solo re-run. `npm ci` hung with no child process during this save, so the combined gate was run as separate commands on the already-installed tree.
+- PR: https://github.com/tatassembly-sys/papertrail/pull/12 (draft, label vscode-agent, not merged)

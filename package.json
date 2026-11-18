@@ -17,13 +17,13 @@
     "test:unit": "node --import tsx --test tests/*.test.ts",
     "test:e2e": "playwright test",
     "smoke:prod": "node scripts/smoke-prod.mjs",
-    "test:coverage": "c8 --all --include=lib/** --check-coverage --lines 60 --reporter=text-summary --reporter=text node --experimental-test-module-mocks --test-concurrency=1 --import tsx --test tests/*.test.ts tests/integration/*.test.ts",
-    "test:integration": "node --experimental-test-module-mocks --test-concurrency=1 --import tsx --test tests/integration/*.test.ts",
+    "test:coverage": "c8 --all --include=lib/** --check-coverage --lines 70 --reporter=text-summary --reporter=text node --experimental-test-module-mocks --test-concurrency=1 --import tsx --import ./tests/integration/preload.mjs --test tests/*.test.ts tests/integration/*.test.ts",
+    "test:integration": "node --experimental-test-module-mocks --test-concurrency=1 --import tsx --import ./tests/integration/preload.mjs --test tests/integration/*.test.ts",
     "db:memory": "node scripts/memory-db.mjs",
     "lighthouse": "lhci autorun"
   },
   "dependencies": {
-    "@sentry/nextjs": "^10.76.2",
+    "@sentry/nextjs": "^10.78.0",
     "bcryptjs": "^2.4.3",
     "jose": "^5.9.6",
     "mongodb": "^6.10.0",
@@ -54,6 +54,9 @@
   },
   "overrides": {
     "postcss": "$postcss",
-    "@mapbox/node-pre-gyp": "^2.0.3"
+    "@mapbox/node-pre-gyp": "^2.0.3",
+    "@sentry/bundler-plugins": {
+      "glob": "14.0.6"
+    }
   }
 }

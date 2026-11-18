@@ -10,6 +10,20 @@
 
 ## [Unreleased]
 
+### Added
+- Offline tests for PubMed, arXiv extract, social clients, xAI, OpenRouter health, article chat, and the fetch queue (PX3).
+- RSS feed test for escaped titles, RFC 822 dates, and exact-author bylines (PX4).
+- Playwright discovery journey for exact-author search, authors, topics, feeds, the missing-post 404, and keyboard focus (PX4).
+- `tests/route-matrix.test.ts` checks every API route against `docs/security/route-matrix.md` (PX5).
+- `docs/runbooks/railway-removal.md` for M0.9. Railway files stay until the owner confirms Vercel and Atlas (PX6).
+
+### Changed
+- `@sentry/nextjs` 10.78.0 and a scoped `glob` 14.0.6 override clear the production glob and minimatch advisories (PX1).
+- `npm run test:coverage` fails under 70% of `lib/` lines (PX2). Measured lines 84.37% (7230/8569), branches 76.62%, functions 88.76%.
+
+### Security
+- Picomatch `<=4.0.7` (GHSA-fc5q-39xc-vjpf) stays in the Sentry bundler plugin. No patched release exists (`npm view picomatch version` is 4.0.7). Recorded in `SECURITY.md` with a revisit date of 2026-12-17. `npm audit --omit=dev --audit-level=high` still exits 1 for that chain.
+
 ## [v1.0.0] — release candidate (owner sets the date and pushes the tag at launch, M10.5/M10.6)
 
 ### Added

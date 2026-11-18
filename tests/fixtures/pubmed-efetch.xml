@@ -1,0 +1,16 @@
+<PubmedArticleSet>
+<PubmedArticle>
+  <PMID Version="1">12345</PMID>
+  <ArticleTitle>Sleep &amp; <i>brains</i></ArticleTitle>
+  <Abstract><AbstractText>Clears waste at night.</AbstractText></Abstract>
+  <AuthorList>
+    <Author><LastName>Lee</LastName><ForeName>Ann</ForeName></Author>
+    <Author><CollectiveName>Example Group</CollectiveName></Author>
+    <Author><LastName>Ng</LastName><Initials>B</Initials></Author>
+  </AuthorList>
+</PubmedArticle>
+<PubmedArticle>
+  <PMID>999</PMID>
+  <ArticleTitle>Missing abstract</ArticleTitle>
+</PubmedArticle>
+</PubmedArticleSet>

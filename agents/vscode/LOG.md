@@ -2,6 +2,20 @@
 
 Newest first. Claim an item here (`in progress: VS Code agent`) before starting it. Check agents/grokbot/LOG.md first.
 
+## 2026-11-17 21:25 Europe/London — NEXT_TASKS PX1–PX6
+Branch `vscode/next-tasks` (from `origin/main` `998a3b2`). Grok Bot's log only published the brief; it is not doing PX1–PX6.
+
+- done: PX1 dependency advisories — `4e70d8f`. `@sentry/nextjs` 10.78.0 and a scoped `glob` 14.0.6 override. `npm ls` shows glob 14.0.6 and minimatch 11.0.9. Picomatch 4.0.7 remains (5 high). `npm audit --omit=dev --audit-level=high` exits 1. Recorded in `SECURITY.md`, revisit 2026-12-17. No `npm audit fix --force`.
+- done: PX2 security-lib tests — `31d5017`. `npm run test:coverage` exit 0, lines 84.37% (7230/8569), branches 76.62%, functions 88.76%, threshold `--lines 70`.
+- done: PX3 offline clients and queue — `57f43b4`. With `HTTPS_PROXY=http://127.0.0.1:9`: unit 150 pass / 0 fail; integration 37 pass / 0 fail.
+- done: PX4 discovery journeys — `6bb5207`. `E2E_REQUIRE=1 npx playwright test e2e/discovery.spec.ts` passed twice (7 passed, 7 passed). Full `E2E_REQUIRE=1 npm run test:e2e` 33 passed.
+- done: PX5 route matrix — `bee845a`. `route-matrix routes=46 rows=46`.
+- done: PX6 launch docs — `503ded2`. Checklist boxes stay `[ ]`. `railway.toml` and `.railwayignore` were not deleted. STATUS baseline 17 November 2026: sandbox 545/545, unit 150/150, integration 37/37.
+- in progress: none.
+- not started: none of PX1–PX6. Owner-only items in NEXT_TASKS section 5 were not attempted.
+- Tests this save: `npm test` sandbox 545/545; unit 149/150 under parallel load because `ensure-indexes` took 2016ms (limit 2000ms). Re-run alone: 1 pass, exit 0. Integration 37/37 exit 0.
+- Not merged. Draft PR https://github.com/tatassembly-sys/papertrail/pull/12 to `main`, label `vscode-agent`.
+
 ## 2026-11-02 Europe/London — author page matches one byline
 - Done on `vscode/work` (`b2d3b3d`): an author page uses an exact byline match. A search for `?author=` still matches a substring. Integration test: Ann Lee exact total 1, substring total 2.
 

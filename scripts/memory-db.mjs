@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Local throwaway MongoDB for e2e/lighthouse runs (the box blocks 27017; this
-// picks a random port). Prints MONGODB_URI, seeds one published post and one
-// draft (so admin bulk-select is visible), and stays up until Ctrl+C.
+// picks a random port). Prints MONGODB_URI, seeds three published posts (two
+// bylines that share a prefix, for exact-author search) and one draft, and
+// stays up until Ctrl+C.
 // Never point this at a real database.
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongoClient } from "mongodb";
@@ -28,6 +29,38 @@ await db.collection("articles").insertOne({
   source_url: "https://arxiv.org/abs/0000.00000",
   published_at: now,
   created_at: now,
+});
+await db.collection("articles").insertOne({
+  title: "Night signals from the cortex",
+  headline: "A second published note, filed under Ann Lee only.",
+  slug: "night-signals-from-the-cortex",
+  status: "published",
+  category: "q-bio",
+  tags: ["neuroscience"],
+  keywords: ["signals"],
+  authors: ["Ann Lee"],
+  plain_explanation: "Sample body for exact-author search.",
+  caveats: "Sample only.",
+  source: "arxiv",
+  source_url: "https://example.test/ann-lee",
+  published_at: new Date(now.getTime() - 60_000),
+  created_at: new Date(now.getTime() - 60_000),
+});
+await db.collection("articles").insertOne({
+  title: "Smith catalogue of local glaciers",
+  headline: "A longer byline that must not match an exact Ann Lee search.",
+  slug: "smith-catalogue-of-local-glaciers",
+  status: "published",
+  category: "physics",
+  tags: ["climate"],
+  keywords: ["glaciers"],
+  authors: ["Ann Lee Smith"],
+  plain_explanation: "Sample body for the longer byline.",
+  caveats: "Sample only.",
+  source: "arxiv",
+  source_url: "https://example.test/ann-lee-smith",
+  published_at: new Date(now.getTime() - 120_000),
+  created_at: new Date(now.getTime() - 120_000),
 });
 await db.collection("articles").insertOne({
   title: "Draft note on local glaciers",

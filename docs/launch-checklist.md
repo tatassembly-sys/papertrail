@@ -7,7 +7,7 @@ Owner-only items are marked `[OWNER]`.
 ## Code and CI
 - [ ] Gate green on the release commit — `npm ci && npm run lint && npm run typecheck && npm test && npm run build`
 - [ ] Integration tests green — `npm run test:integration`
-- [ ] Coverage recorded (target ≥60% of `lib/`) — `npm run test:coverage`
+- [ ] Coverage recorded (threshold 70% of `lib/`; PX2 target is ≥75% lines) — `npm run test:coverage`
 - [ ] No high/critical prod advisories — `npm audit --omit=dev --audit-level=high` exits 0
 - [ ] `[OWNER]` CI workflow copied from `docs/ci/proposed-ci.yml` and green — `gh run list -L 5`
 - [ ] `[OWNER]` Branch protection on `main` requires `check` (M1.4) — GitHub settings screenshot
@@ -45,6 +45,12 @@ Owner-only items are marked `[OWNER]`.
 - [ ] No Google font requests; Fraunces and Inter load — `npx playwright test e2e/fonts.spec.ts` (VS3)
 - [ ] Offline font build — `HTTPS_PROXY=http://127.0.0.1:9 npm run build` (VS3)
 - [ ] Empty-content smoke — `npx playwright test e2e/smoke.spec.ts` (VS3)
+- [ ] Security-lib tests and the 70% line gate — `npm run test:coverage` (PX2)
+- [ ] Offline PubMed, paper extract, social, xAI, chat, and queue tests — `npm run test:unit` and `npm run test:integration` (PX3)
+- [ ] Those suites still pass with `HTTPS_PROXY=http://127.0.0.1:9` — `npm run test:unit` then `npm run test:integration` (PX3)
+- [ ] Discovery journey twice on `next start` — `npx playwright test e2e/discovery.spec.ts` with `E2E_REQUIRE=1` (PX4)
+- [ ] Full browser suite says passed — `npm run test:e2e` with `E2E_REQUIRE=1` (PX4)
+- [ ] API route matrix matches `app/api` — `npm run test:unit` (PX5)
 
 ## Legal, payments, discovery
 - [ ] `[OWNER]` Legal review of privacy/terms/cookies; ICO decision; business details in footer (M5.7, M10.5)

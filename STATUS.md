@@ -1,6 +1,6 @@
 # Paper Trail — status
 
-> **Current as of 20 October 2026.** Plan: [`MILESTONES.md`](MILESTONES.md) · Agent manual: [`AGENTS.md`](AGENTS.md) · Log & baseline: [`PROGRESS.md`](PROGRESS.md).
+> **Current as of 17 November 2026.** Plan: [`MILESTONES.md`](MILESTONES.md) · Agent manual: [`AGENTS.md`](AGENTS.md) · Log & baseline: [`PROGRESS.md`](PROGRESS.md).
 > Production: **down / being moved off Railway** (spending cap). Target: Vercel Hobby (Next.js, region `lhr1`) + MongoDB Atlas M0 (EU region) + cron-job.org for frequent cron ticks.
 > Market decision: **NO-GO until M10 launch checklist passes.**
 > Older sections below are history; where they mention Railway URLs or MR0–MR5, the new M0–M10 plan supersedes them.
@@ -19,6 +19,9 @@
 | M8 | Performance, accessibility and SEO | open |
 | M9 | UX polish and content operations | open |
 | M10 | Launch checklist and go-live | open |
+
+## Baseline (17 November 2026, `vscode/next-tasks`)
+Sandbox 545/545 · unit 150/150 · integration 37/37 · coverage lines 84.37% (7230/8569), branches 76.62%, functions 88.76% (`npm run test:coverage` threshold 70) · Playwright 33/33 with `E2E_REQUIRE=1` · `npm audit --omit=dev --audit-level=high` exits 1 (5 high picomatch via `@sentry/nextjs`, accepted in `SECURITY.md` until 2026-12-17). The 20 October baseline below is history.
 
 ## Baseline (20 October 2026)
 Install ✅ · typecheck ✅ · tests ✅ (520 sandbox + 34 unit) · build ✅ · lint = typecheck alias (no ESLint).
