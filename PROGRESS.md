@@ -18,6 +18,18 @@
 ---
 
 
+## Review 2026-11-18 00:45 Europe/London — VS Code next tasks PX1–PX6 (PR #12)
+
+Reviewer: Grok Bot. Branch `vscode/next-tasks` / https://github.com/tatassembly-sys/papertrail/pull/12, squash-merged → `main` `f72b175`.
+
+- **PX1 done:** `@sentry/nextjs` 10.78.0 plus a scoped `glob` override. `npm audit --omit=dev` went from 9 (4 moderate, 5 high) on old `main` to 5 high. All 5 are picomatch GHSA-fc5q-39xc-vjpf, which has no patched release (latest 4.0.7). They are documented in `SECURITY.md` with a revisit date of 2026-12-17. `--audit-level=high` still exits 1 for that reason only.
+- **PX2/PX3 done:** the tests are real, not placeholders. They use scripted DNS (`tests/integration/preload.mjs`), stubbed fetch, and fixtures. `npm run test:coverage` gives 187 pass and lines 84.38% (7231/8569), against a gate raised from 60 to 70. Every listed module is ≥ 92% lines.
+- **PX4 done:** `e2e/discovery.spec.ts` gave 7/7 ×3 and the full `E2E_REQUIRE=1 npm run test:e2e` gave 33/33 on a warm `next start` (port 3000, in-memory Mongo). On a freshly started server, the first discovery run can fail once (2 of 2 cold starts here). Pages built without a DB serve stale ISR content first. Warm runs are stable.
+- **PX5 done:** `tests/route-matrix.test.ts` fails when a matrix row is deleted (checked, then reverted).
+- **PX6 done:** the launch-checklist script-name check prints `ok`. The Railway runbook is written and no files are deleted.
+- **Gate (box, Node 22):** `npm ci`, lint (no warnings), typecheck, `npm test` (sandbox 545/545 + unit), `test:integration` 37/37, `test:coverage` and `build` all exit 0. GitHub CI `check` and Vercel preview pass.
+- **Left (owner):** picomatch advisory (wait for upstream), plus every section 5 item: Atlas, Vercel env, cron-job.org, branch protection/CI copy, secret rotation, Resend/DNS, Stripe, Sentry/uptime, legal, v1.0.0.
+
 ## Review 2026-11-16 11:55 Europe/London — vscode author-search and RSS fixes
 
 Reviewer: Grok Bot. Source: `vscode/work` commits `df95a1c`, `cfb663a`, `f7159f6` (10 Nov). Brought onto a fresh `grokbot/author-search-rss` branch from `main` so already-merged VS1–VS5 work was not re-applied.

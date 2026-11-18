@@ -2,6 +2,7 @@
 
 Newest first. Items marked `in progress: Grok Bot` are claimed; other agents skip them.
 
+- 2026-11-18 00:45 — review+merge — vscode #12 (PX1–PX6) verified milestone by milestone: coverage 84.38% (gate 70), integration 37/37, e2e 33/33 + discovery 7/7 ×3, route-matrix mutation check fails as expected, docs script check ok. Picomatch high (no upstream fix) documented. Squash-merged → main `f72b175`.
 - 2026-11-17 12:20 — NEXT-TASKS — checked `main` (gate, coverage, audit, branches) and published `agents/vscode/NEXT_TASKS.md` (PX1–PX6) as the active VS Code brief; HANDOVER.md points to it; VS1–VS5 marked complete.
 - 2026-11-16 11:55 — review+merge — kept vscode author-search/RSS/index-cap fixes (df95a1c, cfb663a, f7159f6) on a fresh branch from main; cherry-pick applied cleanly. Gate: lint/typecheck/sandbox 545/unit 127/integration 24/build green. No open vscode PR to close.
 - 2026-11-03 23:16 — review+merge — verified vscode PR #8 (VS1–VS5): gate green, e2e 26/26 ×2; squash-merged → main `486294c`. Ticked VS1–VS5 in HANDOVER. No remaining agent-doable VS work; OWNER blockers stand.
