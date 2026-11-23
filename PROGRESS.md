@@ -1,3 +1,12 @@
+### 2026-11-23 02:31 — Grok Bot local work (branch `grokbot/local-next-2026-11-23`, not pushed)
+- Agent: Grok Bot
+- Commit(s): `62c6b4a` `e3c10a2` `3004074`
+- Change: next/eslint-config-next 15.5.29 (3 moderate Next advisories); ISR index pages no longer cache an empty page when the DB load fails (`lib/isr-fallback.ts`); dropped `app/(home)/loading.tsx`, which made Next 15.5 silently drop same-page search-param navigations (filter chip clear, "Latest entries" from `?page=N`).
+- Root cause of the "first-run discovery e2e flake": a DB-less build prerendered `/authors` as "No authors indexed yet" and served it as a fresh ISR HIT for 5 minutes; plus the loading.tsx navigation drop.
+- Checks run: lint 0; typecheck 0; sandbox 545/545; unit 154/154; integration 37/37; coverage lines 84.44%; build 0; `npm audit --omit=dev` 0 vulnerabilities; `E2E_REQUIRE=1 npm run test:e2e` 34/34 ×3, each on a freshly started `next start` + in-memory Mongo.
+- Picomatch: GHSA-fc5q-39xc-vjpf was withdrawn on 2026-11-18; no longer reported. The 2026-12-17 revisit is not needed.
+- Follow-ups: needs Henry's approval to push/PR. Full dev-tool audit still lists @lhci/cli, c8 and @tailwindcss/typography chains (dev only, semver-major fixes).
+
 ### 2026-11-17 21:25 — PX1–PX6 — next-tasks brief
 - Agent: VS Code agent
 - Commit(s): `4e70d8f` `31d5017` `57f43b4` `6bb5207` `bee845a` `503ded2` `9a995b1`
