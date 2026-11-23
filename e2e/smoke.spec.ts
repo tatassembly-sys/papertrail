@@ -134,3 +134,18 @@ test("admin login rejects a bad password", async ({ page }) => {
   await expect(page).not.toHaveURL(/\/admin/);
   await expect(page.getByRole("button", { name: "Sign in" })).toBeEnabled();
 });
+
+// Regression: with app/(home)/loading.tsx, Next 15.5 sometimes dropped a
+// same-page search-param navigation (URL and content stayed on ?page=99).
+test("clearing home search params navigates every time", async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.goto("/");
+  test.skip((await page.locator('a[href^="/posts/"]').count()) === 0, "needs a seeded catalogue");
+  for (let i = 0; i < 8; i++) {
+    await page.goto("/?page=99");
+    await expect(page.getByText("No more entries.")).toBeVisible();
+    await page.getByRole("link", { name: "Latest entries →" }).click();
+    await expect(page, `attempt ${i + 1}`).not.toHaveURL(/[?&]page=/);
+    await expect(page.locator('a[href^="/posts/"]').first()).toBeVisible();
+  }
+});

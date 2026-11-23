@@ -29,7 +29,9 @@ test("a missing published note probes as 404", () => {
 test("post route has no loading shell that would lock HTTP 200", () => {
   assert.equal(existsSync("app/posts/[slug]/loading.tsx"), false);
   assert.equal(existsSync("app/loading.tsx"), false);
-  assert.equal(existsSync("app/(home)/loading.tsx"), true);
+  // (home) has no loading.tsx either: it made Next drop same-page search-param
+  // navigations (see tests/public-states.test.ts and e2e/smoke.spec.ts).
+  assert.equal(existsSync("app/(home)/loading.tsx"), false);
   assert.equal(existsSync("app/(home)/page.tsx"), true);
 });
 
