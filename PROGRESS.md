@@ -1,3 +1,11 @@
+### 2026-11-23 03:20 — Grok Bot local work (branch `grokbot/local-next-2026-11-23`, not pushed)
+- Agent: Grok Bot
+- Commit(s): `5c15873`
+- Change: `lib/user-export.ts` fetched each section with a fixed `.limit()` (collections 200, highlights 500, article chats 200, submissions 200, billing inquiries 50) and returned the result as if complete. Chats and submissions have no per-user cap, so a heavy reader's subject access export was silently short. Now each section is read up to `EXPORT_ROW_CEILING` (10,000); if a section exceeds it the export is cut there and says so (`complete: false`, `truncated: [...]`). Export shape is otherwise unchanged (two new top-level keys).
+- Tests: `tests/integration/user-export.int.test.ts` (in-memory Mongo: 250 chats, 210 submissions, 60 billing inquiries all exported; other users' rows excluded; ceiling path flagged) — fails on the old code (200 vs 250); `tests/account-export.test.ts` +2.
+- Checks before → after (offline; no npm ci/audit): lint 0/0; typecheck 0/0; sandbox 545/545 both; unit 154 → 156; integration 37 → 39; coverage lines 84.44% → 85.33%; build 0/0. E2E not re-run (needs a running server + DB; no UI change).
+- Follow-ups: needs Henry's approval to push/PR.
+
 ### 2026-11-23 02:31 — Grok Bot local work (branch `grokbot/local-next-2026-11-23`, not pushed)
 - Agent: Grok Bot
 - Commit(s): `62c6b4a` `e3c10a2` `3004074`
