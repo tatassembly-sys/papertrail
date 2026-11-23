@@ -17,6 +17,21 @@ export interface NewsletterExportSource {
   consent_source?: string | null;
 }
 
+/**
+ * Art. 15 exports return every row a reader owns. This ceiling only guards
+ * against a runaway document count; hitting it is reported in `truncated`
+ * (and `complete: false`), never dropped silently.
+ */
+export const EXPORT_ROW_CEILING = 10_000;
+
+/** Fetch with one extra row so an export that hits the ceiling can say so. */
+async function capped<T>(name: string, rows: Promise<T[]>, truncated: string[]): Promise<T[]> {
+  const all = await rows;
+  if (all.length <= EXPORT_ROW_CEILING) return all;
+  truncated.push(name);
+  return all.slice(0, EXPORT_ROW_CEILING);
+}
+
 function iso(value: Date | null | undefined): string | null {
   if (!value) return null;
   return value instanceof Date ? value.toISOString() : null;
@@ -32,10 +47,15 @@ export function buildUserExport(input: {
   submissions: SubmissionDoc[];
   newsletter: NewsletterExportSource | null;
   billingInquiries: BillingInquiryDoc[];
+  /** Sections cut at EXPORT_ROW_CEILING. */
+  truncated?: string[];
 }) {
   const user = input.user;
+  const truncated = [...(input.truncated || [])];
   return {
     exported_at: input.exportedAt.toISOString(),
+    complete: truncated.length === 0,
+    truncated,
     account: {
       id: user._id.toString(),
       email: user.email,
@@ -132,12 +152,30 @@ export async function exportUserData(userId: string) {
   if (!user || user._id.toString() !== userId) return null;
 
   const db = await getDb();
+  const limit = EXPORT_ROW_CEILING + 1;
+  const truncated: string[] = [];
   const [collections, highlights, chats, submissions, newsletter, billingInquiries] =
     await Promise.all([
-      db.collection<CollectionDoc>("collections").find({ user_id: userId }).limit(200).toArray(),
-      db.collection<HighlightDoc>("highlights").find({ user_id: userId }).limit(500).toArray(),
-      db.collection<ChatThreadDoc>("article_chats").find({ user_id: userId }).limit(200).toArray(),
-      db.collection<SubmissionDoc>("submissions").find({ user_id: userId }).limit(200).toArray(),
+      capped(
+        "collections",
+        db.collection<CollectionDoc>("collections").find({ user_id: userId }).limit(limit).toArray(),
+        truncated
+      ),
+      capped(
+        "highlights",
+        db.collection<HighlightDoc>("highlights").find({ user_id: userId }).limit(limit).toArray(),
+        truncated
+      ),
+      capped(
+        "chats",
+        db.collection<ChatThreadDoc>("article_chats").find({ user_id: userId }).limit(limit).toArray(),
+        truncated
+      ),
+      capped(
+        "submissions",
+        db.collection<SubmissionDoc>("submissions").find({ user_id: userId }).limit(limit).toArray(),
+        truncated
+      ),
       db.collection<NewsletterExportSource>("newsletter_subscribers").findOne(
         { email: user.email },
         {
@@ -152,11 +190,11 @@ export async function exportUserData(userId: string) {
           },
         }
       ),
-      db
-        .collection<BillingInquiryDoc>("billing_inquiries")
-        .find({ email: user.email })
-        .limit(50)
-        .toArray(),
+      capped(
+        "billing_inquiries",
+        db.collection<BillingInquiryDoc>("billing_inquiries").find({ email: user.email }).limit(limit).toArray(),
+        truncated
+      ),
     ]);
 
   return buildUserExport({
@@ -168,5 +206,6 @@ export async function exportUserData(userId: string) {
     submissions,
     newsletter,
     billingInquiries,
+    truncated: truncated.sort(),
   });
 }
