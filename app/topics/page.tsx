@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getPublishedTagCounts } from "@/lib/articles";
 import { slugifyLabel } from "@/lib/name-slug";
 import { PUBLIC_INDEX_CAP, visibleIndex } from "@/lib/search";
+import { loadForIsr } from "@/lib/isr-fallback";
 
 export const metadata: Metadata = {
   title: "Topics",
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function TopicsIndexPage() {
-  const loaded = await getPublishedTagCounts(PUBLIC_INDEX_CAP + 1).catch(() => []);
+  const loaded = await loadForIsr(() => getPublishedTagCounts(PUBLIC_INDEX_CAP + 1));
   const { visible: tags, truncated } = visibleIndex(loaded, PUBLIC_INDEX_CAP);
 
   return (

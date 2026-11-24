@@ -86,6 +86,33 @@ test("export JSON omits secrets and other people's rows", () => {
   assert.equal(exported.newsletter?.consent_source, "double-opt-in");
   assert.equal(JSON.stringify(exported).includes("hashed-secret"), false);
   assert.equal(JSON.stringify(exported).includes("Theirs"), false);
+  assert.equal(exported.complete, true);
+  assert.deepEqual(exported.truncated, []);
+});
+
+test("export reports truncated sections instead of dropping rows silently", () => {
+  const user = { _id: new ObjectId(), email: "reader@example.com", name: "Ada" } as UserDoc;
+  const exported = buildUserExport({
+    exportedAt: new Date("2026-11-23T00:00:00.000Z"),
+    user,
+    collections: [],
+    highlights: [],
+    chats: [],
+    submissions: [],
+    newsletter: null,
+    billingInquiries: [],
+    truncated: ["highlights"],
+  });
+  assert.equal(exported.complete, false);
+  assert.deepEqual(exported.truncated, ["highlights"]);
+});
+
+test("export has no silent per-section caps below the ceiling", () => {
+  const src = readFileSync("lib/user-export.ts", "utf8");
+  for (const cap of [".limit(50)", ".limit(200)", ".limit(500)"]) {
+    assert.equal(src.includes(cap), false, cap);
+  }
+  assert.match(src, /EXPORT_ROW_CEILING = 10_000/);
 });
 
 test("export and deletion queries stay filtered to the signed-in user", () => {
