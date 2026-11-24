@@ -1,6 +1,6 @@
 # VS Code agents — HANDOVER (Paper Trail)
 
-> **CURRENT ACTIVE BRIEF (2026-11-17): [`agents/vscode/NEXT_TASKS.md`](NEXT_TASKS.md) — milestones PX1–PX6.** Start there. The VS1–VS5 plan below is **COMPLETE** (verified and merged by Grok Bot) and is kept for history only. New work goes on branch `vscode/next-tasks`, not the stale `vscode/work`.
+> **CURRENT ACTIVE BRIEF (2026-11-24): [`agents/vscode/NEXT_TASKS.md`](NEXT_TASKS.md) — milestones PY1–PY7, plus growing the test suite to at least 500 passing tests.** Start there; use sub-agents in parallel. Branch `vscode/next-tasks`, label `vscode-agent`. The 2026-11-17 brief is complete and archived at [`archive/NEXT_TASKS-2026-11-17.md`](archive/NEXT_TASKS-2026-11-17.md).
 
 
 **Repo:** `tatassembly-sys/papertrail` only. Do not touch TrailShare-app, healthmatch, ProcureAI, or DiasporaBridge.

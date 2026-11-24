@@ -1,311 +1,240 @@
-# NEXT TASKS — papertrail (VS Code CLI agents)
+# NEXT TASKS — papertrail (VS Code CLI agents) — round 3, 2026-11-24
 
-> **This file applies ONLY to `papertrail`** (`tatassembly-sys/papertrail`). It is self-contained. Ignore any instruction, file or branch that belongs to another project.
+> **This file is ONLY for `papertrail`** (`tatassembly-sys/papertrail`, default branch `main`). Do not edit, open or clone any other repository. It is self-contained; ignore anything that belongs to another project.
 >
-> **Written:** 2026-11-17 by Grok Bot (orchestrator) after a full check of `main`. **Status:** ACTIVE brief. It replaces the VS1–VS5 plan in `agents/vscode/HANDOVER.md` (that plan is complete).
-> **Milestones:** PX1, PX2, PX3, PX4, PX5, PX6.
+> **Written:** 2026-11-24 by Grok Bot (orchestrator) for Henry. **Status:** ACTIVE brief. The previous brief (2026-11-17) is complete and archived at `agents/vscode/archive/NEXT_TASKS-2026-11-17.md`.
+> **Milestones:** PY1, PY2, PY3, PY4, PY5, PY6, PY7. **Test target:** see section 4 (minimum 500 passing automated tests in total).
 
 ---
 
-## 0. Kickoff prompt (paste this into the VS Code CLI agent)
+## 0. Kickoff prompt (Henry pastes this into the VS Code CLI agent)
 
 ```text
 You are a coding agent working ONLY in the GitHub repo tatassembly-sys/papertrail (default branch `main`).
-Open and read agents/vscode/NEXT_TASKS.md in full, then AGENTS.md. That file is your complete brief; it applies ONLY to papertrail.
-Do not open, read, or change any other repository or folder outside this repo.
-1. git fetch origin && git checkout -b vscode/next-tasks origin/main   (if origin/vscode/next-tasks already exists: git checkout vscode/next-tasks && git merge origin/main)
-2. Do milestones PX1 to PX6 in order, exactly as written. Use sub-agents / parallel workers for independent steps.
-3. After each milestone: run its test commands AND the full gate, commit, log in agents/vscode/LOG.md, push vscode/next-tasks.
-4. Never push to `main`, never force-push, never edit .github/workflows, never add services that need new accounts or API keys.
-5. Do not stop until every milestone is complete and verified. When done, append Handover notes to agents/vscode/NEXT_TASKS.md, push, and open ONE pull request vscode/next-tasks -> main labelled vscode-agent. Do not merge it.
+This task is ONLY for papertrail. Do not open, read, clone or change any other repository or folder outside this repo.
+Read agents/vscode/NEXT_TASKS.md in full, then AGENTS.md. NEXT_TASKS.md is your complete brief.
+1. git fetch origin. If origin/vscode/next-tasks exists: git checkout vscode/next-tasks && git merge origin/main. Otherwise: git checkout -b vscode/next-tasks origin/main.
+2. Do milestones PY1 to PY7 as written. Use sub-agents in parallel (one per milestone or test area, see section 3), and keep going until every milestone is complete and verified.
+3. Grow the automated test suite to AT LEAST the target in section 4 (never below 500 passing tests in total for this repo). Write real, meaningful tests. No padding or trivial duplicates. Run the FULL suite and record the exact counts in agents/vscode/LOG.md.
+4. After each milestone: run its checks plus the full gate, commit, log in agents/vscode/LOG.md, push vscode/next-tasks.
+5. Never push to main, never force-push, never edit .github/workflows, nothing that needs new accounts, API keys, live payments, crons or deploys.
+6. When done: append Handover notes to agents/vscode/NEXT_TASKS.md, push, and open or update ONE PR vscode/next-tasks -> main labelled vscode-agent. Do not merge it.
 ```
 
 ---
 
-## 1. Current state of `papertrail` (checked 2026-11-17)
+## 1. Current state of `papertrail` (audited 2026-11-24)
 
-**Product:** Paper Trail (Next.js App Router + MongoDB). Pre-launch and code-complete for agent work. Production hosting (Vercel + Atlas), email, crons and legal are owner items (see section 5).
+**Product:** Paper Trail — Next.js 15 App Router + MongoDB research-digest site. Pre-launch (NO-GO until the M10 launch checklist passes). Hosting (Vercel + Atlas), email, crons, Stripe and legal are owner items.
 
-**Recent merges on `main`:**
-- `c355bf1` (#10) exact-author search, author RSS byline, public index cap of 80 (`lib/search.ts`, `app/authors/**`, `app/feed/route.ts`, `app/topics/**`).
-- `486294c` (#8) VS1–VS5: account e2e, admin a11y, self-hosted fonts guard, edge tests. Earlier: #1–#7 (fonts self-hosted, production checks, bulk admin, ISR, coverage ≥60%, CHANGELOG, handover plan).
+**Recently merged / merging:** VS Code PX1–PX6 (#12, `f72b175`). Grok Bot PR #14 (`grokbot/next-2026-11-23`) is being merged now: Next 15.5.29, ISR empty-list fix for `/authors` and `/topics` (`lib/isr-fallback.ts`), removal of `app/(home)/loading.tsx` (fixed stuck query-only navigation; regression test in `e2e/smoke.spec.ts`), and GDPR `/api/me/export` 10k-per-section ceiling with `complete`/`truncated`. **Merge `origin/main` before you start and again before each push.**
 
-**Check results on `main` @ `c355bf1` (2026-11-17, Grok Bot box, Node 22):**
+**Measured 2026-11-24 (Grok Bot box, Node 22, tree = main + PR #14):**
 
-| Check | Result |
-|---|---|
-| `npm run lint` | ✔ no warnings or errors |
-| `npm run typecheck` | exit 0 |
-| `npm test` (sandbox + unit) | sandbox 545/545, unit pass, exit 0 |
-| `npm run test:integration` | 24/24 pass |
-| `npm run test:coverage` (`lib/**`) | lines **68.66%**, branches 74.38%, functions 84.36% (threshold is only 60%) |
-| `npm run build` | exit 0 |
-| `npm audit --omit=dev` | **5 moderate** (`glob` / `minimatch` via `@sentry/nextjs` → `@sentry/bundler-plugins`), 0 high |
-| Open PRs / issues | none |
-| e2e (`npm run test:e2e`) | not run in this check (needs `npm run build && npm start` + `npm run db:memory`) |
+| Suite | Command | Count |
+|---|---|---|
+| Unit | `npm run test:unit` | **156** pass |
+| Integration (in-memory Mongo) | `npm run test:integration` | **39** pass |
+| E2E (Playwright) | `npx playwright test --list` | **34** tests in 6 files |
+| **Counted total** | | **229** |
+| Sandbox scenarios (not counted) | `npm run test:sandbox` | 545/545 |
+| Coverage `lib/**` | `npm run test:coverage` | lines 85.33%, branches 77.23%, functions 91.27% (gate 70) |
 
-**Real gaps found:**
-1. Moderate advisories in the production dependency tree (`@sentry/nextjs` pulls vulnerable `glob`/`minimatch`).
-2. Security-sensitive `lib/` modules with **0% unit coverage**: `url-fetch.ts` (SSRF guard), `origin.ts`, `safe-error.ts`, `auth-credentials.ts`, `auth-server.ts`, `share-links.ts`, `cite.ts`, `export-note.ts`, `reading-time.ts`.
-3. External-API client modules with 0–38% coverage: `pubmed.ts`, `paper-extract.ts`, `reddit.ts`, `x.ts`, `facebook.ts`, `instagram.ts`, `social.ts`, `xai.ts` (18.75%), `article-chat.ts` (17.9%), `queue.ts` (33%), `openrouter-health.ts` (38%).
-4. The #10 features (exact-author search, author RSS, index cap) have unit tests but no browser/e2e coverage; the RSS feed has no XML well-formedness/escaping test.
-5. `docs/security/route-matrix.md` is not enforced by a test (new API routes could be added without an auth decision).
-6. Launch docs need the new commands, and the post-cut-over Railway removal (M0.9) needs a ready-to-run checklist.
-
-**Branches:** `origin/vscode/work` is **stale** (21 pre-squash commits not on `main`, 3 behind). `origin/grokbot/work` and `origin/grokbot/author-search-rss` belong to Grok Bot. Do not use any of them.
-
+**Audit findings (real next work):**
+1. `lib/` modules still under 80% lines: `cron-lock.ts` 56%, `stripe.ts` 56%, `json-body.ts` 60%, `billing.ts` 61%, `users.ts` 62%, `publish-mix.ts` 67% (branches 47%), `indexes.ts` 70%, `cron-run.ts` 72%, `mail.ts` 74%, `newsletter.ts` 77% (branches 59%), `extract-draft.ts` 79%, `articles.ts` 79%.
+2. 47 API route handlers (`app/**/route.ts`) — only some have HTTP-level integration tests; auth/validation/error paths are not proven per route.
+3. 33 React components in `components/` have **no** component tests (forms, dialogs, search, highlight tools, billing panel, admin list).
+4. E2E covers smoke/a11y/account/admin-a11y/discovery/fonts only — no e2e for collections, highlights, cite/export, newsletter consent, mobile nav, error pages, admin bulk review.
+5. No single command counts all tests; there is no test-count report.
+6. Open issues/PRs: none besides Grok Bot #14.
 
 ---
 
-## 2. Rules (always follow — read before writing any code)
+## 2. Rules (read before writing any code)
 
-1. **Scope.** Work only inside this repository. Do not open, clone, read or change any other repository.
-2. **Branch.** Work on **`vscode/next-tasks`**, created fresh from `origin/main`:
-   ```bash
-   git fetch origin
-   git checkout -b vscode/next-tasks origin/main
-   ```
-   - Do **not** use `vscode/work`: it holds stale pre-squash history (21 commits already squashed into `main`). Do not push to it or delete it.
-   - If `origin/vscode/next-tasks` already exists (an earlier session pushed it), check it out and run `git merge origin/main`; do not rebase commits that are already pushed.
-   - Before your **first** push you may `git rebase origin/main`. After that, bring in new `main` commits with `git merge origin/main` only.
-3. **Never** push to `main` or to any `grokbot/*` branch. **Never** force-push (`--force`, `--force-with-lease`, `+refs`). **Never** delete remote branches.
-4. **Never edit `.github/workflows/*`.** The token has no workflow scope and the owner applies CI by hand. Put any CI change in `docs/ci/proposed-ci.yml` (or another file under `docs/ci/`) only.
-5. **No new accounts, API keys, paid services, live payments, cron jobs or deploys.** Use offline mocks, in-memory/embedded databases, and local servers. If a step genuinely needs an owner account, mark it `BLOCKED (owner)` in `agents/vscode/LOG.md`, skip it, and continue with the next step.
-6. **Secrets.** Never commit `.env*` values, tokens or keys. Use obviously fake test values (e.g. `test-secret-0123456789abcdef`).
-7. **Log everything** in `agents/vscode/LOG.md` (newest first) with Europe/London time (`TZ=Europe/London date '+%Y-%m-%d %H:%M'`): `claimed`, `done (<commit hash>)`, or `BLOCKED (<reason>)`, plus the exact test command and its result line.
-8. **Lane hygiene.** Read `agents/grokbot/LOG.md` and any open PRs labelled `grok-bot` first. If Grok Bot is already doing an item, skip it and note that in your log.
-9. **Sub-agents.** If your tool supports sub-agents, Task tools or parallel workers, use them for independent steps (for example: one worker on tests, one on docs, one on dependency checks). All commits still land on `vscode/next-tasks` in this repo only.
-10. **Small, reviewable commits.** One logical change per commit, message format: `[vscode-agent] <ID>: <summary>` (e.g. `[vscode-agent] PX1.2: add tests for <area>`).
-11. **No behaviour changes without a test.** Any app-code change must come with a test that fails before and passes after. Do not weaken, skip or delete existing tests or assertions to make things pass. Do not lower coverage thresholds.
-12. **No fake completion.** A step is done only when (a) its test commands exit 0 on your machine, (b) the full gate below exits 0, (c) the change is committed on `vscode/next-tasks`, and (d) `agents/vscode/LOG.md` names the commit and the result line. Paste real output lines, not summaries you expect.
-13. **Do not stop** until every milestone below is complete, verified and logged — or explicitly marked `BLOCKED (owner)` with the reason. Then do the final handover step.
-14. **Only Grok Bot (or the owner) merges** into `main`. You open or update the PR; you never merge it.
+1. **Scope.** Only this repository. Never open, clone, read or change another repo.
+2. **Branch.** Work on **`vscode/next-tasks`**. If `origin/vscode/next-tasks` exists, check it out and `git merge origin/main`; otherwise `git checkout -b vscode/next-tasks origin/main`. Bring in new `main` commits with `git merge origin/main` (do it at the start and before every push — Grok Bot may merge to `main` while you work). Never rebase pushed commits.
+3. **Never** push to `main` or to any `grokbot/*` branch. **Never** force-push. **Never** delete remote branches.
+4. **Never edit `.github/workflows/*`** (the token has no workflow scope). CI changes go in `docs/ci/` only.
+5. **Pre-launch, cost-free.** No new accounts, API keys, paid services, live payments, cron jobs, deploys or production calls. Use offline mocks, fake test values and local/in-memory databases. If a step truly needs an owner account, log `BLOCKED (owner)` and move on.
+6. **Secrets.** Never commit `.env*` values, tokens or keys. Use obvious fakes (`test-secret-0123456789abcdef`).
+7. **Log** in `agents/vscode/LOG.md`, newest first, Europe/London time: `claimed`, `done (<hash>)` or `BLOCKED (<reason>)`, with the exact command and its real result line.
+8. **Lane hygiene.** Read `agents/grokbot/LOG.md` and open `grok-bot` PRs first. Skip anything Grok Bot has claimed. PR label: `vscode-agent`.
+9. **No behaviour change without a test** that fails before and passes after. Never weaken, skip, `.only`, delete or loosen existing tests or assertions; never lower coverage thresholds.
+10. **Real tests only.** Each new test must assert a distinct behaviour (input → output, status code, DB state, rendered text/ARIA, error path). Not allowed as "tests": loops generating near-identical cases to inflate counts, snapshot-only tests of static markup, `expect(true)`-style checks, tests that only assert a function exists. Table-driven tests are fine when every row covers a genuinely different case; count them honestly.
+11. **Small commits:** `[vscode-agent] <ID>: <summary>`.
+12. **No fake completion.** Done = checks exit 0, full gate exits 0, committed, logged with real output lines.
+13. **Do not stop** until every milestone is done or `BLOCKED (owner)` with a reason, and the test target is met.
+14. **Only Grok Bot (or Henry) merges** into `main`.
+15. **Windows note.** Henry's machine is Windows. Use Git Bash (or make scripts cross-platform with Node); keep line endings as they are; do not mass-reformat files you did not change.
 
 ### Full gate (run before every push; must exit 0)
 
 ```bash
-npm ci && npm run lint && npm run typecheck && npm test && npm run test:integration && npm run build && npm audit --omit=dev --audit-level=high && git status --porcelain
+npm ci && npm run lint && npm run typecheck && npm test && npm run test:integration && npm run test:coverage && npm run build && npm audit --omit=dev --audit-level=high && git status --porcelain
 ```
 
 ---
 
-## 3. Milestones (do them in this order)
+## 3. How to use sub-agents (do this — it is required)
+
+Use your tool's sub-agents / Task tool / parallel workers to speed this up. Suggested split:
+
+- **Lead agent (you):** owns the branch, merges sub-agent results, runs the full gate, writes the log and handover. Only the lead commits and pushes, one milestone at a time, so commits stay reviewable.
+- **One sub-agent per milestone or per test area** (see the per-area targets in section 4). Give each sub-agent: the milestone text from this file, the exact files/folders it may touch, and the command that proves it is done.
+- Sub-agents must not edit the same files at the same time. Split by folder (e.g. one on `lib/` unit tests, one on API/integration tests, one on e2e, one on UI/accessibility, one on docs).
+- Each sub-agent returns: changed files, new test names, the command it ran and its result line. The lead re-runs everything before committing — never trust a sub-agent's summary without re-running.
+- Keep going: when a sub-agent finishes, start the next pending milestone or test area until all are done.
+
+---
+
+## 4. Test target — at least 500 passing automated tests (per-area plan)
+
+**Baseline: 229 counted tests** (unit 156 + integration 39 + e2e 34). **Target: ≥ 520** (minimum 500).
+
+| Area | Command | Now | Target | New (approx.) | Milestone |
+|---|---|---|---|---|---|
+| Unit — `lib/` gaps | `npm run test:unit` | 156 | 270 | +114 | PY2 |
+| Unit — components | `npm run test:unit` (new `tests/components/*.test.tsx`) | 0 | 40 | +40 | PY4 |
+| Integration — API routes + DB | `npm run test:integration` | 39 | 130 | +91 | PY3, PY6 |
+| E2E — Playwright | `npm run test:e2e` | 34 | 80 | +46 | PY5 |
+| **Total** | `npm run test:count` (PY1) | **229** | **≥ 520** | **+291** | |
+
+**Counting rule (same for every area):** one test = one test case reported by a test runner (`node:test`, Vitest, Playwright) or one named check in this repo's own suite runners that prints `N passed`. Generated scenario matrices, benchmarks, load tests and probes are listed separately and are **not** counted toward the target.
+
+**Required in your final log entry:** a table with each area's command, before count, after count, and the **TOTAL** (must be ≥ the target and ≥ 500), plus confirmation that the full suite ran in one session with 0 failures (and flake check: run the full suite twice; both runs must pass).
+
+---
+
+## 5. Milestones (in order; parallelise independent ones with sub-agents)
 
 Overview:
-1. **PX1 — Dependency advisories** — clear the 5 moderate production advisories without breaking changes
-2. **PX2 — Tests for security-sensitive lib modules** — unit tests for SSRF guard, origin, safe errors, auth helpers; raise coverage threshold
-3. **PX3 — Offline tests for external-API clients and the queue** — mocked-fetch tests for PubMed, paper extract, social, xAI, chat, queue
-4. **PX4 — Browser journeys for search, authors and RSS** — e2e for exact-author search, author pages, topic pages, feed, 404, keyboard
-5. **PX5 — Enforce the API route matrix** — a test that fails when an API route has no documented auth decision
-6. **PX6 — Launch docs and cut-over prep** — launch checklist commands, Railway-removal checklist, CHANGELOG, STATUS
+1. **PY1 — One command that runs and counts every test** — `npm run test:count` runs all suites and prints the total
+2. **PY2 — `lib/` coverage gaps (≈ +114 unit tests)** — test every weak `lib/` module to ≥ 85% lines
+3. **PY3 — API route contract tests (≈ +80 integration tests)** — every `app/**/route.ts` has auth, validation and happy-path tests
+4. **PY4 — Component tests (≈ +40 unit tests)** — test the interactive components in `components/`
+5. **PY5 — E2E journeys, accessibility and mobile (≈ +46 Playwright tests)** — browser tests for journeys not yet covered
+6. **PY6 — Hardening, performance and bug sweep** — fix real defects found while testing; add budgets
+7. **PY7 — Docs and final test report** — docs match reality; final count ≥ 520
 
-### PX1 — Dependency advisories
+### PY1 — One command that runs and counts every test
 
-**Goal:** `npm audit --omit=dev` reports 0 moderate/high/critical, or every remaining advisory is justified in writing.
-
-**Files:** `package.json`, `package-lock.json`, `SECURITY.md`.
+**Goal:** Henry can run the whole suite and see one number.
 
 **Steps:**
-1. `npm audit --omit=dev --json > /tmp/audit.json` and `npm ls glob minimatch` — record which parent pulls each vulnerable version (expected: `@sentry/nextjs` → `@sentry/bundler-plugins` → `glob@13`/`minimatch@10`).
-2. Check for a newer **same-major** `@sentry/nextjs` (`npm view @sentry/nextjs versions --json`) whose tree has patched `glob`/`minimatch`. Upgrade with `npm install @sentry/nextjs@<version>`.
-3. If no such release exists, try an npm `overrides` entry pinning the patched `glob`/`minimatch` **only for that subtree**, then run the full gate. Keep it only if the gate and `npm run build` pass.
-4. Never run `npm audit fix --force`. Never bump a major version of `next`, `react` or `mongodb` in this milestone.
-5. If an advisory cannot be cleared safely, add a dated row to `SECURITY.md` ("Accepted advisories": package, path, why it is build-time only or unreachable, revisit date).
+1. Add `scripts/test-count.mjs` (Node, cross-platform): runs unit, integration and e2e (e2e via the existing Playwright setup with `npm run db:memory` + built app, or `--skip-e2e` flag), parses each runner's pass/fail counts, prints a table and `TOTAL <n>`; exits 1 if any test fails or if `--min <n>` is given and the total is lower. Sandbox scenarios are printed separately as "not counted".
+2. `package.json`: `"test:count": "node scripts/test-count.mjs --min 500"`.
+3. Unit-test the parser in `tests/test-count.test.ts` (node:test TAP summary, Playwright list/summary, failure lines).
+4. Add the command to `docs/ci/proposed-ci.yml` (docs only) and README "Testing".
 
-**Acceptance:** gate green; `npm audit --omit=dev --audit-level=moderate` exits 0 **or** each remaining item is documented in `SECURITY.md`.
-
-**Test commands:**
-```bash
-npm audit --omit=dev --audit-level=moderate; echo "audit exit=$?"
-npm run build && npm test && npm run test:integration
-```
-
-**Self-check:** paste the audit summary line before and after into `agents/vscode/LOG.md`. Confirm `npm ls @sentry/nextjs` shows the version you intended.
+**Acceptance:** `npm run test:count -- --min 0` prints the table with today's numbers (229 + sandbox line); parser tests pass.
+**Self-check:** make one test fail locally → `test:count` exits 1; revert.
 
 ---
 
-### PX2 — Tests for security-sensitive lib modules
+### PY2 — `lib/` coverage gaps (≈ +114 unit tests)
 
-**Goal:** every security-relevant helper in `lib/` has direct unit tests; `lib/**` line coverage rises from 68.66% to **≥ 75%** and the threshold in `test:coverage` is raised from 60 to **70**.
+**Files:** `lib/cron-lock.ts`, `stripe.ts`, `json-body.ts`, `billing.ts`, `users.ts`, `publish-mix.ts`, `indexes.ts`, `cron-run.ts`, `mail.ts`, `newsletter.ts`, `extract-draft.ts`, `articles.ts`. New tests in `tests/*.test.ts` (use `--experimental-test-module-mocks` patterns already in the repo; mock Mongo/network, no real calls — run with `HTTPS_PROXY=http://127.0.0.1:9` to prove it).
 
-**Files:** new `tests/url-fetch.test.ts`, `tests/origin.test.ts`, `tests/safe-error.test.ts`, `tests/auth-credentials.test.ts`, `tests/share-links.test.ts`, `tests/cite.test.ts`, `tests/export-note.test.ts`, `tests/reading-time.test.ts`; `package.json` (`test:coverage` `--lines`).
+**Cover per module:** happy path, every error branch, boundaries. Examples: `json-body` — empty body, invalid JSON, wrong content-type, oversize body, nested limits; `cron-lock` — acquire, held by another, expired lock takeover, release by non-owner; `stripe`/`billing` — billing OFF keeps checkout 503, webhook signature bad/old/duplicate, unknown event ignored; `users` — create/duplicate email/case-folding/password-reset token expiry; `publish-mix` — every branch of the mix selection (currently 47% branches); `newsletter` — consent required, unsubscribe token, double opt-in states; `mail` — log transport when no key, link building with `getSiteUrl()`.
+**Bugs:** if a test exposes a bug, fix it in the same milestone with the failing test first.
 
-**Steps:**
-1. `lib/url-fetch.ts` (`hostnameResolvesPublic`, `fetchPublicHttp`): stub DNS (`node --experimental-test-module-mocks` `mock.module("dns/promises", …)`, already enabled in `test:coverage`/`test:integration`) and stub `global.fetch`. Cover: private/loopback/link-local IPv4 + IPv6 literals blocked; hostname resolving to any private address blocked; DNS failure → false; public → allowed; a 30x redirect to a private address is refused; the hop limit (4) stops redirect loops; non-http(s) schemes refused.
-2. `lib/origin.ts`: same-origin check accepts the site origin, rejects foreign/missing/`null` origins (CSRF guard).
-3. `lib/safe-error.ts`: messages shown to users never include stack traces, Mongo error text or secrets.
-4. `lib/auth-credentials.ts` / `lib/auth-server.ts`: wrong password, unknown user, unverified user, locked/rate-limited user paths (mock the DB layer or use `npm run db:memory`-style in-memory Mongo via existing integration helpers in `tests/integration/`).
-5. `lib/share-links.ts`, `lib/cite.ts`, `lib/export-note.ts`, `lib/reading-time.ts`: pure-function tests including escaping of titles with `&`, `<`, quotes and non-ASCII names.
-6. If a test exposes a real bug, fix it in the smallest way and keep the failing-then-passing test.
-7. Run `npm run test:coverage`; once lines ≥ 75%, change `--lines 60` to `--lines 70` in the `test:coverage` script.
-
-**Acceptance:** all new tests pass; `npm run test:coverage` exits 0 with lines ≥ 75% and threshold 70; gate green.
-
-**Test commands:**
-```bash
-npm run test:unit
-npm run test:integration
-npm run test:coverage
-```
-New files under `tests/*.test.ts` are picked up by `test:unit` automatically; files that need module mocks may live in `tests/integration/` (which runs with `--experimental-test-module-mocks`).
-
-**Self-check:** paste the c8 `Lines` summary line before and after into the log. Each module listed above must appear in the coverage table above 0%.
+**Acceptance:** every listed file ≥ 85% lines and ≥ 75% branches in `npm run test:coverage`; total lines ≥ 88%; raise the c8 `--lines` gate from 70 to 80 in `package.json`.
+**Self-check:** paste the per-file coverage rows for the 12 files in the log.
 
 ---
 
-### PX3 — Offline tests for external-API clients and the queue
-
-**Goal:** every external client fails safely without keys or network and parses real-shaped responses; no test touches the internet.
-
-**Files:** `lib/pubmed.ts`, `lib/paper-extract.ts`, `lib/reddit.ts`, `lib/x.ts`, `lib/facebook.ts`, `lib/instagram.ts`, `lib/social.ts`, `lib/xai.ts`, `lib/article-chat.ts`, `lib/queue.ts`, `lib/openrouter-health.ts`; new tests under `tests/` or `tests/integration/`.
+### PY3 — API route contract tests (≈ +80 integration tests)
 
 **Steps:**
-1. Stub `global.fetch` per test (restore after). Use small fixture JSON/XML that mirrors the real API shape (write fixtures under `tests/fixtures/`, no real data scraping).
-2. For each client cover: key/env missing → feature reports disabled and does **not** call fetch; HTTP 429/500 → handled error, no throw to the user; malformed body → handled error; timeout/abort → handled error; success → parsed fields.
-3. `lib/queue.ts`: cover claim → process → complete, failure → retry count/back-off, last-error recording (`queue-last-error.ts`), idempotency when the same job is processed twice (use the in-memory Mongo helpers already used by `tests/integration/`).
-4. Never put a real key in tests. Use `test-key-not-real`.
+1. List every route handler (`app/**/route.ts`, 47 files) and its methods into a table in `docs/security/route-matrix.md` (it already exists — extend it, don't duplicate) with: auth required (public / user / admin / cron bearer), body schema, expected statuses.
+2. In `tests/integration/routes-*.int.test.ts` (in-memory Mongo via the existing preload), for each route: unauthenticated → 401/403 where protected; wrong method → 405; invalid body → 400 with a safe error (no stack, no internals); happy path → 2xx and the DB change; cron routes reject a missing/wrong bearer with constant-time compare.
+3. Origin/CSRF check on state-changing routes; rate-limited routes return 429 after the limit.
 
-**Acceptance:** each listed module ≥ 60% lines in `npm run test:coverage`; gate green; `rg -n "https?://" tests/ | rg -v "example|localhost|127.0.0.1|fixtures"` shows no live endpoints actually fetched.
-
-**Test commands:**
-```bash
-npm run test:unit && npm run test:integration && npm run test:coverage
-```
-
-**Self-check:** temporarily disable networking for the run if your tool allows (or set `HTTPS_PROXY=http://127.0.0.1:9`) and confirm the suites still pass — proving nothing reaches the internet.
+**Acceptance:** `npm run test:integration` ≥ 120 passing; `tests/route-matrix.test.ts` fails if a new `route.ts` is added without a matrix row (extend the existing test if needed).
+**Self-check:** temporarily remove an auth check from one admin route → a test fails; revert.
 
 ---
 
-### PX4 — Browser journeys for search, authors and RSS
+### PY4 — Component tests (≈ +40 unit tests)
 
-**Goal:** the #10 features and core reading paths are covered end-to-end against a local production build.
+**Setup:** add dev-only deps if needed (`@testing-library/react`, `happy-dom` or `jsdom`) — no accounts or services. Keep the runner `node:test` (`tests/components/*.test.tsx` included by `test:unit`), or document clearly if another runner is added and include it in `npm test` and `test:count`.
 
-**Files:** new `e2e/discovery.spec.ts`; maybe `e2e/support.ts`; new `tests/feed.test.ts`.
+**Cover:** `SearchBar`/`SearchHotkey`/`ActiveFilters` (keyboard shortcut, clearing filters updates URL), `CiteButton`/`ExportNote` (formats, copy feedback), `CollectionSave`, `HighlightTools`, `SaveActions`, `FollowTopic`, `NewsletterNudge` (consent checkbox required), `LabInquiryForm`/`EditorForm`/`TokenActionForm` (validation messages, disabled while submitting, error display), `NavMenu`/`ThemeToggle` (ARIA expanded/pressed), `BillingPanel`/`CheckoutButtons` (billing off state), `AdminArticleList`/`RetryFailedQueue`.
+Each test asserts accessible names/roles and behaviour, not snapshots.
 
-**How to run the app locally (no accounts):**
-```bash
-npm run db:memory            # terminal 1: in-memory Mongo (prints the MONGODB_URI to use)
-npm run build && npm start   # terminal 2: with MONGODB_URI from terminal 1 and test env values
-E2E_REQUIRE=1 npm run test:e2e   # terminal 3: fails (instead of skipping) when no server is listening
-```
-Use Playwright against `next start`, not `next dev` (CSP blocks `unsafe-eval` in dev). Never set `E2E_EXPOSE_MAIL_LINKS` anywhere except your local shell.
-
-**Steps:**
-1. Seed 2–3 posts with distinct authors (reuse the seeding approach in existing specs/helpers).
-2. Spec: search by exact author name → only that author's posts; `ActiveFilters` shows the author chip and clearing it restores results.
-3. Spec: `/authors` lists authors; `/authors/<slug>` shows posts and links to the author RSS feed; `/topics` and `/topics/<tag>` render and stay within the index cap (≤ 80 items).
-4. Spec: `/feed` (and the author feed) returns `200`, `content-type` contains `xml`, and the body parses as XML.
-5. Unit test `tests/feed.test.ts`: titles/authors containing `&`, `<`, `"` and emoji are escaped; dates are RFC 822; bylines present.
-6. Spec: unknown post `/posts/does-not-exist` → 404 page with `noindex`, no redirect to login.
-7. Keyboard-only: Tab from the top of `/` to search, submit with Enter, open the first result with Enter; visible focus ring at each step; axe (wcag2a/aa) has no serious/critical violations on `/authors`, `/topics`, and a search results page.
-
-**Acceptance:** `E2E_REQUIRE=1 npx playwright test e2e/discovery.spec.ts` passes **twice in a row**; full `E2E_REQUIRE=1 npm run test:e2e` passes; gate green.
-
-**Test commands:**
-```bash
-E2E_REQUIRE=1 npx playwright test e2e/discovery.spec.ts && E2E_REQUIRE=1 npx playwright test e2e/discovery.spec.ts
-E2E_REQUIRE=1 npm run test:e2e
-npm run test:unit
-```
-
-**Self-check:** the run must say `passed`, not `skipped`. If Playwright browsers are missing run `npx playwright install chromium`.
+**Acceptance:** ≥ 40 component tests passing in `npm test`; no network calls.
 
 ---
 
-### PX5 — Enforce the API route matrix
+### PY5 — E2E journeys, accessibility and mobile (≈ +46 Playwright tests)
 
-**Goal:** every `app/api/**/route.ts` handler is listed in `docs/security/route-matrix.md` with its auth rule, and a test enforces it.
+**Add specs** (offline: `npm run db:memory` + local build, same as existing e2e): collections (create/rename/delete/save article), highlights, cite + export note, newsletter sign-up consent + unsubscribe link page, account export download shows `complete: true`, account deletion confirm flow, admin bulk review (approve/reject/retry), 404/410/error pages with `noindex`, search with filters and back/forward history (regression for the removed `loading.tsx`), mobile viewport nav menu and keyboard-only navigation, axe scan on every public page (zero serious/critical).
 
-**Files:** `docs/security/route-matrix.md`, new `tests/route-matrix.test.ts` (may extend the existing `tests/public-writes.test.ts`).
-
-**Steps:**
-1. Walk `app/api/**/route.ts` (fs + glob in the test), collect each route path and exported HTTP methods.
-2. Parse the route matrix markdown table; fail the test listing any route/method missing from the matrix, or any matrix row whose file no longer exists.
-3. For every route marked public-write or cron in the matrix, assert the handler file references the expected guard (e.g. `cron-auth`, `origin`, `rate-limit`, admin session) — a static check, simple string/AST match is fine.
-4. Fill in any missing matrix rows truthfully after reading the handler. If a route is unguarded and should not be, fix it with a test and log it.
-
-**Acceptance:** `npm run test:unit` includes and passes the route-matrix test; deleting a row from the matrix makes it fail (try it locally, then revert).
-
-**Test commands:**
-```bash
-npm run test:unit
-```
-
-**Self-check:** record in the log the number of routes discovered vs. rows in the matrix.
+**Acceptance:** `npm run test:e2e` ≥ 80 passing, run 3 times in a row with no flake (`--repeat-each` is not allowed as padding; count unique tests only).
+**Self-check:** log the three result lines.
 
 ---
 
-### PX6 — Launch docs and cut-over prep
+### PY6 — Hardening, performance and bug sweep
 
-**Goal:** the owner can launch by following docs only; no code needs to change on cut-over day.
+1. **Security:** CSP/security headers test for every page type; `url-fetch` SSRF guard covers IPv6, decimal/octal IPs, redirects to private ranges; safe-error never leaks stack in production mode; cookie flags (`Secure`, `HttpOnly`, `SameSite`) per cookie.
+2. **Data:** GDPR export/delete — test the 10k ceiling path (`truncated` true) with a seeded large user (integration); deletion removes or anonymises every collection listed in the privacy notice.
+3. **Performance:** add a local bundle/page-weight budget check (e.g. read `.next` build output; fail if first-load JS for `/` grows > 10% over today's value, recorded in the script) and run `npm run lighthouse` locally against the built app (no external services) — record scores.
+4. **Bug sweep:** run the app locally, click through every page in the route list; file each defect in the log, fix it with a failing test first.
 
-**Files:** `docs/launch-checklist.md`, new `docs/runbooks/railway-removal.md`, `CHANGELOG.md` (Unreleased), `STATUS.md`, `README.md`.
-
-**Steps:**
-1. `docs/launch-checklist.md` Quality section: add the exact new commands from PX2–PX5 (leave boxes `[ ]`; the owner ticks them with evidence).
-2. Write `docs/runbooks/railway-removal.md` for M0.9: the exact files and wording to delete **after** the owner confirms Vercel + Atlas is live (`railway.toml`, `.railwayignore`, Railway mentions in README/SETUP/STATUS — find them with `rg -n -i railway`). **Do not delete them now.**
-3. `CHANGELOG.md`: add an `Unreleased` section listing this brief's changes.
-4. `STATUS.md`: update the "current as of" line and test numbers (coverage, test counts) with the real figures from your final gate.
-5. Check every command written in docs exists in `package.json` (`npm run <name>` must be a real script).
-
-**Acceptance:** docs updated; a script-name check passes:
-```bash
-node -e "const s=require('./package.json').scripts;const t=require('fs').readFileSync('docs/launch-checklist.md','utf8');const m=[...t.matchAll(/npm run ([\w:-]+)/g)].map(x=>x[1]).filter(n=>!s[n]);if(m.length){console.error('missing',m);process.exit(1)}console.log('ok')"
-```
-
-**Self-check:** no file other than docs/CHANGELOG/STATUS/README changed in this milestone (`git diff --stat`).
+**Acceptance:** each fix has a regression test; budgets script in `npm run test:count` output or `npm test`; Lighthouse scores logged (perf/a11y/best-practices/SEO ≥ 90 on home, article, topic pages, or a logged reason).
 
 ---
 
-## 4. Final handover (required — do this last)
+### PY7 — Docs and final test report
 
-1. Run the full gate one final time on a clean tree; `git status --porcelain` must print nothing.
-2. Append a dated entry under **Handover notes** below using the template, covering every milestone: what was done, the commits, the exact test commands with their result lines (pass/fail counts, coverage numbers, audit summary), anything `BLOCKED (owner)`, open issues and risks.
-3. Add a matching newest-first entry to `agents/vscode/LOG.md` and a short entry in `PROGRESS.md`.
-4. Push: `git push -u origin vscode/next-tasks` (normal push, never forced).
-5. Open ONE pull request (or update the existing one):
+1. README "Testing" section: every suite, how to run it offline, `npm run test:count`.
+2. `STATUS.md` baseline line and `CHANGELOG.md` `Unreleased` updated with real final numbers.
+3. `docs/ci/proposed-ci.yml` (docs only): add the new suites so the owner can copy them later.
+4. Check every `npm run <x>` written in docs exists in `package.json`.
+
+**Acceptance:** `npm run test:count` total ≥ 520, 0 failures, run twice; table pasted into the log and handover notes.
+
+---
+
+## 6. Final handover (do this last)
+
+1. Merge `origin/main` once more, run the full gate and the full test count twice on a clean tree; `git status --porcelain` prints nothing.
+2. Append a dated entry under **Handover notes** below (template) covering every milestone: commits, exact commands and result lines, the test-count table, coverage numbers, anything `BLOCKED (owner)`, risks.
+3. Add a matching entry to `agents/vscode/LOG.md` and a short entry in `PROGRESS.md`.
+4. `git push -u origin vscode/next-tasks` (normal push, never forced).
+5. Open ONE PR (or update the existing one):
    ```bash
    gh pr create --base main --head vscode/next-tasks --label vscode-agent \
-     --title "[vscode-agent] Next tasks: <short summary>" \
-     --body-file <file with: milestones done, test results, blocked items, risks>
+     --title "[vscode-agent] Round 3: PY1–PY7 + test suite to <N> tests" --body-file <summary file>
    ```
-   If the `vscode-agent` label is missing, create it with `gh label create vscode-agent --color 1D76DB` (labels are allowed; nothing else in repo settings is).
+   If the label is missing: `gh label create vscode-agent --color 1D76DB`.
 6. Do not merge. Grok Bot reviews and squash-merges.
 
 ---
 
-## 5. Owner-only items (do NOT attempt — listed so you skip them)
+## 7. Owner-only items (do NOT attempt)
 
-- MongoDB Atlas cluster, Vercel project and env vars (M0.1, M0.2); then M0.9 Railway removal (agents do it only after the owner says cut-over is done).
-- cron-job.org jobs (M0.6) and production smoke (M0.8).
-- Branch protection on `main` and copying `docs/ci/proposed-ci.yml` into `.github/workflows` (M1.4).
-- Rotate `OPENROUTER_API_KEY`, `CRON_SECRET`, `AUTH_SECRET`, admin password hash (M2.1).
-- Resend key, `EMAIL_FROM`/`NEWSLETTER_FROM`, DNS for `papertrailresearch.co.uk` (M10.3).
-- Stripe account (M6.4) — checkout must stay 503 until then.
-- UptimeRobot / Sentry project / Atlas alerts (M7.5); Google Search Console (M10.4).
-- Legal review, ICO registration, GO decision, `v1.0.0` tag (M5.7, M10.5).
+- MongoDB Atlas, Vercel project + env vars, Railway removal (M0.x).
+- cron-job.org schedules, production smoke (M0.8), branch protection, copying `docs/ci/proposed-ci.yml` into `.github/workflows` (M1.4).
+- Secret rotation, Resend key + DNS for `papertrailresearch.co.uk`, Stripe (checkout stays 503), UptimeRobot/Sentry, Search Console.
+- Legal review, ICO registration, GO decision, `v1.0.0` tag.
 
 ---
 
 ## Handover notes
 
-<!-- VS Code agents: append dated notes here, newest first, after each milestone and when finished. -->
+<!-- VS Code agents: append dated notes here, newest first. -->
 
 ### Template
 ```markdown
 ### YYYY-MM-DD HH:MM Europe/London — after <ID(s)>
 - Done: …
 - Commits on vscode/next-tasks: …
-- Tests: `<command>` → <result line>; …
+- Test count: | area | command | before | after | … TOTAL: <n> (≥ target), full suite run twice, 0 failures
+- Other checks: lint / typecheck / build / coverage / audit result lines
 - Blocked (owner): …
 - Open issues / risks: …
 - PR: <url> (label vscode-agent, not merged)
 ```
-
-### 2026-11-17 21:25 Europe/London — after PX1–PX6
-- Done: PX1 glob/minimatch cleared, picomatch high accepted; PX2 security tests and 70% line gate; PX3 offline clients and queue; PX4 discovery e2e; PX5 route matrix 46/46; PX6 launch docs and Railway runbook (files not deleted).
-- Commits on vscode/next-tasks: `4e70d8f`, `31d5017`, `57f43b4`, `6bb5207`, `bee845a`, `503ded2`, `9a995b1`.
-- Tests: `npm run test:coverage` → lines 84.37% (7230/8569), exit 0; `HTTPS_PROXY=http://127.0.0.1:9` unit 150/150 and integration 37/37; discovery spec 7 passed twice; `E2E_REQUIRE=1 npm run test:e2e` → 33 passed; sandbox 545/545; `npm run lint` exit 0; `npm run typecheck` exit 0; `npm audit --omit=dev --audit-level=high` → exit 1, 5 high picomatch.
-- Blocked (owner): Atlas, Vercel env, cron-job.org, M0.8 smoke, branch protection, copying proposed CI, secret rotation, Resend, DNS, Stripe, Sentry/uptime, legal, v1.0.0. M0.9 deletion stays blocked.
-- Open issues / risks: picomatch 4.0.7 has no patched release (revisit 2026-12-17). `ensure-indexes` must refuse in under 2000ms; one loaded run took 2016ms and passed on a solo re-run. `npm ci` hung with no child process during this save, so the combined gate was run as separate commands on the already-installed tree.
-- PR: https://github.com/tatassembly-sys/papertrail/pull/12 (draft, label vscode-agent, not merged)
